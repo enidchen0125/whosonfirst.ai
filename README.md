@@ -58,6 +58,27 @@ Most changes are data changes.
 
 **When you re-verify the standards**, update `REVIEWED` in `src/data/site.ts`.
 
+## Design
+
+The look is under exploration. Four directions share one set of token names and differ only in values:
+
+| Direction | File | Idea |
+| --- | --- | --- |
+| Scorecard (default) | `src/styles/directions/scorecard.css` | A paper scorecard: warm stock, serif titles |
+| Scoreboard | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals |
+| Line Map | `src/styles/directions/linemap.css` | Transit signage: black, white and five line colours |
+| Internet-Draft | `src/styles/directions/draft.css` | An Internet-Draft: monospace throughout |
+
+Switch with the control at the bottom right of any page, or with `?direction=scoreboard` (or `linemap`, `draft`, `scorecard`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
+
+`npm run check` includes a contrast audit (`scripts/contrast-check.mjs`) that fails if any text pairing in any direction falls below 4.5:1.
+
+```bash
+npm run ds:build
+```
+
+`npm run ds:build` (after `npm run build`) turns the direction files and the sources in `design-system/` into a design system package in `design-system/out/`, which is not committed.
+
 ## Accuracy
 
 Drafts in this area change monthly. Revision numbers and dates in the tracker were taken from the IETF document mirror and specification repositories. Process states (for example "in last call") came from secondary sources and are worded as reported. Vendor products are described from vendor documentation and were not tested. See the About page for the full method.

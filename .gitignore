@@ -5,3 +5,6 @@ dist/
 *.log
 .env
 .env.*
+
+# generated design system
+design-system/out/

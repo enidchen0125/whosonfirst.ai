@@ -9,7 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-check.mjs",
-    "check:contrast": "node scripts/contrast-check.mjs"
+    "check:contrast": "node scripts/contrast-check.mjs",
+    "ds:build": "node scripts/build-design-system.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",
