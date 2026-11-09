@@ -1,0 +1,170 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const places = [
+  {
+    href: '/deployments/kubernetes/',
+    title: 'Kubernetes',
+    blurb:
+      'Five layers of identity for an agent pod: ServiceAccount tokens, federation, certificates and SPIFFE, gateways, and user delegation. With an interactive map.',
+    chips: ['Workload identity', 'Pod Certificates', 'Gateways'],
+  },
+  {
+    href: '/deployments/agent-platforms/',
+    title: 'Managed agent platforms',
+    blurb:
+      'What cloud and identity vendors now offer for agents: per-agent identities, token vaults, on-behalf-of exchange, and administrator-controlled access.',
+    chips: ['Agent identity', 'Token vaults', 'Vendor survey'],
+  },
+  {
+    href: '/deployments/local/',
+    title: 'Desktop, IDE, CLI and CI',
+    blurb:
+      'Agents on a person’s machine are public clients. Agents in a pipeline have a platform identity. Neither should carry a pasted API key.',
+    chips: ['Public clients', 'stdio servers', 'CI OIDC'],
+  },
+  {
+    href: '/deployments/sandboxes/',
+    title: 'Sandboxes',
+    blurb:
+      'For agents that run untrusted code: keep credentials outside the sandbox and inject them at the network edge.',
+    chips: ['Egress proxies', 'Credential injection'],
+  },
+];
+
+const rows = [
+  {
+    where: 'Kubernetes',
+    identity: 'ServiceAccount token, pod certificate or SPIFFE ID',
+    user: 'Token exchange at a gateway or in the agent',
+    secrets: 'Nowhere, with federation; otherwise a Secret',
+    risk: 'Shared service accounts; loose federation trust rules',
+  },
+  {
+    where: 'Managed platform',
+    identity: 'A platform-issued agent identity',
+    user: 'The platform’s token vault and exchange',
+    secrets: 'In the platform’s vault',
+    risk: 'Opaque defaults; knowing what the platform can do as your agent',
+  },
+  {
+    where: 'Desktop, IDE, CLI',
+    identity: 'None of its own: a public OAuth client',
+    user: 'Authorization code with PKCE, as the signed-in user',
+    secrets: 'Operating system keychain',
+    risk: 'Tokens on disk; any local process can claim a localhost redirect',
+  },
+  {
+    where: 'CI pipeline',
+    identity: 'The CI system’s OIDC token for the job',
+    user: 'Usually none: the job acts as itself',
+    secrets: 'Nowhere, with federation',
+    risk: 'Trust rules that match more repositories or branches than intended',
+  },
+  {
+    where: 'Sandbox',
+    identity: 'Whatever the host gives it, ideally nothing reusable',
+    user: 'Held outside; injected per request',
+    secrets: 'Outside the sandbox',
+    risk: 'Misuse of access while the sandbox runs',
+  },
+];
+---
+
+<Base
+  title="Deployments"
+  description="Where an agent runs decides where its identity comes from. Kubernetes, managed agent platforms, local machines, CI and sandboxes compared."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Deployments</p>
+      <h1>Where the agent runs decides where its identity comes from</h1>
+      <p class="lede">
+        The flows are the same everywhere. What changes with the runtime is the starting credential: what the platform
+        can vouch for, where a secret could safely live, and who can see the agent’s traffic.
+      </p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="grid two">
+        {
+          places.map((p) => (
+            <a class="card place" href={p.href}>
+              <h2>{p.title}</h2>
+              <p>{p.blurb}</p>
+              <div class="chips">
+                {p.chips.map((c) => (
+                  <span class="chip">{c}</span>
+                ))}
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Side by side</h2>
+        <p>The same four questions asked of each runtime.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Runtime</th>
+              <th>The agent’s own identity</th>
+              <th>Acting for a user</th>
+              <th>Where secrets live</th>
+              <th>Main risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((r) => (
+                <tr>
+                  <td>
+                    <strong>{r.where}</strong>
+                  </td>
+                  <td>{r.identity}</td>
+                  <td>{r.user}</td>
+                  <td>{r.secrets}</td>
+                  <td>{r.risk}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <p class="callout-title">A pattern across all of them</p>
+        <p>
+          In every runtime the strongest option is the one where the platform attests to the agent and nothing
+          long-lived is stored: a projected token, a job’s OIDC token, a platform-issued agent identity. Where that is
+          not available, the next best is a secret the agent can use but cannot read.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .place h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.5rem;
+  }
+  .place p {
+    font-size: 0.98rem;
+  }
+  td {
+    min-width: 11rem;
+  }
+  td:first-child {
+    min-width: 8rem;
+    white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+layout: ../layouts/Article.astro
+title: About this site
+description: What Who's on First covers, how its facts were checked, how status is worded, and how to correct it.
+lede: A reference for people who have to decide how an AI agent will authenticate and what it will be allowed to do. It explains the options, shows them step by step, and tracks the standards that are still moving.
+section:
+  label: About
+  href: /about/
+---
+
+## The name
+
+In Abbott and Costello's routine, a man asks who is playing first base and never gets an answer he can use, because the first baseman is named Who. The second baseman is What. The third baseman is I Don't Know.
+
+Ask a production system which person an API call was made for, and which piece of software made it, when an AI agent sat in between. The conversation is often the same. The site is organized around making those two answers, and a few more, survive from the place they are known to the place they are needed. The [lineup](/concepts/#lineup) maps the whole team.
+
+## What is covered
+
+- **Flows.** Each way an agent can obtain and present credentials, as a sequence diagram with the messages on the wire.
+- **Deployments.** How the starting credential changes with where the agent runs.
+- **Standards.** The RFCs, drafts and specifications involved, with status.
+
+The scope is authentication and authorization. Prompt injection, model safety and data governance appear only where they change an authentication decision, which is more often than one would like.
+
+## How facts were checked
+
+The standards in this area change monthly, and a reference that is confidently out of date is worse than none. This is how the content was verified in November 2026.
+
+**Specifications read at source.** The MCP authorization specification and its extensions, the A2A specification, the AP2 specification, and the OAuth and WIMSE working group draft sources were read from their public repositories. Kubernetes feature stages were taken from the project's versioned feature list and documentation source. Examples on flow pages follow those documents.
+
+**IETF revision numbers and dates** come from the IETF's document metadata mirror.
+
+**Process states**, such as whether a draft is in last call or with the RFC Editor, come from secondary sources, because the primary trackers were not reachable from the environment in which this was compiled. They are worded as *reported*. Treat them as a prompt to check the linked source.
+
+**Vendor products** are described from vendor documentation and announcements, and were not tested. That page says so at the top.
+
+Every tracker entry links to its canonical source. If the two disagree, the source is right.
+
+## How status is worded
+
+| Label | Meaning |
+| --- | --- |
+| RFC | Published by the IETF. Stable, though possibly updated by later RFCs |
+| Final spec | Approved as final by another body, or a released version of a protocol specification |
+| WG draft | Adopted by a working group that intends to publish it. Can still change incompatibly |
+| Individual draft | A proposal by its authors. No endorsement, and no guarantee it will progress |
+| Project / platform | Open-source software or a platform API, not a specification |
+| Guidance | A report, framework or best-practice document |
+
+On flow pages, **stable** means the flow rests on published standards. **Emerging** means it depends on at least one working group draft or a recently released protocol version. **Experimental** means the specifications are early and likely to change.
+
+## Examples are illustrative
+
+Hostnames, tokens and keys in examples are made up or taken from the specifications' own examples. Requests are abbreviated for reading. Do not copy an example as an implementation; follow the specification it illustrates.
+
+## Corrections
+
+This site is built from structured data in a public repository: one file per flow, one list of standards, one glossary. A correction is usually a one-line change. If something is wrong or out of date, open an issue or a pull request at [github.com/kevinswiber/whosonfirst.ai](https://github.com/kevinswiber/whosonfirst.ai).
+
+## Independence
+
+The site is not affiliated with any standards body or vendor named on it. Mention of a product is not a recommendation.

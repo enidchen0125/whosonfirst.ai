@@ -1,0 +1,537 @@
+---
+import Base from '../../layouts/Base.astro';
+import { standards } from '../../data/standards';
+import { flows } from '../../data/flows';
+import { REVIEWED } from '../../data/site';
+import { STATUS_LABEL, STATUS_TONE, TOPIC_LABEL } from '../../data/types';
+import type { StdStatus, StdTopic } from '../../data/types';
+import { inline } from '../../lib/md';
+
+const statuses = (Object.keys(STATUS_LABEL) as StdStatus[]).filter((s) => standards.some((x) => x.status === s));
+const topics = (Object.keys(TOPIC_LABEL) as StdTopic[]).filter((t) => standards.some((x) => x.topics.includes(t)));
+const bodies = [...new Set(standards.map((s) => s.body))].sort(
+  (a, b) => standards.filter((s) => s.body === b).length - standards.filter((s) => s.body === a).length,
+);
+const count = (fn: (s: (typeof standards)[number]) => boolean) => standards.filter(fn).length;
+const usedIn = (id: string) => flows.filter((f) => f.standards.includes(id));
+
+const moved = [
+  {
+    when: 'January',
+    what: 'The OpenID Foundation approves the **AuthZEN Authorization API 1.0** as a final specification: a standard interface to policy engines.',
+  },
+  {
+    when: 'March',
+    what: '**A2A 1.0** is released, with signed Agent Cards and a defined task state for in-task authorization.',
+  },
+  {
+    when: 'April',
+    what: '**AP2 v0.2** redesigns payment mandates and is donated to the **FIDO Alliance**, which forms working groups on agentic authentication and payments.',
+  },
+  {
+    when: 'July',
+    what: '**MCP 2026-07-28**: the protocol becomes stateless, Dynamic Client Registration is deprecated, issuer validation is required, and the enterprise-managed and client-credentials extensions become stable.',
+  },
+  {
+    when: 'August',
+    what: 'Two OAuth best-practice documents are published: **RFC 10017** (browser-based apps) and **RFC 10027** (cross-device flows). **Kubernetes 1.37** ships Pod Certificates and ClusterTrustBundle as GA.',
+  },
+  {
+    when: 'September',
+    what: 'The WIMSE working group adopts **AIMS**, the agent identity architecture. The OAuth working group adopts **Deferred Token Response**. The Web Bot Auth working group adopts its first document.',
+  },
+  {
+    when: 'October',
+    what: 'The IETF forms two agent-related working groups, **agentproto** (agent communication) and **DAWN** (agent discovery). Neither is chartered to work on authentication or authorization. **ID-JAG** reaches revision -06.',
+  },
+  {
+    when: 'November',
+    what: '**RFC 10070** updates JWT client authentication. **CIMD** reaches -03. **SPIRE 1.16** adds experimental WIT-SVID support. IETF 127 meets mid-month.',
+  },
+];
+---
+
+<Base
+  title="Standards tracker"
+  description="Every RFC, draft, specification and project that matters for agent authentication and authorization, with current status and why it matters."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Standards</p>
+      <h1>Standards and drafts tracker</h1>
+      <p class="lede">
+        {standards.length} RFCs, drafts, specifications and projects that shape how agents authenticate and what they
+        are allowed to do. Each entry says what it defines, where it stands, and why it matters for agents.
+      </p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What moved in 2026</h2>
+        <p>The year so far, as of {REVIEWED}.</p>
+      </div>
+      <ol class="moved">
+        {
+          moved.map((m) => (
+            <li>
+              <span class="when">{m.when}</span>
+              <p set:html={inline(m.what)} />
+            </li>
+          ))
+        }
+      </ol>
+      <div class="callout">
+        <p class="callout-title">Reading status correctly</p>
+        <p>
+          An IETF <strong>working group draft</strong> has been adopted by a group that intends to publish it, but can
+          still change in incompatible ways. An <strong>individual draft</strong> is one or more people’s proposal and
+          carries no endorsement. Revision numbers and dates here were taken from the IETF document mirror and
+          specification repositories. Process states, such as “in last call”, come from secondary sources and are
+          worded as reported. Follow the source link before relying on any draft.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <standards-explorer class="sx">
+        <form class="sx-filters" aria-label="Filter standards" hidden>
+          <label class="sx-search">
+            <span class="visually-hidden">Search</span>
+            <input type="search" name="q" placeholder="Search name, number or text…" autocomplete="off" />
+          </label>
+
+          <fieldset>
+            <legend>Status</legend>
+            {
+              statuses.map((s) => (
+                <label class="sx-opt">
+                  <input type="checkbox" name="status" value={s} />
+                  <span>{STATUS_LABEL[s]}</span>
+                  <em>{count((x) => x.status === s)}</em>
+                </label>
+              ))
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>Topic</legend>
+            {
+              topics.map((t) => (
+                <label class="sx-opt">
+                  <input type="checkbox" name="topic" value={t} />
+                  <span>{TOPIC_LABEL[t]}</span>
+                  <em>{count((x) => x.topics.includes(t))}</em>
+                </label>
+              ))
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>Body</legend>
+            {
+              bodies.map((b) => (
+                <label class="sx-opt">
+                  <input type="checkbox" name="body" value={b} />
+                  <span>{b}</span>
+                  <em>{count((x) => x.body === b)}</em>
+                </label>
+              ))
+            }
+          </fieldset>
+
+          <button class="btn small ghost" type="reset">Clear filters</button>
+        </form>
+
+        <div class="sx-results">
+          <p class="sx-count" aria-live="polite">{standards.length} entries</p>
+          <ul class="sx-list">
+            {
+              standards.map((s) => {
+                const used = usedIn(s.id);
+                return (
+                  <li
+                    class="sx-item"
+                    id={s.id}
+                    data-status={s.status}
+                    data-topics={s.topics.join(' ')}
+                    data-body={s.body}
+                    data-text={`${s.name} ${s.ref} ${s.body} ${s.summary} ${s.agents} ${s.detail ?? ''}`.toLowerCase()}
+                  >
+                    <header>
+                      <h3>{s.name}</h3>
+                      <span class="sx-ref">{s.ref}</span>
+                    </header>
+                    <div class="chips">
+                      <span class="chip" data-tone={STATUS_TONE[s.status]}>
+                        {STATUS_LABEL[s.status]}
+                      </span>
+                      <span class="chip">{s.body}</span>
+                      {s.topics.map((t) => (
+                        <span class="chip topic">{TOPIC_LABEL[t]}</span>
+                      ))}
+                    </div>
+                    <p class="sx-summary" set:html={inline(s.summary)} />
+                    <p class="sx-agents">
+                      <strong>For agents</strong>
+                      <span set:html={inline(s.agents)} />
+                    </p>
+                    {s.detail && (
+                      <p class="sx-detail">
+                        <strong>Status</strong>
+                        <span set:html={inline(s.detail)} />
+                      </p>
+                    )}
+                    <footer>
+                      <a href={s.url} rel="noopener">
+                        Source ↗
+                      </a>
+                      {used.length > 0 && (
+                        <span class="sx-used">
+                          Used in{' '}
+                          {used.map((f, i) => (
+                            <>
+                              {i > 0 && ', '}
+                              <a href={`/flows/${f.slug}/`}>{f.short}</a>
+                            </>
+                          ))}
+                        </span>
+                      )}
+                    </footer>
+                  </li>
+                );
+              })
+            }
+          </ul>
+          <p class="sx-empty" hidden>Nothing matches those filters. <button type="button" class="linklike">Clear them</button>.</p>
+        </div>
+      </standards-explorer>
+    </div>
+  </section>
+</Base>
+
+<script>
+  class StandardsExplorer extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector<HTMLFormElement>('form')!;
+      const items = [...this.querySelectorAll<HTMLElement>('.sx-item')];
+      const countEl = this.querySelector<HTMLElement>('.sx-count')!;
+      const empty = this.querySelector<HTMLElement>('.sx-empty')!;
+      form.hidden = false;
+      this.dataset.js = '';
+
+      const read = () => {
+        const fd = new FormData(form);
+        return {
+          q: String(fd.get('q') ?? '').trim().toLowerCase(),
+          status: fd.getAll('status').map(String),
+          topic: fd.getAll('topic').map(String),
+          body: fd.getAll('body').map(String),
+        };
+      };
+
+      const apply = (push = true) => {
+        const f = read();
+        const words = f.q.split(/\s+/).filter(Boolean);
+        let shown = 0;
+        for (const el of items) {
+          const topics = (el.dataset.topics ?? '').split(' ');
+          const ok =
+            (f.status.length === 0 || f.status.includes(el.dataset.status ?? '')) &&
+            (f.body.length === 0 || f.body.includes(el.dataset.body ?? '')) &&
+            (f.topic.length === 0 || f.topic.some((t) => topics.includes(t))) &&
+            words.every((w) => (el.dataset.text ?? '').includes(w));
+          el.hidden = !ok;
+          if (ok) shown++;
+        }
+        countEl.textContent =
+          shown === items.length ? `${shown} entries` : `${shown} of ${items.length} entries`;
+        empty.hidden = shown !== 0;
+        if (push) {
+          const p = new URLSearchParams();
+          if (f.q) p.set('q', f.q);
+          for (const k of ['status', 'topic', 'body'] as const) for (const v of f[k]) p.append(k, v);
+          const qs = p.toString();
+          history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
+        }
+      };
+
+      // restore from the URL
+      const params = new URLSearchParams(location.search);
+      const q = form.elements.namedItem('q') as HTMLInputElement;
+      q.value = params.get('q') ?? '';
+      for (const k of ['status', 'topic', 'body']) {
+        const wanted = params.getAll(k);
+        form.querySelectorAll<HTMLInputElement>(`input[name="${k}"]`).forEach((i) => {
+          i.checked = wanted.includes(i.value);
+        });
+      }
+      apply(false);
+
+      form.addEventListener('input', () => apply());
+      form.addEventListener('submit', (e) => e.preventDefault());
+      const clear = () => {
+        form.reset();
+        // reset() restores defaults; make sure URL-restored checks are cleared too
+        form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((i) => (i.checked = false));
+        q.value = '';
+        apply();
+      };
+      form.addEventListener('reset', (e) => {
+        e.preventDefault();
+        clear();
+      });
+      empty.querySelector('button')?.addEventListener('click', clear);
+
+      // deep link to one entry: make sure it is visible, then mark it
+      const focusHash = () => {
+        const id = decodeURIComponent(location.hash.slice(1));
+        if (!id) return;
+        const el = items.find((i) => i.id === id);
+        if (!el) return;
+        if (el.hidden) clear();
+        items.forEach((i) => i.classList.toggle('is-target', i === el));
+        el.scrollIntoView({ block: 'start' });
+      };
+      window.addEventListener('hashchange', focusHash);
+      focusHash();
+    }
+  }
+  customElements.define('standards-explorer', StandardsExplorer);
+</script>
+
+<style>
+  .moved {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    border-top: 1.5px solid var(--ink);
+  }
+  .moved li {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0.75rem 0;
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .moved .when {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--clay);
+    padding-top: 0.25rem;
+  }
+  .moved p {
+    margin: 0;
+    max-width: 52rem;
+  }
+  @media (max-width: 34rem) {
+    .moved li {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+  }
+
+  .sx {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (min-width: 58rem) {
+    .sx[data-js] {
+      grid-template-columns: 15.5rem minmax(0, 1fr);
+    }
+    .sx-filters {
+      position: sticky;
+      top: 4.6rem;
+      max-height: calc(100dvh - 5.4rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      padding-right: 0.4rem;
+    }
+  }
+  .sx-filters[hidden] {
+    display: none;
+  }
+  .sx-search input {
+    width: 100%;
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    background: var(--chalk);
+    color: var(--ink);
+  }
+  .sx-filters fieldset {
+    border: 0;
+    padding: 0;
+    margin: 1.2rem 0 0;
+  }
+  .sx-filters legend {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    padding: 0 0 0.35rem;
+    width: 100%;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 0.35rem;
+  }
+  .sx-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .sx-opt input {
+    accent-color: var(--clay);
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+  }
+  .sx-opt em {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--ink-3);
+  }
+  .sx-filters .btn {
+    margin-top: 1.2rem;
+  }
+  @media (max-width: 57.99rem) {
+    .sx-filters fieldset {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.1rem 1.1rem;
+    }
+    .sx-opt em {
+      margin-left: 0;
+    }
+  }
+
+  .sx-count {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.7rem;
+  }
+  .sx-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.8rem;
+  }
+  .sx-item {
+    margin: 0;
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1.05rem 1.25rem 0.95rem;
+    scroll-margin-top: 5rem;
+  }
+  .sx-item[hidden] {
+    display: none;
+  }
+  .sx-item.is-target,
+  .sx-item:target {
+    border-color: var(--clay);
+    box-shadow: 4px 4px 0 var(--clay-soft);
+  }
+  .sx-item header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.9rem;
+    margin-bottom: 0.55rem;
+  }
+  .sx-item h3 {
+    margin: 0;
+    font-size: 1.24rem;
+  }
+  .sx-ref {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--ink-2);
+    word-break: break-word;
+  }
+  .chip.topic {
+    border-style: dashed;
+  }
+  .sx-summary {
+    margin: 0.75rem 0 0.55rem;
+    max-width: 50rem;
+  }
+  .sx-agents,
+  .sx-detail {
+    display: grid;
+    grid-template-columns: 5.6rem minmax(0, 1fr);
+    gap: 0.8rem;
+    margin: 0;
+    padding: 0.5rem 0;
+    border-top: 1px dashed var(--rule-strong);
+    font-size: 0.94rem;
+    max-width: 50rem;
+  }
+  .sx-agents strong,
+  .sx-detail strong {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    padding-top: 0.22rem;
+  }
+  .sx-detail {
+    color: var(--ink-2);
+  }
+  .sx-item footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--rule-strong);
+    font-size: 0.86rem;
+  }
+  .sx-used {
+    color: var(--ink-2);
+  }
+  @media (max-width: 34rem) {
+    .sx-agents,
+    .sx-detail {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+  }
+  .sx-empty {
+    padding: 2rem 0;
+    color: var(--ink-2);
+  }
+  .linklike {
+    font: inherit;
+    color: var(--ink);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--clay);
+    text-underline-offset: 0.18em;
+  }
+</style>

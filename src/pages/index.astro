@@ -1,4 +1,429 @@
 ---
 import Base from '../layouts/Base.astro';
+import LastHop from '../components/LastHop.astro';
+import { byGroup, flows } from '../data/flows';
+import { standards } from '../data/standards';
+import { REVIEWED } from '../data/site';
+
+const groups = byGroup();
+const drafts = standards.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
+
+const situations = [
+  {
+    tone: 'clay',
+    chip: 'Human present',
+    title: 'Someone is at the keyboard',
+    text: 'Send them to sign in and consent. The agent gets a token that carries their authority and nothing more.',
+    links: ['authorization-code-pkce', 'mcp-authorization', 'device-authorization'],
+  },
+  {
+    tone: 'ochre',
+    chip: 'Human reachable',
+    title: 'Someone can be asked',
+    text: 'The agent works alone and stops for approval when it matters, on a channel it cannot forge.',
+    links: ['ciba', 'step-up-authorization', 'url-elicitation'],
+  },
+  {
+    tone: 'sky',
+    chip: 'No human',
+    title: 'Nobody is there',
+    text: 'The agent is the principal. Its identity comes from the platform it runs on, not from a stored secret.',
+    links: ['workload-identity-federation', 'spiffe-workload-identity', 'client-credentials'],
+  },
+];
+const short = (slug: string) => flows.find((f) => f.slug === slug)!.short;
+
+const sections = [
+  {
+    href: '/concepts/',
+    title: 'Concepts',
+    text: 'Principals, delegation versus impersonation, audience, proof of possession, and an annotated tour of nine tokens.',
+  },
+  {
+    href: '/flows/',
+    title: `${flows.length} flows`,
+    text: 'Every flow as a sequence diagram you can step through, with the HTTP on the wire and who holds what at each step.',
+  },
+  {
+    href: '/deployments/',
+    title: 'Deployments',
+    text: 'Kubernetes, managed agent platforms, desktops and CLIs, CI pipelines and sandboxes: where identity comes from in each.',
+  },
+  {
+    href: '/standards/',
+    title: 'Standards tracker',
+    text: `${standards.length} RFCs, drafts and specifications with current status. ${drafts} of them are still drafts.`,
+  },
+];
+
+const news = [
+  ['MCP 2026-07-28', 'The protocol went stateless, deprecated Dynamic Client Registration, and made issuer validation mandatory for clients.', '/flows/mcp-authorization/'],
+  ['Agents are workloads', 'The IETF WIMSE working group adopted an architecture for agent identity that composes existing standards and defines no new protocol.', '/standards/#wimse-aims'],
+  ['Pod Certificates are GA', 'Kubernetes 1.37 gives every pod a native, auto-rotated X.509 identity. You bring the signer.', '/deployments/kubernetes/'],
+  ['Approval can wait', 'The OAuth working group adopted Deferred Token Response: any grant may answer “not yet” while a human decides.', '/standards/#deferred-token-response'],
+];
 ---
-<Base><div class="wrap"><h1>wip</h1></div></Base>
+
+<Base>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Authentication and authorization for AI agents</p>
+        <h1>Who is acting, for whom, and who said they could?</h1>
+        <p class="lede">
+          A field guide to every way an AI agent can prove what it is and what it may do: with a person at the
+          keyboard, with a person on call, and with nobody there at all.
+        </p>
+        <p class="cta">
+          <a class="btn primary" href="/flows/">Explore the flows</a>
+          <a class="btn" href="/guide/">Find the one you need</a>
+        </p>
+      </div>
+
+      <figure class="diamond">
+        <svg viewBox="-58 0 588 400" role="img" aria-labelledby="dia-title">
+          <title id="dia-title">
+            A baseball diamond. First base is labelled Who, the principal. Second base is What, the agent. Third base
+            is I Don’t Know, the resource. Home plate is the issuer.
+          </title>
+          <path class="d-field" d="M235 352 L375 212 L235 72 L95 212 Z"></path>
+          <!-- the path authority travels: home → first → second → third -->
+          <path class="d-run" d="M250 337 L360 227" marker-end="url(#d-arrow)"></path>
+          <path class="d-run" d="M360 197 L250 87" marker-end="url(#d-arrow)"></path>
+          <path class="d-run" d="M220 87 L110 197" marker-end="url(#d-arrow)"></path>
+          <defs>
+            <marker id="d-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"></path>
+            </marker>
+          </defs>
+          <text class="d-step" x="322" y="298" text-anchor="start">grants</text>
+          <text class="d-step" x="322" y="134" text-anchor="start">acts</text>
+          <text class="d-step" x="148" y="134" text-anchor="end">calls</text>
+
+          <g class="role-authz">
+            <path class="d-base" d="M222 340h26v13l-13 13-13-13z"></path>
+            <text class="d-name" x="235" y="388" text-anchor="middle">the issuer</text>
+          </g>
+          <g class="role-human">
+            <rect class="d-base" x="362" y="199" width="26" height="26" transform="rotate(45 375 212)"></rect>
+            <text class="d-tag" x="402" y="208">Who</text>
+            <text class="d-name" x="402" y="226">the principal</text>
+          </g>
+          <g class="role-agent">
+            <rect class="d-base" x="222" y="59" width="26" height="26" transform="rotate(45 235 72)"></rect>
+            <text class="d-tag" x="235" y="30" text-anchor="middle">What</text>
+            <text class="d-name" x="235" y="47" text-anchor="middle">the agent</text>
+          </g>
+          <g class="role-resource">
+            <rect class="d-base" x="82" y="199" width="26" height="26" transform="rotate(45 95 212)"></rect>
+            <text class="d-tag" x="68" y="208" text-anchor="end">I Don’t Know</text>
+            <text class="d-name" x="68" y="226" text-anchor="end">the resource</text>
+          </g>
+        </svg>
+        <figcaption>
+          Ask most systems who made an API call when an agent is involved, and you get the routine.{' '}
+          <a href="/concepts/#lineup">Meet the whole lineup →</a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Start with one question: is a person involved?</h2>
+        <p>Everything else follows from the answer.</p>
+      </div>
+      <div class="grid situations">
+        {
+          situations.map((s) => (
+            <div class="card">
+              <span class="chip" data-tone={s.tone}>
+                {s.chip}
+              </span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+              <ul>
+                {s.links.map((slug) => (
+                  <li>
+                    <a href={`/flows/${slug}/`}>{short(slug)}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+      <p class="more">
+        Agents in a chain, agents talking to agents, and agents on the open web have their own flows.{' '}
+        <a href="/flows/">See all {flows.length} →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What does the last hop know?</h2>
+        <p>The problem in one picture. Change how authority is passed down the chain.</p>
+      </div>
+      <LastHop />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>What is here</h2>
+      <div class="grid two what">
+        {
+          sections.map((s) => (
+            <a class="card" href={s.href}>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Moving this year</h2>
+        <p>As of {REVIEWED}. <a href="/standards/">Full tracker →</a></p>
+      </div>
+      <ul class="news">
+        {
+          news.map(([title, text, href]) => (
+            <li>
+              <a href={href}>
+                <strong>{title}</strong>
+                <span>{text}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Every flow</h2>
+      <div class="index">
+        {
+          groups.map((g) => (
+            <div>
+              <h3>{g.title}</h3>
+              <ul>
+                {g.flows.map((f) => (
+                  <li>
+                    <a href={`/flows/${f.slug}/`}>{f.short}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    border-bottom: 1px solid var(--rule);
+    background:
+      linear-gradient(var(--paper), transparent 75%),
+      repeating-linear-gradient(to right, transparent 0 calc(4rem - 1px), var(--rule) calc(4rem - 1px) 4rem);
+    padding-block: clamp(2.5rem, 7vw, 5rem) clamp(2rem, 5vw, 3.5rem);
+  }
+  .hero-grid {
+    display: grid;
+    gap: 2rem 3rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+  }
+  @media (min-width: 60rem) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    }
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 5.6vw, 4.1rem);
+    max-width: 14ch;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1.8rem 0 0;
+  }
+
+  .diamond {
+    margin: 0;
+  }
+  .diamond svg {
+    display: block;
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
+    height: auto;
+    font-family: var(--font-body);
+  }
+  .d-field {
+    fill: color-mix(in srgb, var(--paper-2) 70%, transparent);
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+  }
+  .d-run {
+    fill: none;
+    stroke: var(--clay);
+    stroke-width: 1.6;
+    stroke-dasharray: 2 5;
+    stroke-linecap: round;
+  }
+  .d-arrowhead {
+    fill: var(--clay);
+  }
+  .d-step {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--ink-2);
+  }
+  .d-base {
+    fill: var(--role-soft);
+    stroke: var(--role);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .d-tag {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 21px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+  .d-name {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    fill: var(--role);
+  }
+  .diamond figcaption {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    text-align: center;
+    max-width: 26rem;
+    margin-inline: auto;
+  }
+
+  .section h2 {
+    margin-top: 0;
+  }
+  .situations .card h3 {
+    margin: 0.8rem 0 0.35rem;
+    font-size: 1.3rem;
+  }
+  .situations ul {
+    list-style: none;
+    padding: 0.7rem 0 0;
+    margin: 0.9rem 0 0;
+    border-top: 1px dashed var(--rule-strong);
+    font-size: 0.94rem;
+  }
+  .situations li {
+    margin: 0.25rem 0;
+  }
+  .situations li::before {
+    content: '→ ';
+    color: var(--clay);
+  }
+  .more {
+    margin: 1.3rem 0 0;
+    color: var(--ink-2);
+  }
+
+  .what {
+    margin-top: 1.2rem;
+  }
+  .what h3 {
+    font-size: 1.4rem;
+  }
+
+  .news {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1.5px solid var(--ink);
+  }
+  .news li {
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .news a {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 0.2rem 2rem;
+    padding: 0.85rem 0;
+    text-decoration: none;
+  }
+  .news a:hover {
+    color: inherit;
+  }
+  .news a:hover strong {
+    color: var(--clay);
+  }
+  .news strong {
+    font-family: var(--font-display);
+    font-size: 1.16rem;
+    font-weight: 560;
+  }
+  .news span {
+    color: var(--ink-2);
+  }
+  @media (max-width: 40rem) {
+    .news a {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .index {
+    display: grid;
+    gap: 1.5rem 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    margin-top: 1.2rem;
+  }
+  .index h3 {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .index ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.96rem;
+  }
+  .index li {
+    margin: 0.3rem 0;
+  }
+  .index a {
+    text-decoration-color: var(--rule-strong);
+  }
+  .index a:hover {
+    text-decoration-color: var(--clay);
+  }
+</style>

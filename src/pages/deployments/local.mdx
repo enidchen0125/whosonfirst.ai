@@ -1,0 +1,96 @@
+---
+layout: ../../layouts/Article.astro
+title: Desktop, IDE, CLI and CI agents
+description: Agents on a user's machine are public OAuth clients. Agents in a pipeline have a platform identity. How each should authenticate, where tokens live, and what to do about stdio MCP servers.
+lede: An agent on someone's laptop has a human close by and no identity of its own. An agent in a pipeline has an identity and no human. Each has a well-trodden path, and both paths avoid a pasted API key.
+section:
+  label: Deployments
+  href: /deployments/
+---
+
+## On the user's machine
+
+A desktop assistant, an IDE extension and a command-line agent have the same security profile. They are distributed to many machines, so they cannot keep a secret: anything shipped inside the binary can be extracted. OAuth calls this a **public client**. They do have a user sitting in front of them.
+
+That makes [authorization code with PKCE](/flows/authorization-code-pkce/) the right default, with three specifics.
+
+**Use the system browser and a loopback redirect.** Open the user's real browser, not an embedded web view, and listen on `127.0.0.1` with a port chosen at runtime. The user sees their own password manager and passkeys, and the agent never sees credentials.
+
+**Identify the client by URL.** With a [Client ID Metadata Document](/flows/mcp-authorization/), the client ID is an HTTPS address its publisher controls. The authorization server fetches it to learn the client's name and permitted redirect URIs. No registration step, and no client secret.
+
+**Know what that does and does not prove.** A metadata document proves the publisher controls a URL. It cannot prove that the process on the machine is the publisher's software, because any local program can listen on localhost and present the same client ID. This is why the MCP specification requires authorization servers to show the redirect hostname on the consent screen, and suggests a warning for clients that redirect only to localhost. The consent screen is the user's chance to notice.
+
+### Where tokens live
+
+- In the operating system's credential store: Keychain, Credential Manager, the Secret Service. Not in a dotfile, and not in a project directory where they can be committed.
+- Keyed by the authorization server's issuer. A token or client registration obtained from one server must never be offered to another. The current MCP revision makes this a requirement.
+- Out of the model's context. The runtime attaches tokens to requests; the model sees tool results.
+
+Where both sides support it, bind tokens to a key with [DPoP](/flows/dpop/), and keep that key in hardware if the platform offers a non-exportable store. A stolen refresh token is then useless on another machine.
+
+### Local MCP servers over stdio
+
+A server the client launches as a subprocess has no HTTP exchange in which to run OAuth. The MCP specification says such servers should not use the HTTP authorization flow and should take credentials from their environment.
+
+In practice that means an environment variable holding an API key, and it is the weakest link in most local setups. The specification's own guidance for improving it:
+
+- Pass secrets to each server individually, never through a shared global environment.
+- Scope each token as narrowly as the provider allows.
+- Keep long-lived secrets out of plain-text configuration files.
+- Prefer short-lived credentials obtained from a broker at launch.
+
+A local server is also a program running with the user's privileges. Where it came from matters as much as how it authenticates.
+
+### In a workplace
+
+If the user signs in to the agent with the company identity provider, [enterprise-managed authorization](/flows/cross-app-access/) lets that provider grant the agent access to other workplace applications without a consent prompt for each. The employee signs in once; administrators decide what connects to what.
+
+## Headless and remote agents
+
+A coding agent in a remote container, a session over SSH, a notebook kernel: there is a user, but no browser where the agent runs.
+
+- **[Device authorization](/flows/device-authorization/)** is the standard answer. The agent prints a code; the user approves on another device. It is simple and widely supported, and the flow most associated with consent phishing, so the approval screen needs to say clearly what is being approved.
+- **Forward the loopback port** if the user has a tunnel to the remote machine anyway. Authorization code with PKCE then works unchanged, with a stronger binding between the approval and the session.
+- **[URL elicitation](/flows/url-elicitation/)** lets a remote MCP server hand the user a link when it needs a third-party grant, so that credential never passes through the agent at all.
+- **Do not copy tokens in.** Pasting a personal access token into a remote environment gives a long-lived, broadly scoped credential to the place least able to protect it.
+
+Hosted coding agents increasingly solve this differently: the credential stays with the platform and is attached to outbound requests by a proxy. See [sandboxes](/deployments/sandboxes/).
+
+## In CI
+
+A pipeline job has no user, and it does have a platform that knows exactly what is running. Most CI systems will issue the job a signed OIDC token saying so. That token is the job's identity, and [workload identity federation](/flows/workload-identity-federation/) turns it into cloud or API access without a stored secret.
+
+```yaml
+# GitHub Actions: ask for an identity token, then trade it for cloud access
+permissions:
+  id-token: write   # allow the job to request its OIDC token
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # The cloud's login action exchanges the job's token for
+      # short-lived credentials. No key is stored in repository secrets.
+```
+
+The token's claims describe the job: repository, branch or tag, environment, workflow. The trust rule on the receiving side decides which of those are required.
+
+**Be specific in the trust rule.** A rule that accepts any token from the CI provider's issuer accepts every repository on that provider. Pin the repository and, for anything sensitive, the branch or environment.
+
+**Watch the subject format.** GitHub announced in 2026 that newly created repositories default to subject claims built from immutable owner and repository IDs instead of names. Rules that pattern-match on names need attention when new repositories are added.
+
+**An agent in CI is still an agent.** If the job runs a model that reads pull request content, it is processing untrusted input with the pipeline's credentials. Give agent steps the least privilege of any step in the workflow, and keep deploy credentials in a separate job.
+
+## Checklist
+
+<ul class="checklist">
+  <li>No client secret is embedded in a distributed agent.</li>
+  <li>Sign-in uses the system browser, PKCE and a loopback redirect.</li>
+  <li>Tokens are stored in the operating system's credential store, keyed by issuer.</li>
+  <li>stdio servers receive their own narrowly scoped credentials, not a shared environment.</li>
+  <li>Remote agents obtain tokens through a flow, never by paste.</li>
+  <li>CI jobs use the platform's OIDC token, and trust rules pin repository and environment.</li>
+  <li>Steps that run a model on untrusted content have the fewest permissions in the pipeline.</li>
+</ul>

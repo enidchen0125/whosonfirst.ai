@@ -1,0 +1,390 @@
+---
+import Base from '../../layouts/Base.astro';
+import Lineup from '../../components/Lineup.astro';
+import LastHop from '../../components/LastHop.astro';
+import TokenInspector from '../../components/TokenInspector.astro';
+import { ROLE_LABEL } from '../../data/types';
+import type { Role } from '../../data/types';
+
+const roles: { role: Role; who: string; examples: string }[] = [
+  { role: 'human', who: 'A person with authority to grant', examples: 'End user, employee, approver' },
+  { role: 'agent', who: 'Software acting for someone', examples: 'Agent, MCP client, tool server in the middle' },
+  { role: 'authz', who: 'Whoever issues credentials', examples: 'Authorization server, identity provider, SPIRE' },
+  { role: 'resource', who: 'The thing being protected', examples: 'API, MCP server, remote agent, website' },
+  { role: 'infra', who: 'The platform underneath', examples: 'Kubernetes, gateway, egress proxy' },
+];
+
+const toc = [
+  ['lineup', 'The lineup'],
+  ['different', 'Why agents are different'],
+  ['delegation', 'Delegation or impersonation'],
+  ['human', 'With and without a human'],
+  ['tokens', 'What is in a token'],
+  ['rules', 'Rules of thumb'],
+];
+---
+
+<Base
+  title="Concepts"
+  description="The ideas behind agent authentication and authorization: principals, delegation versus impersonation, audience, proof of possession, and what each claim in a token is for."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Concepts</p>
+      <h1>Who’s on first?</h1>
+      <p class="lede">
+        In the old routine, a man asks a simple question about a baseball team and never gets a straight answer,
+        because the players are named Who, What and I Don’t Know. Ask a production system “who made this API call?” when
+        an AI agent is involved and you will often have the same conversation.
+      </p>
+      <nav class="toc" aria-label="On this page">
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </nav>
+    </div>
+  </div>
+
+  <section class="section" id="lineup">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>The lineup</h2>
+        <p>Nine positions, nine questions. Hover a position or a row.</p>
+      </div>
+      <Lineup />
+      <div class="prose after">
+        <p>
+          Every request an agent makes should be able to answer these. The first three decide almost everything.{' '}
+          <strong>Who</strong> is the principal: the party whose authority is being exercised. <strong>What</strong> is
+          the actor: the software exercising it. And on third base is the resource at the end of the chain, which in
+          too many systems really does not know either of them.
+        </p>
+        <p>
+          The rest of this site is about the mechanisms that carry those answers from where they are known to where
+          they are needed.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="different">
+    <div class="wrap">
+      <h2>Why agents are different</h2>
+      <p class="lede">
+        Agents use the same protocols as every other program. What changes is how hard they lean on parts of those
+        protocols that used to be edge cases.
+      </p>
+      <div class="grid two diff">
+        <div class="card">
+          <h3>Delegation is the normal case</h3>
+          <p>
+            A web app mostly acts as itself and occasionally for a user. An agent exists to act for someone else. The
+            distinction between “the user did this” and “software did this for the user” stops being academic.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Connections are made at runtime</h3>
+          <p>
+            Classic OAuth assumes a developer registered the client with each API ahead of time. An agent may be
+            pointed at a server nobody involved has seen before, and must discover how to authenticate on the spot.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Calls fan out</h3>
+          <p>
+            One request becomes an agent calling tools that call services that call other agents. Authority has to
+            follow the chain without growing along the way, and without any hop holding more than it needs.
+          </p>
+        </div>
+        <div class="card">
+          <h3>The caller can be talked into things</h3>
+          <p>
+            An agent reads untrusted text and acts on it. A credential in its reach is a credential an injected
+            instruction can misuse or leak. Controls that live in the prompt are suggestions; controls at the resource
+            are enforcement.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Work outlives the session</h3>
+          <p>
+            A person approves something and closes the laptop. The agent keeps going for hours. Either it holds a
+            long-lived grant, or it needs a way to reach the person later.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Identity has two layers</h3>
+          <p>
+            There is the workload, a process running somewhere, and there is the principal it is working for. They are
+            proven by different credentials, and a sound design carries both.
+          </p>
+        </div>
+      </div>
+
+      <h3 class="legend-title">The five roles, and their colours</h3>
+      <p class="muted">Every diagram on this site uses the same five.</p>
+      <ul class="roles">
+        {
+          roles.map((r) => (
+            <li class={`role-${r.role}`}>
+              <span class="swatch" />
+              <strong>{ROLE_LABEL[r.role]}</strong>
+              <span class="who">{r.who}</span>
+              <span class="ex">{r.examples}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="delegation">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Delegation or impersonation</h2>
+        <p>What does the last hop know? Pick how authority is passed down and see.</p>
+      </div>
+      <LastHop />
+      <div class="prose after">
+        <p>
+          <strong>Impersonation</strong> means the downstream service cannot distinguish the software from the person.
+          It is simple, and it is how most integrations work today. <strong>Delegation</strong> keeps both identities:
+          the token says who it is for and, separately, who is acting. The standard mechanism is the{' '}
+          <code>act</code> claim from <a href="/flows/token-exchange/">token exchange</a>.
+        </p>
+        <p>
+          The confused deputy problem is what happens without it. A service with broad authority is tricked by a
+          caller into using that authority on the caller’s behalf. An agent that forwards tokens, or that serves many
+          users with one identity, is a deputy waiting to be confused. Audience-restricted tokens and explicit
+          delegation are the defences.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="human">
+    <div class="wrap">
+      <h2>With and without a human</h2>
+      <p class="lede">
+        The most useful first question about any agent workflow is whether a person is involved, and if so, when.
+      </p>
+      <div class="grid modes">
+        <a class="card" href="/flows/#g-human-present">
+          <span class="chip" data-tone="clay">Human present</span>
+          <h3>Someone is at the keyboard</h3>
+          <p>
+            They can be redirected to sign in and shown a consent screen. The agent ends up with a token that carries
+            their authority, scoped to what they approved. The risk is consent fatigue and over-broad grants.
+          </p>
+        </a>
+        <a class="card" href="/flows/#g-human-in-the-loop">
+          <span class="chip" data-tone="ochre">Human reachable</span>
+          <h3>Someone can be asked</h3>
+          <p>
+            The agent works alone but stops for approval at specific points. The approval must reach the person on a
+            channel the agent cannot forge, describe one concrete action, and be enforced by something other than the
+            agent.
+          </p>
+        </a>
+        <a class="card" href="/flows/#g-autonomous">
+          <span class="chip" data-tone="sky">No human</span>
+          <h3>Nobody is there</h3>
+          <p>
+            The agent is the principal. Its identity should come from the platform it runs on, not from a stored
+            secret, and its permissions are whatever an administrator granted in advance. Policy is the only control.
+          </p>
+        </a>
+      </div>
+      <div class="callout" data-tone="clay">
+        <p class="callout-title">The trap in the middle</p>
+        <p>
+          The dangerous configuration is the one that is neither: an unattended agent holding a person’s long-lived
+          token. It has a human’s full authority and no human watching. If you find yourself here, narrow the scope,
+          bind the token to a key, make the person reachable for anything irreversible, and know how you would revoke
+          it.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="tokens">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What is in a token</h2>
+        <p>Nine credentials you will meet. Open any claim to see which question it answers.</p>
+      </div>
+      <TokenInspector />
+    </div>
+  </section>
+
+  <section class="section" id="rules">
+    <div class="wrap">
+      <h2>Rules of thumb</h2>
+      <ol class="rules">
+        <li>
+          <strong>One audience per token.</strong>{' '}
+          A token should work at exactly one resource. Request it that way with the <code>resource</code> parameter and
+          reject anything addressed to someone else.
+        </li>
+        <li>
+          <strong>Exchange, never forward.</strong>{' '}
+          A service that needs to call another gets a new token for that hop. Passing along the one it received is how
+          a token meant for one place ends up everywhere.
+        </li>
+        <li>
+          <strong>Keep credentials out of the model’s context.</strong>{' '}
+          Anything the model can read, an injected instruction can ask it to repeat. Tokens belong in the runtime
+          around the model, or outside the sandbox entirely.
+        </li>
+        <li>
+          <strong>Enforce at the resource.</strong>{' '}
+          The agent asking for confirmation is a courtesy. The API refusing without a valid, specific authorization is
+          a control.
+        </li>
+        <li>
+          <strong>Prove the workload and the principal separately.</strong>{' '}
+          Which process is calling, and whose authority it carries, are different questions with different
+          credentials.
+        </li>
+        <li>
+          <strong>Prefer identity you do not have to store.</strong>{' '}
+          A platform-issued token that rotates itself beats a secret in an environment variable every time.
+        </li>
+        <li>
+          <strong>Short lives, narrow scopes, and a way to say stop.</strong>{' '}
+          Assume a token will leak and an agent will misbehave. Decide in advance how small the damage is and how fast
+          you can end it.
+        </li>
+      </ol>
+      <p class="next">
+        <a class="btn primary" href="/flows/">See the flows →</a>
+        <a class="btn" href="/guide/">Or answer six questions</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    margin-top: 1.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .toc a {
+    color: var(--ink-2);
+    text-decoration-color: var(--rule-strong);
+  }
+  .toc a:hover {
+    color: var(--clay);
+  }
+  .section h2 {
+    margin-top: 0;
+  }
+  .section > .wrap > .lede {
+    margin-bottom: 1.6rem;
+  }
+  .after {
+    margin-top: 1.8rem;
+  }
+  .after p:last-child {
+    margin-bottom: 0;
+  }
+
+  .legend-title {
+    margin-top: 2.4rem;
+    margin-bottom: 0.2rem;
+  }
+  .roles {
+    list-style: none;
+    padding: 0;
+    margin: 0.8rem 0 0;
+    border-top: 1.5px solid var(--ink);
+  }
+  .roles li {
+    display: grid;
+    grid-template-columns: 0.9rem 9rem minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.6rem 0;
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.95rem;
+  }
+  .roles .swatch {
+    width: 0.9rem;
+    height: 0.9rem;
+    background: var(--role-soft);
+    border: 1.5px solid var(--role);
+    border-radius: 2px;
+    align-self: center;
+  }
+  .roles strong {
+    color: var(--role);
+  }
+  .roles .ex {
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+  @media (max-width: 44rem) {
+    .roles li {
+      grid-template-columns: 0.9rem minmax(0, 1fr);
+      row-gap: 0.1rem;
+    }
+    .roles .who,
+    .roles .ex {
+      grid-column: 2;
+    }
+  }
+
+  .modes .card h3 {
+    margin-top: 0.8rem;
+  }
+  .modes {
+    margin-bottom: 1.2rem;
+  }
+
+  .rules {
+    list-style: none;
+    counter-reset: rule;
+    padding: 0;
+    margin: 1.2rem 0 2rem;
+    border-top: 1.5px solid var(--ink);
+    max-width: 54rem;
+  }
+  .rules li {
+    counter-increment: rule;
+    position: relative;
+    padding: 0.9rem 0 0.9rem 3rem;
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rules li::before {
+    content: counter(rule);
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    width: 1.9rem;
+    height: 1.9rem;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+  .rules strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.18rem;
+    font-weight: 560;
+    margin-bottom: 0.15rem;
+  }
+  .next {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+</style>

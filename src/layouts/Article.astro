@@ -1,0 +1,184 @@
+---
+/**
+ * Layout for long-form MDX pages. Set it with `layout:` in frontmatter.
+ * Frontmatter: title, description, lede, section ({ label, href }).
+ */
+import Base from './Base.astro';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Props {
+  frontmatter: {
+    title: string;
+    description?: string;
+    lede?: string;
+    section?: { label: string; href: string };
+  };
+  headings?: Heading[];
+}
+
+const { frontmatter: fm, headings = [] } = Astro.props;
+const toc = headings.filter((h) => h.depth === 2);
+---
+
+<Base title={fm.title} description={fm.description ?? fm.lede}>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">
+        {fm.section ? <a href={fm.section.href}>{fm.section.label}</a> : 'Guide'}
+      </p>
+      <h1>{fm.title}</h1>
+      {fm.lede && <p class="lede">{fm.lede}</p>}
+    </div>
+  </div>
+
+  <div class="wrap article-grid">
+    {
+      toc.length > 2 && (
+        <nav class="article-toc" aria-label="On this page">
+          <p>On this page</p>
+          <ol>
+            {toc.map((h) => (
+              <li>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+    <article class="article">
+      <slot />
+    </article>
+  </div>
+</Base>
+
+<style>
+  .article-grid {
+    display: grid;
+    gap: 1.5rem 3rem;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: clamp(1.6rem, 4vw, 2.6rem);
+    align-items: start;
+  }
+  @media (min-width: 66rem) {
+    .article-grid:has(.article-toc) {
+      grid-template-columns: 13rem minmax(0, 1fr);
+    }
+    .article-toc {
+      position: sticky;
+      top: 4.8rem;
+    }
+  }
+  .article-toc p {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .article-toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.9rem;
+  }
+  .article-toc li {
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .article-toc a {
+    display: block;
+    padding: 0.4rem 0;
+    text-decoration: none;
+    color: var(--ink-2);
+    line-height: 1.3;
+  }
+  .article-toc a:hover {
+    color: var(--clay);
+  }
+  @media (max-width: 65.99rem) {
+    .article-toc ol {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 1.2rem;
+    }
+    .article-toc li {
+      border-bottom: 0;
+    }
+  }
+
+  /* MDX output is not scoped, so these are global rules under .article */
+  .article :global(:where(p, ul, ol, blockquote, h2, h3, h4, dl)) {
+    max-width: 46rem;
+  }
+  .article :global(> :first-child) {
+    margin-top: 0;
+  }
+  .article :global(h2) {
+    font-size: clamp(1.5rem, 3vw, 1.95rem);
+    margin-top: 2.6em;
+    padding-top: 1.1em;
+    border-top: 1px solid var(--rule);
+    scroll-margin-top: 4rem;
+  }
+  .article :global(h2:first-child) {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .article :global(h3) {
+    scroll-margin-top: 5rem;
+  }
+  .article :global(table) {
+    display: block;
+    overflow-x: auto;
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    margin-block: 1.4em 1.8em;
+  }
+  .article :global(tr:last-child td) {
+    border-bottom: 0;
+  }
+  .article :global(td) {
+    min-width: 9rem;
+  }
+  .article :global(td:first-child) {
+    font-weight: 500;
+  }
+  .article :global(.wide) {
+    max-width: none;
+    margin-block: 1.6rem 2rem;
+  }
+  .article :global(li > p) {
+    margin-bottom: 0.4em;
+  }
+  .article :global(.checklist) {
+    list-style: none;
+    padding: 0;
+    border-top: 1.5px solid var(--ink);
+  }
+  .article :global(.checklist li) {
+    position: relative;
+    margin: 0;
+    padding: 0.65rem 0 0.65rem 2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .article :global(.checklist li::before) {
+    content: '';
+    position: absolute;
+    left: 0.15rem;
+    top: 0.95rem;
+    width: 0.95rem;
+    height: 0.95rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+  }
+</style>

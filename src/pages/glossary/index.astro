@@ -1,0 +1,222 @@
+---
+import Base from '../../layouts/Base.astro';
+import { glossary } from '../../data/glossary';
+import { inline } from '../../lib/md';
+
+const terms = [...glossary].sort((a, b) => a.term.localeCompare(b.term, 'en', { sensitivity: 'base' }));
+const slug = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
+---
+
+<Base
+  title="Glossary"
+  description="Plain definitions for the vocabulary of agent authentication and authorization, from access token to workload proof token."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Glossary</p>
+      <h1>The vocabulary</h1>
+      <p class="lede">{terms.length} terms, defined in a sentence or two, with a pointer to where each is used.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <glossary-list class="gl">
+      <div class="gl-tools">
+        <label hidden>
+          <span class="visually-hidden">Filter terms</span>
+          <input type="search" placeholder="Filter terms…" autocomplete="off" />
+        </label>
+        <nav aria-label="Jump to letter">
+          {letters.map((l) => <a href={`#letter-${l}`}>{l}</a>)}
+        </nav>
+      </div>
+
+      <dl>
+        {
+          terms.map((t, i) => {
+            const first = t.term[0].toUpperCase();
+            const newLetter = i === 0 || terms[i - 1].term[0].toUpperCase() !== first;
+            return (
+              <div
+                class="gl-term"
+                id={slug(t.term)}
+                data-text={`${t.term} ${(t.aka ?? []).join(' ')} ${t.def}`.toLowerCase()}
+              >
+                {newLetter && <span class="gl-letter" id={`letter-${first}`} aria-hidden="true">{first}</span>}
+                <dt>
+                  {t.term}
+                  {t.aka && <span class="aka">{t.aka.join(' · ')}</span>}
+                </dt>
+                <dd>
+                  <span set:html={inline(t.def)} />
+                  {t.see && (
+                    <a class="see" href={t.see.href}>
+                      {t.see.label} →
+                    </a>
+                  )}
+                </dd>
+              </div>
+            );
+          })
+        }
+      </dl>
+      <p class="gl-empty" hidden>No term matches.</p>
+    </glossary-list>
+  </div>
+</Base>
+
+<script>
+  class GlossaryList extends HTMLElement {
+    connectedCallback() {
+      const label = this.querySelector<HTMLLabelElement>('.gl-tools label')!;
+      const input = label.querySelector('input')!;
+      const items = [...this.querySelectorAll<HTMLElement>('.gl-term')];
+      const empty = this.querySelector<HTMLElement>('.gl-empty')!;
+      label.hidden = false;
+      input.addEventListener('input', () => {
+        const words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        let shown = 0;
+        for (const el of items) {
+          const ok = words.every((w) => (el.dataset.text ?? '').includes(w));
+          el.hidden = !ok;
+          if (ok) shown++;
+        }
+        empty.hidden = shown > 0;
+        this.toggleAttribute('data-filtering', words.length > 0);
+      });
+    }
+  }
+  customElements.define('glossary-list', GlossaryList);
+</script>
+
+<style>
+  .gl {
+    display: block;
+    padding-top: 1.6rem;
+    max-width: 58rem;
+  }
+  .gl-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .gl-tools label[hidden] {
+    display: none;
+  }
+  .gl-tools input {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.75rem;
+    width: min(100%, 16rem);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    background: var(--chalk);
+    color: var(--ink);
+  }
+  .gl-tools nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+  .gl-tools nav a {
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    text-decoration: none;
+    color: var(--ink-2);
+    border-radius: 3px;
+  }
+  .gl-tools nav a:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .gl[data-filtering] .gl-tools nav,
+  .gl[data-filtering] .gl-letter {
+    display: none;
+  }
+
+  dl {
+    margin: 0;
+    border-top: 1.5px solid var(--ink);
+  }
+  .gl-term {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 0.2rem 2rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: 5rem;
+  }
+  .gl-term[hidden] {
+    display: none;
+  }
+  .gl-term:target {
+    background: var(--clay-soft);
+    box-shadow:
+      -0.75rem 0 0 var(--clay-soft),
+      0.75rem 0 0 var(--clay-soft);
+  }
+  .gl-letter {
+    position: absolute;
+    right: 100%;
+    top: 0.7rem;
+    margin-right: 1.2rem;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--clay);
+    scroll-margin-top: 5rem;
+  }
+  @media (max-width: 78rem) {
+    .gl-letter {
+      display: none;
+    }
+  }
+  dt {
+    font-family: var(--font-display);
+    font-size: 1.14rem;
+    font-weight: 560;
+    line-height: 1.25;
+  }
+  .aka {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+    margin-top: 0.2rem;
+  }
+  dd {
+    margin: 0;
+    font-size: 0.98rem;
+  }
+  .see {
+    display: inline-block;
+    margin-left: 0.4rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+  @media (max-width: 40rem) {
+    .gl-term {
+      grid-template-columns: 1fr;
+    }
+  }
+  .gl-empty {
+    color: var(--ink-2);
+    padding: 1.5rem 0;
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+layout: ../../layouts/Article.astro
+title: Sandboxed agents
+description: Agents that execute untrusted code or read untrusted content should not hold credentials. How credential-injecting egress proxies work, and what they do not solve.
+lede: A sandbox contains what an agent can do to the machine. It does nothing about what the agent can do with a credential it holds. For that, the credential has to stay outside.
+section:
+  label: Deployments
+  href: /deployments/
+---
+
+## The threat
+
+A coding agent clones a repository and runs its test suite. A research agent opens a web page. In both cases the agent has just executed, or taken instructions from, content written by a stranger.
+
+If the agent's environment contains an API key, three things can now happen. The key can be printed into a log or a transcript. It can be sent to a server the attacker controls. Or it can be committed, pasted or otherwise carried out through any channel the agent can write to. Short lifetimes and narrow scopes reduce the damage. They do not prevent the leak.
+
+The more complete answer is architectural: put the agent somewhere it can *use* access without being able to *read* the credential that grants it.
+
+## The pattern
+
+1. The agent runs in a sandbox with no route to the network except through a proxy it does not control.
+2. Real credentials live in a vault next to that proxy, each scoped to the hosts it may be sent to.
+3. The sandbox gets nothing, or an opaque placeholder.
+4. On each outbound request the proxy checks the destination against an allow-list and, if a credential is scoped to that host, attaches it on the way out.
+
+The step-by-step version, including what happens when an injected instruction tries to exfiltrate the key, is on the [credential broker flow](/flows/credential-broker/).
+
+## Design choices that matter
+
+**Scope every credential to hosts.** A credential that the proxy will attach to any request can be aimed at a server that echoes headers back. The allowed-hosts list is the control.
+
+**Inject into headers and bodies, not URLs.** URLs end up in logs, referrers and error messages on the far side.
+
+**The proxy terminates TLS.** It has to, in order to add a header. The sandbox must therefore trust the proxy's certificate authority, and the proxy becomes the most sensitive component in the system. Treat it accordingly.
+
+**Deny by default.** An allow-list of destinations limits where data can go even when no credential is involved.
+
+**Scope credentials to an execution where you can.** A sandbox that is reused across tasks should not accumulate the authority of every task it has run. Minting a credential per run and revoking it at exit bounds the exposure.
+
+## Where it is implemented
+
+There is no standard for this pattern. These are implementations and building blocks, described as their own documentation describes them.
+
+| Implementation | Approach |
+| --- | --- |
+| Claude Managed Agents vaults | Credentials are attached to a session by reference and never enter the sandbox. Calls to MCP servers and git go through proxies that add the credential; environment-variable secrets appear as placeholders that are substituted at egress, only for their allowed hosts, and only in headers and bodies |
+| Fly.io Tokenizer (open source) | The client holds a secret *encrypted to the proxy's key* and sends it with the request. Only the proxy can open it, and the sealed value carries its own rule for which hosts it may go to |
+| agentgateway (open source) | An egress-proxy mode with destination allow-listing and optional TLS termination, plus backend authentication policies that attach or exchange credentials |
+| Agent Router (open source) | Per-backend credential injection for MCP servers, with a policy for whether a caller-supplied token may override it |
+| Kubernetes Agent Sandbox | No built-in broker. Sandboxes created from a template get no ServiceAccount token and a restrictive network policy; an example shows per-execution gateway tokens that are revoked when the process exits |
+
+Hosted sandbox products and several newer open-source proxies offer the same idea. The landscape is moving fast enough that a list here would be out of date; the design choices above are the questions to ask of any of them.
+
+## What it does not solve
+
+**Misuse of live access.** While the sandbox runs, a hijacked agent can make any call the allow-list and credentials permit. If it may write to your repository, it can write something harmful. Injection stops the credential leaving; it does not make the agent trustworthy.
+
+**What the agent may do.** That is authorization, and it belongs at the resource or at a gateway that understands the request: per-tool policy, [transaction-bound approvals](/flows/step-up-authorization/), limits on amounts and rates.
+
+**Data exfiltration through allowed hosts.** If the agent can write to any service on the allow-list, that service is a channel out.
+
+**Format-checking clients.** Some SDKs validate the shape of a key before sending it and will reject a placeholder. A dummy value in the expected format usually works.
+
+## When there is nothing to inject
+
+The best case is a destination that accepts identity instead of a secret. If the sandbox's host platform issues it a signed, short-lived identity token, and the destination trusts that issuer, [workload identity federation](/flows/workload-identity-federation/) gets the agent access with no stored credential anywhere. Injection is for everything that still wants an API key.
+
+## Checklist
+
+<ul class="checklist">
+  <li>The sandbox has no network path that bypasses the proxy.</li>
+  <li>No real credential is present in the sandbox's environment, files or image.</li>
+  <li>Every credential is scoped to named hosts and injected only into headers or bodies.</li>
+  <li>The destination allow-list is default-deny.</li>
+  <li>Credentials are per task or per session where the provider allows it, and revoked at exit.</li>
+  <li>The proxy and vault authenticate each other with workload identity, not a shared secret.</li>
+  <li>Authorization for sensitive actions is enforced outside the sandbox.</li>
+</ul>

@@ -1,0 +1,217 @@
+---
+import Base from '../../layouts/Base.astro';
+import FlowCard from '../../components/FlowCard.astro';
+import { byGroup, flows } from '../../data/flows';
+import { HUMAN_LABEL, MATURITY_LABEL } from '../../data/types';
+
+const groups = byGroup();
+
+/** Who the resulting credential is about, and what the agent proves itself with. */
+const COMPARE: Record<string, [subject: string, proof: string]> = {
+  'authorization-code-pkce': ['User', 'PKCE, plus client authentication if confidential'],
+  'mcp-authorization': ['User', 'Client ID metadata URL and PKCE'],
+  'device-authorization': ['User', 'Device code'],
+  'step-up-authorization': ['User, for one action', 'Same as the underlying flow'],
+  ciba: ['User, for one action', 'Signed client assertion'],
+  'url-elicitation': ['User, at the third party', 'Nothing: the server holds the grant'],
+  'token-exchange': ['User, with the actor named', 'Client authentication and the token it received'],
+  'cross-app-access': ['User', 'A grant issued by the identity provider'],
+  'identity-chaining': ['User or agent, mapped per domain', 'A signed grant from the home domain'],
+  'transaction-tokens': ['User and transaction', 'Workload identity'],
+  'client-credentials': ['Agent', 'Signed assertion or client secret'],
+  'workload-identity-federation': ['Agent, as a workload', 'A token issued by the platform'],
+  'spiffe-workload-identity': ['Agent, as a workload', 'Certificate obtained by attestation'],
+  'wimse-workload-tokens': ['Agent, as a workload', 'Key-bound token and per-request proof'],
+  'agent-to-agent': ['Whatever the token says', 'A scheme declared in the Agent Card'],
+  'web-bot-auth': ['Agent operator', 'HTTP message signature'],
+  'agent-payments': ['User’s signed intent', 'A key named in the mandate'],
+  dpop: ['Unchanged', 'A signed proof on every request'],
+  'credential-broker': ['Unchanged', 'Nothing: the proxy holds the secret'],
+};
+for (const f of flows) {
+  if (!COMPARE[f.slug]) throw new Error(`flows/index: add "${f.slug}" to COMPARE`);
+}
+
+const filters = [
+  { id: 'all', label: 'All flows' },
+  { id: 'present', label: 'Human present' },
+  { id: 'reachable', label: 'Human reachable' },
+  { id: 'absent', label: 'No human' },
+];
+---
+
+<Base
+  title="Flows"
+  description="Step-by-step interactive walkthroughs of every way an AI agent can authenticate and be authorized, from OAuth with a human at the keyboard to workload identity with no human at all."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Flows</p>
+      <h1>Every way an agent gets access</h1>
+      <p class="lede">
+        {flows.length} flows, each as a sequence diagram you can step through. They are grouped by the question that
+        matters most when choosing between them: is there a person involved, and when?
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap fl">
+    <fieldset class="fl-filter">
+      <legend class="visually-hidden">Filter by human involvement</legend>
+      {
+        filters.map((f, i) => (
+          <label>
+            <input type="radio" name="human" value={f.id} checked={i === 0} />
+            <span>{f.label}</span>
+          </label>
+        ))
+      }
+    </fieldset>
+
+    {
+      groups.map((g) => (
+        <section class="fl-group" aria-labelledby={`g-${g.id}`}>
+          <div class="section-head">
+            <h2 id={`g-${g.id}`}>{g.title}</h2>
+            <p>{g.blurb}</p>
+          </div>
+          <div class="grid">
+            {g.flows.map((f) => (
+              <div class="fl-cell" data-human={f.human}>
+                <FlowCard flow={f} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <section class="fl-table" aria-labelledby="compare">
+      <div class="section-head">
+        <h2 id="compare">Side by side</h2>
+        <p>Who the token is about, and what proves it.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Flow</th>
+              <th>Human</th>
+              <th>Token subject</th>
+              <th>Agent proves itself with</th>
+              <th>Maturity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              flows.map((f) => (
+                <tr>
+                  <td>
+                    <a href={`/flows/${f.slug}/`}>{f.short}</a>
+                  </td>
+                  <td>{HUMAN_LABEL[f.human].replace('Human ', '').replace('With or without a human', 'Either')}</td>
+                  <td>{COMPARE[f.slug][0]}</td>
+                  <td>{COMPARE[f.slug][1]}</td>
+                  <td>{MATURITY_LABEL[f.maturity]}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .fl {
+    padding-top: 1.6rem;
+  }
+  .fl-filter {
+    border: 0;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    position: sticky;
+    top: 3.6rem;
+    z-index: 5;
+    background: var(--paper);
+    padding-block: 0.7rem;
+  }
+  .fl-filter label {
+    cursor: pointer;
+  }
+  .fl-filter input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .fl-filter span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.55rem 0.9rem;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 999px;
+    color: var(--ink-2);
+  }
+  .fl-filter label:hover span {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .fl-filter input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .fl-filter input:focus-visible + span {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+  }
+
+  .fl-group {
+    padding-block: 1.8rem;
+    border-top: 1px solid var(--rule);
+  }
+  .fl-group:first-of-type {
+    border-top: 0;
+  }
+  .fl-group h2 {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+  .fl-cell {
+    display: grid;
+  }
+
+  /* CSS-only filter. "any" flows always show. */
+  .fl:has(input[value='present']:checked) .fl-cell:not([data-human='present'], [data-human='any']),
+  .fl:has(input[value='reachable']:checked) .fl-cell:not([data-human='reachable'], [data-human='any']),
+  .fl:has(input[value='absent']:checked) .fl-cell:not([data-human='absent'], [data-human='any']) {
+    display: none;
+  }
+  .fl:has(input[value='present']:checked) .fl-group:not(:has(.fl-cell:is([data-human='present'], [data-human='any']))),
+  .fl:has(input[value='reachable']:checked)
+    .fl-group:not(:has(.fl-cell:is([data-human='reachable'], [data-human='any']))),
+  .fl:has(input[value='absent']:checked) .fl-group:not(:has(.fl-cell:is([data-human='absent'], [data-human='any']))) {
+    display: none;
+  }
+
+  .fl-table {
+    padding-block: 2rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .fl-table h2 {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+  .fl-table td:first-child {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+layout: ../../layouts/Article.astro
+title: Managed agent platforms
+description: What cloud providers, identity vendors and model platforms offer for agent identity and authorization, and the questions to ask of any of them.
+lede: During 2026 most large cloud and identity vendors shipped something they call agent identity. Underneath the product names they are assembling the same few standard parts.
+section:
+  label: Deployments
+  href: /deployments/
+---
+
+<div class="callout">
+  <p class="callout-title">How to read this page</p>
+  <p>
+    This is a survey compiled from vendor documentation and announcements, reviewed in November 2026. Nothing here was
+    tested, product names change, and features move between preview and general availability month to month. Use it
+    to learn what to look for, then read the vendor’s current documentation.
+  </p>
+</div>
+
+## What a platform should give you
+
+Six capabilities separate an agent identity product from a renamed service account.
+
+| Capability | Why it matters |
+| --- | --- |
+| An identity per agent | So two agents are distinguishable in policy and in logs, and one can be shut off without the other |
+| A credential the agent does not store | The platform attests to the agent; there is no secret to leak |
+| Delegation that records the actor | Tokens for user-delegated work name both the user and the agent, not the user alone |
+| A vault for downstream tokens | Refresh tokens for third-party services stay with the platform; the agent gets short-lived access |
+| Central policy and consent | An administrator, not each end user, decides which agents reach which systems |
+| A lifecycle | Agents are registered, owned, reviewed and removed like any other identity |
+
+Most products deliver some of these well and the rest partially. The table is a way to see which.
+
+## Cloud providers
+
+**AWS: Amazon Bedrock AgentCore Identity.** Each agent gets a workload identity in a directory. The agent presents a workload token to the identity service and receives outbound credentials from a token vault: OAuth access tokens, either user-delegated or client-credentials, or API keys. Inbound requests are validated against your identity provider's tokens or with IAM. In 2026 AWS added an on-behalf-of exchange that turns a user's token into a narrower one carrying both the user's and the agent's identity.
+
+**Microsoft: Entra Agent ID.** Agents become first-class directory objects, with an unusual structure. A **blueprint** holds the credentials. An **agent identity** created from it has none of its own; the blueprint's credential is used to get tokens for it. In delegated flows the token's subject is the human and the actor is the agent identity; in autonomous flows the agent identity is the subject. An optional **agent user** exists for systems that insist on a user account.
+
+**Google Cloud: Agent Identity.** Each deployed agent gets a SPIFFE ID and an automatically rotated X.509 certificate, and is an IAM principal in its own right, not a service account. This is the closest of the three to the IETF position that agents are workloads.
+
+All three converge on the same model: a workload identity for the agent, exchanged for scoped, short-lived credentials, with the user's identity carried separately. The flows are [workload identity federation](/flows/workload-identity-federation/) and [token exchange](/flows/token-exchange/).
+
+## Identity providers
+
+**Okta.** Cross App Access is Okta's name for the [ID-JAG](/flows/cross-app-access/) pattern: the enterprise identity provider issues a grant that another application's authorization server exchanges for an access token, so administrators govern which agents connect to which apps. A separate offering covers registering, discovering and governing agents.
+
+**Auth0.** Auth0 for AI Agents bundles four pieces: user authentication; a token vault that holds users' third-party tokens and exchanges the agent's token for them on demand; asynchronous authorization through [CIBA](/flows/ciba/); and relationship-based authorization for filtering what retrieval returns to each user.
+
+**Keycloak.** The open-source option, and a useful reality check on what is implementable today. In the 26.x line, standard token exchange and DPoP are supported. The JWT authorization grant and federated client authentication, including with Kubernetes ServiceAccount tokens, became supported in 26.6. Client ID Metadata Documents and ID-JAG are experimental, the latter only in the receiving role. Token-exchange delegation with the `act` claim is in preview, with agents named as the use case.
+
+**HashiCorp Vault.** Version 2.x adds, in the Enterprise edition, an agent registry and a mode in which Vault acts as an OAuth resource server: a registered agent's OAuth token authorizes requests directly, with fine-grained scoping expressed as [Rich Authorization Requests](/flows/step-up-authorization/). Vault can also authenticate callers by SPIFFE identity.
+
+## At the edge
+
+**Cloudflare** approaches from the network. MCP server portals put many MCP servers behind one access-controlled endpoint with per-user identity from your identity provider and central logging. Its access product can act as the OAuth provider in front of an MCP server. And it is a principal backer of [Web Bot Auth](/flows/web-bot-auth/), under which it classifies cryptographically signed agents separately from anonymous bots.
+
+## Model platforms' hosted agents
+
+**Anthropic.** Claude Managed Agents keep credentials in vaults that are attached to a session by reference. The documented design is that credentials never enter the sandbox: calls to MCP servers and git go through proxies that add them, and environment-variable secrets appear inside as placeholders, replaced at egress only for their allowed hosts. Vaults store and refresh tokens; you run the consent flow and supply them.
+
+**OpenAI.** For remote MCP servers and connectors used through the API, the developer's application obtains the OAuth access token and supplies it with each request. When ChatGPT itself is the MCP client, it runs the authorization code flow with PKCE on the user's first use of a tool.
+
+Two models, then. In one, the platform holds credentials and injects them. In the other, your application holds them and passes them in. The first keeps secrets out of the agent's reach; the second keeps them out of the platform's. See [sandboxes](/deployments/sandboxes/) for the first in detail.
+
+## Questions to ask
+
+<ul class="checklist">
+  <li>Does each agent get its own identity, or do agents share the application’s?</li>
+  <li>How does the agent prove itself: a platform attestation, or a secret I must store?</li>
+  <li>When the agent acts for a user, does the token name the agent as actor, or only the user?</li>
+  <li>Where are third-party refresh tokens kept, and can the model ever read an access token?</li>
+  <li>Who grants access: each end user, or an administrator through policy?</li>
+  <li>Can I see, and revoke, everything one agent can reach from a single place?</li>
+  <li>What happens to an agent’s access when its owner leaves?</li>
+  <li>Which of this is a published standard, and which works only inside this vendor?</li>
+</ul>
+
+The last question is the one this site exists to help with. The [standards tracker](/standards/) shows which pieces are stable enough to expect interoperability.

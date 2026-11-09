@@ -1,0 +1,459 @@
+---
+import Base from '../../layouts/Base.astro';
+import { questions, rules, cautions, deployLinks, ROLE_TITLE } from '../../data/guide';
+import { flows, flow } from '../../data/flows';
+import { HUMAN_LABEL, MATURITY_LABEL } from '../../data/types';
+
+// fail the build if a rule points at a flow or answer that does not exist
+for (const r of rules) {
+  flow(r.flow);
+  for (const [q, values] of Object.entries(r.when)) {
+    const question = questions.find((x) => x.id === q);
+    if (!question) throw new Error(`guide: unknown question "${q}"`);
+    for (const v of values) {
+      if (!question.options.some((o) => o.value === v)) throw new Error(`guide: unknown answer "${q}=${v}"`);
+    }
+  }
+}
+
+const data = {
+  rules,
+  cautions,
+  deployLinks,
+  roles: ROLE_TITLE,
+  flows: Object.fromEntries(
+    flows.map((f) => [
+      f.slug,
+      { short: f.short, tagline: f.tagline, human: HUMAN_LABEL[f.human], maturity: MATURITY_LABEL[f.maturity] },
+    ]),
+  ),
+};
+---
+
+<Base
+  title="Decision guide"
+  description="Answer six questions about your agent and get the authentication and authorization flows that fit, with reasons."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Decision guide</p>
+      <h1>Which flow fits your agent?</h1>
+      <p class="lede">
+        Six questions. Answer as many as you can; the recommendations update as you go and the address bar keeps your
+        answers, so you can share the result.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <decision-guide class="dg">
+      <form class="dg-questions" aria-label="About your agent">
+        {
+          questions.map((q, i) => (
+            <fieldset>
+              <legend>
+                <span class="dg-num">{i + 1}</span>
+                {q.title}
+              </legend>
+              {q.help && <p class="dg-help">{q.help}</p>}
+              <div class="dg-options">
+                {q.options.map((o) => (
+                  <label>
+                    <input type="radio" name={q.id} value={o.value} />
+                    <span>
+                      <strong>{o.label}</strong>
+                      {o.hint && <em>{o.hint}</em>}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))
+        }
+        <button class="btn small ghost" type="reset">Start over</button>
+      </form>
+
+      <aside class="dg-results" aria-live="polite" aria-label="Recommendations">
+        <p class="dg-kicker">The call</p>
+        <div class="dg-out">
+          <noscript>
+            <p>
+              The guide needs JavaScript to compute recommendations. Without it, the <a href="/flows/"
+                >flows page</a
+              > groups every option by whether a human is involved.
+            </p>
+          </noscript>
+        </div>
+      </aside>
+
+      <script type="application/json" class="dg-data" set:html={JSON.stringify(data)} />
+    </decision-guide>
+  </div>
+</Base>
+
+<script>
+  type Answers = Record<string, string>;
+  interface Rule {
+    flow: string;
+    role: 'start' | 'add' | 'consider';
+    when: Record<string, string[]>;
+    why: string;
+    weight?: number;
+  }
+  interface Data {
+    rules: Rule[];
+    cautions: { when: Record<string, string[]>; text: string }[];
+    deployLinks: Record<string, { href: string; label: string }>;
+    roles: Record<string, string>;
+    flows: Record<string, { short: string; tagline: string; human: string; maturity: string }>;
+  }
+
+  const esc = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  class DecisionGuide extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector<HTMLFormElement>('form')!;
+      const out = this.querySelector<HTMLElement>('.dg-out')!;
+      const data: Data = JSON.parse(this.querySelector('.dg-data')!.textContent!);
+      const names = [...new Set([...form.querySelectorAll<HTMLInputElement>('input[type=radio]')].map((i) => i.name))];
+
+      const read = (): Answers => {
+        const fd = new FormData(form);
+        const a: Answers = {};
+        for (const n of names) {
+          const v = fd.get(n);
+          if (typeof v === 'string') a[n] = v;
+        }
+        return a;
+      };
+
+      // A rule matches when every condition whose question has been answered is satisfied.
+      // It only counts once at least one of its conditions has actually been answered.
+      const matches = (when: Record<string, string[]>, a: Answers, needAll = false) => {
+        let hit = 0;
+        for (const [q, values] of Object.entries(when)) {
+          if (a[q] == null) {
+            if (needAll) return false;
+            continue;
+          }
+          if (!values.includes(a[q])) return false;
+          hit++;
+        }
+        return hit > 0;
+      };
+
+      const render = (push = true) => {
+        const a = read();
+        const answered = Object.keys(a).length;
+
+        if (push) {
+          const qs = new URLSearchParams(a).toString();
+          history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}`);
+        }
+
+        if (answered === 0) {
+          out.innerHTML = `<p class="dg-empty">Pick an answer to any question. Start with the first: it decides whose name ends up on the token.</p>`;
+          return;
+        }
+
+        // best rule per flow; a "start" beats an "add" beats a "consider"
+        const rank = { start: 0, add: 1, consider: 2 } as const;
+        const best = new Map<string, Rule & { specificity: number }>();
+        for (const r of data.rules) {
+          if (!matches(r.when, a)) continue;
+          const specificity = Object.keys(r.when).filter((q) => a[q] != null).length;
+          const prev = best.get(r.flow);
+          if (
+            !prev ||
+            rank[r.role] < rank[prev.role] ||
+            (rank[r.role] === rank[prev.role] && specificity > prev.specificity)
+          ) {
+            best.set(r.flow, { ...r, specificity });
+          }
+        }
+
+        const groups: Record<string, (Rule & { specificity: number })[]> = { start: [], add: [], consider: [] };
+        for (const r of best.values()) groups[r.role].push(r);
+        for (const k of Object.keys(groups)) {
+          groups[k].sort((x, y) => y.specificity - x.specificity || (y.weight ?? 0) - (x.weight ?? 0));
+        }
+
+        let html = '';
+        const total = best.size;
+        html += `<p class="dg-status">${answered} of ${names.length} answered · ${total} ${total === 1 ? 'flow fits' : 'flows fit'}</p>`;
+
+        if (total === 0) {
+          html += `<p class="dg-empty">No flow matches that exact combination. Try relaxing an answer, or browse <a href="/flows/">all flows</a>.</p>`;
+        }
+
+        for (const role of ['start', 'add', 'consider'] as const) {
+          const list = groups[role];
+          if (!list.length) continue;
+          html += `<section class="dg-group dg-${role}"><h2>${esc(data.roles[role])}</h2><ul>`;
+          for (const r of list) {
+            const f = data.flows[r.flow];
+            html += `<li><a class="dg-flow" href="/flows/${r.flow}/"><strong>${esc(f.short)}</strong><span class="dg-meta">${esc(f.human)} · ${esc(f.maturity)}</span></a><p>${esc(r.why)}</p></li>`;
+          }
+          html += `</ul></section>`;
+        }
+
+        const warn = data.cautions.filter((c) => matches(c.when, a, true));
+        if (warn.length) {
+          html += `<section class="dg-group dg-caution"><h2>Watch out</h2><ul>`;
+          for (const c of warn) html += `<li><p>${esc(c.text)}</p></li>`;
+          html += `</ul></section>`;
+        }
+
+        const dep = a.runtime ? data.deployLinks[a.runtime] : undefined;
+        if (dep) {
+          html += `<p class="dg-deploy">Deployment notes: <a href="${dep.href}">${esc(dep.label)} →</a></p>`;
+        }
+
+        out.innerHTML = html;
+      };
+
+      // restore from URL
+      const params = new URLSearchParams(location.search);
+      for (const n of names) {
+        const v = params.get(n);
+        if (!v) continue;
+        const input = form.querySelector<HTMLInputElement>(`input[name="${n}"][value="${CSS.escape(v)}"]`);
+        if (input) input.checked = true;
+      }
+      render(false);
+
+      form.addEventListener('change', () => render());
+      form.addEventListener('reset', () => setTimeout(() => render(), 0));
+      // clicking a selected option again clears it
+      form.addEventListener('click', (e) => {
+        const input = (e.target as Element).closest('label')?.querySelector<HTMLInputElement>('input[type=radio]');
+        if (!input) return;
+        if (input.dataset.was === 'true') {
+          e.preventDefault();
+          setTimeout(() => {
+            input.checked = false;
+            input.dataset.was = 'false';
+            render();
+          }, 0);
+        } else {
+          form.querySelectorAll<HTMLInputElement>(`input[name="${input.name}"]`).forEach((i) => (i.dataset.was = 'false'));
+          input.dataset.was = 'true';
+        }
+      });
+      form.querySelectorAll<HTMLInputElement>('input:checked').forEach((i) => (i.dataset.was = 'true'));
+    }
+  }
+  customElements.define('decision-guide', DecisionGuide);
+</script>
+
+<style>
+  .dg {
+    display: grid;
+    gap: 2rem 3rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    padding-top: clamp(1.6rem, 4vw, 2.6rem);
+  }
+  @media (min-width: 62rem) {
+    .dg {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    }
+    .dg-results {
+      position: sticky;
+      top: 4.6rem;
+      max-height: calc(100dvh - 5.4rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+  }
+
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.9rem;
+  }
+  legend {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--font-display);
+    font-size: 1.32rem;
+    font-weight: 560;
+    line-height: 1.2;
+    padding: 0;
+    margin-bottom: 0.3rem;
+  }
+  .dg-num {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  fieldset:has(input:checked) .dg-num {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: var(--paper);
+  }
+  .dg-help {
+    margin: 0 0 0.3rem 2.4rem;
+    font-size: 0.92rem;
+    color: var(--ink-2);
+  }
+  .dg-options {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr));
+    margin-top: 0.7rem;
+  }
+  .dg-options label {
+    cursor: pointer;
+    display: grid;
+  }
+  .dg-options input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dg-options span {
+    display: block;
+    padding: 0.65rem 0.85rem;
+    background: var(--chalk);
+    border: 1.5px solid var(--rule);
+    border-radius: var(--radius);
+    transition:
+      border-color 0.12s,
+      background 0.12s;
+  }
+  .dg-options strong {
+    display: block;
+    font-size: 0.96rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .dg-options em {
+    display: block;
+    font-style: normal;
+    font-size: 0.8rem;
+    color: var(--ink-2);
+    line-height: 1.35;
+    margin-top: 0.15rem;
+  }
+  .dg-options label:hover span {
+    border-color: var(--ink);
+  }
+  .dg-options input:checked + span {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .dg-options input:checked + span em {
+    color: color-mix(in srgb, var(--paper) 75%, transparent);
+  }
+  .dg-options input:focus-visible + span {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+  }
+
+  .dg-results {
+    background: var(--chalk);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.3rem 1.3rem;
+  }
+  .dg-kicker {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.5rem;
+    font-weight: 560;
+    margin: 0 0 0.4rem;
+  }
+  .dg-out :global(.dg-status) {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.4rem;
+  }
+  .dg-out :global(.dg-empty) {
+    color: var(--ink-2);
+    margin: 0.4rem 0 0;
+  }
+  .dg-out :global(.dg-group) {
+    margin-top: 1.1rem;
+  }
+  .dg-out :global(.dg-group h2) {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 0.2rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1.5px solid var(--ink);
+    color: var(--ink);
+  }
+  .dg-out :global(.dg-start h2) {
+    color: var(--grass);
+    border-color: var(--grass);
+  }
+  .dg-out :global(.dg-caution h2) {
+    color: var(--clay);
+    border-color: var(--clay);
+  }
+  .dg-out :global(ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dg-out :global(li) {
+    margin: 0;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .dg-out :global(li:last-child) {
+    border-bottom: 0;
+    padding-bottom: 0.2rem;
+  }
+  .dg-out :global(.dg-flow) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.1rem 0.8rem;
+    text-decoration: none;
+  }
+  .dg-out :global(.dg-flow strong) {
+    font-family: var(--font-display);
+    font-size: 1.16rem;
+    font-weight: 560;
+    text-decoration: underline;
+    text-decoration-color: var(--clay);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.18em;
+  }
+  .dg-out :global(.dg-meta) {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .dg-out :global(li p) {
+    margin: 0.25rem 0 0;
+    font-size: 0.93rem;
+    line-height: 1.5;
+  }
+  .dg-out :global(.dg-deploy) {
+    margin: 1.1rem 0 0;
+    padding-top: 0.8rem;
+    border-top: 1.5px solid var(--ink);
+    font-size: 0.93rem;
+  }
+</style>
