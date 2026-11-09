@@ -722,7 +722,7 @@ export const standards: Standard[] = [
     ref: 'agentgateway 1.x',
     body: 'Linux Foundation',
     status: 'project',
-    detail: 'Version 1.7 in October 2026. Hosted by the Agentic AI Foundation since June 2026.',
+    detail: 'Version 1.7 in October 2026. A Linux Foundation project, reported to have joined the Agentic AI Foundation in June 2026.',
     topics: ['kubernetes', 'authorization', 'agent-protocol'],
     summary: 'An open-source proxy for model, MCP and A2A traffic. It can act as an MCP resource server, call an external policy engine per tool call, perform token exchange and ID-JAG, and run as an egress proxy.',
     agents: 'A concrete place to enforce much of what this site describes without changing agent code.',

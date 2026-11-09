@@ -10,6 +10,7 @@
 import { Code } from 'astro:components';
 import type { Flow, StepKind } from '../data/types';
 import { block, inline } from '../lib/md';
+import { codeThemes } from '../lib/code-themes.mjs';
 
 interface Props {
   flow: Flow;
@@ -248,7 +249,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
               <Code
                 code={r.s.code.text.trim()}
                 lang={r.s.code.lang as any}
-                themes={{ light: 'vitesse-light', dark: 'vitesse-dark' }}
+                themes={codeThemes as any}
                 defaultColor={false}
               />
             )}

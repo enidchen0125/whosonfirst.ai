@@ -37,7 +37,7 @@ This is identification, not authorization. A valid signature says “this reques
       kind: 'self',
       label: 'Publish key directory',
       title: 'The operator publishes its public keys',
-      body: `A key directory in JWKS format, served over HTTPS from a well-known path on a domain the operator controls. That domain is the agent’s identity.`,
+      body: `A key directory in JWKS format, served over HTTPS from a well-known path on a domain the operator controls. That domain is the agent’s identity. The path and media type shown are those used in the drafts to date.`,
       code: {
         lang: 'http',
         text: `GET /.well-known/http-message-signatures-directory HTTP/1.1

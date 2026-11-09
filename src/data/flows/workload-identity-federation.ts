@@ -36,7 +36,7 @@ The agent’s credential is now a fact about where it is running, attested by in
       kind: 'back',
       label: 'Mount projected token',
       title: 'The kubelet delivers an identity token to the pod',
-      body: `The pod spec asks for a projected service account token with a chosen audience and lifetime. The kubelet obtains it from the API server’s TokenRequest API and writes it to a file in the pod. The token is bound to this pod: when the pod is deleted, the token stops validating. The kubelet replaces it before it expires.`,
+      body: `The pod spec asks for a projected service account token with a chosen audience and lifetime. The kubelet obtains it from the API server’s TokenRequest API and writes it to a file in the pod. The token is bound to this pod: once the pod is deleted, the API server no longer accepts it. The kubelet replaces the file before the token expires.`,
       code: {
         lang: 'yaml',
         text: `volumes:

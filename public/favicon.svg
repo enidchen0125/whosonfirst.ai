@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <style>
-    .p { fill: #f7f3ea } .i { stroke: #18212b } .c { fill: #b4421f; stroke: #b4421f }
+    .p { fill: #f7f3ea } .i { stroke: #18212b } .c { fill: #a43a1a; stroke: #a43a1a }
     @media (prefers-color-scheme: dark) { .p { fill: #0e141a } .i { stroke: #ebe5d6 } .c { fill: #f0865c; stroke: #f0865c } }
   </style>
   <path class="i" d="M16 3.5 28.5 16 16 28.5 3.5 16Z" fill="none" stroke-width="1.8" stroke-linejoin="round"/>

@@ -13,12 +13,12 @@
   --chalk: light-dark(#fffdf8, #121a22);
   --ink: light-dark(#18212b, #ebe5d6);
   --ink-2: light-dark(#4a5562, #a8b2bc);
-  --ink-3: light-dark(#6f7a86, #7d8893);
+  --ink-3: light-dark(#5d6873, #8a949e);
   --rule: light-dark(#d9d0bc, #283440);
   --rule-strong: light-dark(#b9ae95, #3b4958);
 
   /* role colours */
-  --clay: light-dark(#b4421f, #f0865c);
+  --clay: light-dark(#a43a1a, #f0865c);
   --clay-soft: light-dark(#f4dfd3, #3a221a);
   --sky: light-dark(#24588a, #7fb8ea);
   --sky-soft: light-dark(#d9e5f0, #14273a);
@@ -26,7 +26,7 @@
   --plum-soft: light-dark(#e8deef, #271c34);
   --grass: light-dark(#2c6a47, #72c494);
   --grass-soft: light-dark(#dbe9dd, #16291f);
-  --ochre: light-dark(#8a6410, #dbb657);
+  --ochre: light-dark(#7a570c, #dbb657);
   --ochre-soft: light-dark(#f0e5c6, #2c2410);
 
   --font-display: 'Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;

@@ -227,8 +227,10 @@ const data = {
       form.addEventListener('reset', () => setTimeout(() => render(), 0));
       // clicking a selected option again clears it
       form.addEventListener('click', (e) => {
-        const input = (e.target as Element).closest('label')?.querySelector<HTMLInputElement>('input[type=radio]');
-        if (!input) return;
+        // A click on a label is followed by a synthesized click on its input.
+        // Handle only that second event, so each selection is processed once.
+        const input = e.target;
+        if (!(input instanceof HTMLInputElement) || input.type !== 'radio') return;
         if (input.dataset.was === 'true') {
           e.preventDefault();
           setTimeout(() => {

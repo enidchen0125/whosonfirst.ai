@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found" description="That page does not exist.">
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">404</p>
+      <h1>I don’t know. Third base.</h1>
+      <p class="lede">There is no page at this address. It may have moved, or the link may be wrong.</p>
+      <p class="go">
+        <a class="btn primary" href="/">Home</a>
+        <a class="btn" href="/flows/">All flows</a>
+        <a class="btn" href="/standards/">Standards tracker</a>
+      </p>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .go {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1.6rem 0 0;
+  }
+</style>

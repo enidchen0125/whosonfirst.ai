@@ -13,7 +13,7 @@ export const agentToAgent: Flow = {
 
 The declaration lives in the **Agent Card**, a JSON document published at a well-known URL. It lists security schemes in a form borrowed from OpenAPI: API key, HTTP bearer, OAuth 2.0, OpenID Connect, or mutual TLS. The calling agent reads the card, gets a matching credential by whatever means apply, and sends it on every request in an HTTP header.
 
-Version 1.0 added two things that matter for trust. Agent Cards can be signed, so a caller can check that a card was issued by who it claims. And there is a defined task state for the moment a remote agent needs further authorization partway through the work.`,
+Two parts of version 1.0 matter for trust. Agent Cards can be signed, so a caller can check that a card was issued by who it claims. And there is a defined task state for the moment a remote agent needs further authorization partway through the work.`,
   fits: [
     'Agents from different teams or vendors delegating tasks to one another.',
     'Remote agents that are opaque: you see their card and their results, not their tools.',
@@ -144,7 +144,7 @@ Version 1.0 added two things that matter for trust. Agent Cards can be signed, s
   notes: [
     {
       title: 'A2A and MCP',
-      body: `The two protocols are complementary: MCP connects an agent to tools, A2A connects agents to each other. Both are now hosted by the same foundation, and both lean on OAuth. The difference in their security models is one of emphasis. MCP specifies a complete discovery and authorization profile. A2A specifies how requirements are declared and stops there.`,
+      body: `The two protocols are complementary: MCP connects an agent to tools, A2A connects agents to each other. Both are Linux Foundation projects, and both lean on OAuth. The difference in their security models is one of emphasis. MCP specifies a complete discovery and authorization profile. A2A specifies how requirements are declared and stops there.`,
     },
   ],
 };
