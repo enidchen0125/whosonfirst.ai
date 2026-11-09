@@ -1,0 +1,294 @@
+---
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/fraunces/opsz-italic.css';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/400-italic.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+import { REVIEWED } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const SITE = "Who's on First";
+const { title, description = 'A field guide to authentication and authorization for AI agents: the flows, the deployments, and the standards — with and without a human in the loop.' } = Astro.props;
+const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — auth for AI agents`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const nav = [
+  { href: '/concepts/', label: 'Concepts' },
+  { href: '/flows/', label: 'Flows' },
+  { href: '/deployments/', label: 'Deployments' },
+  { href: '/standards/', label: 'Standards' },
+  { href: '/guide/', label: 'Decision guide' },
+  { href: '/glossary/', label: 'Glossary' },
+];
+const path = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e141a" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      (() => {
+        try {
+          const t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a class="brand" href="/" aria-label="Who's on First — home">
+          <Logo />
+          <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            {
+              nav.map((item) => (
+                <li>
+                  <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        <button class="theme" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+            <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <div>
+          <a class="brand" href="/">
+            <Logo size={22} />
+            <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
+          </a>
+          <p>
+            A field guide to authentication and authorization for AI agents. Who is acting, on whose behalf, and
+            who said they could.
+          </p>
+        </div>
+        <ul>
+          {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+          <li><a href="/about/">About</a></li>
+        </ul>
+        <p class="fine">
+          Standards status last reviewed {REVIEWED}. Drafts move quickly: check the linked source before you build
+          on one.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const btn = document.querySelector<HTMLButtonElement>('.theme');
+      btn?.addEventListener('click', () => {
+        const root = document.documentElement;
+        const current =
+          root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch {}
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: 0.5rem;
+    top: -4rem;
+    z-index: 100;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+  }
+  .skip:focus {
+    top: 0.5rem;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    min-height: 3.5rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    text-decoration: none;
+    color: var(--ink);
+    margin-right: auto;
+    padding-block: 0.6rem;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.16rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .tld {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--clay);
+    margin-left: 0.1em;
+  }
+  nav ul {
+    display: flex;
+    gap: 0.2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav li {
+    margin: 0;
+  }
+  nav a {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-2);
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--radius);
+    white-space: nowrap;
+  }
+  nav a:hover {
+    color: var(--ink);
+    background: var(--paper-2);
+  }
+  nav a[aria-current='page'] {
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--clay);
+    border-radius: 0;
+  }
+  .theme {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    flex: none;
+  }
+  .theme:hover {
+    background: var(--paper-2);
+  }
+
+  @media (max-width: 62rem) {
+    .bar {
+      padding-bottom: 0;
+    }
+    nav {
+      order: 3;
+      width: calc(100% + 2 * var(--gutter));
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: calc(var(--gutter) - 0.6rem);
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-top: 1px solid var(--rule);
+    }
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+    margin-top: clamp(3rem, 8vw, 6rem);
+    padding-block: 2.5rem 2rem;
+    font-size: 0.92rem;
+    color: var(--ink-2);
+  }
+  .foot {
+    display: grid;
+    gap: 1.5rem 3rem;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+  .foot p {
+    max-width: 30rem;
+    margin: 0.4rem 0 0;
+  }
+  .foot ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    columns: 2;
+    column-gap: 2rem;
+  }
+  .foot .fine {
+    grid-column: 1 / -1;
+    max-width: none;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 40rem) {
+    .foot {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

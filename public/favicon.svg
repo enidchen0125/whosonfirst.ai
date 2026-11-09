@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .p { fill: #f7f3ea } .i { stroke: #18212b } .c { fill: #b4421f; stroke: #b4421f }
+    @media (prefers-color-scheme: dark) { .p { fill: #0e141a } .i { stroke: #ebe5d6 } .c { fill: #f0865c; stroke: #f0865c } }
+  </style>
+  <path class="i" d="M16 3.5 28.5 16 16 28.5 3.5 16Z" fill="none" stroke-width="1.8" stroke-linejoin="round"/>
+  <rect class="p i" x="13.6" y="1.1" width="4.8" height="4.8" transform="rotate(45 16 3.5)" stroke-width="1.5"/>
+  <rect class="p i" x="1.1" y="13.6" width="4.8" height="4.8" transform="rotate(45 3.5 16)" stroke-width="1.5"/>
+  <rect class="p i" x="13.6" y="26.1" width="4.8" height="4.8" transform="rotate(45 16 28.5)" stroke-width="1.5"/>
+  <rect class="c" x="25.2" y="12.7" width="6.6" height="6.6" transform="rotate(45 28.5 16)" stroke-width="1.5"/>
+</svg>

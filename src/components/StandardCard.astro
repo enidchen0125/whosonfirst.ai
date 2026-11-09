@@ -1,0 +1,59 @@
+---
+import type { Standard } from '../data/types';
+import { STATUS_LABEL, STATUS_TONE } from '../data/types';
+import { inline } from '../lib/md';
+
+interface Props {
+  standard: Standard;
+  compact?: boolean;
+}
+const { standard: s, compact = false } = Astro.props;
+---
+
+<article class:list={['std', { compact }]}>
+  <header>
+    <span class="chip" data-tone={STATUS_TONE[s.status]}>{STATUS_LABEL[s.status]}</span>
+    <span class="ref">{s.ref}</span>
+  </header>
+  <h4><a href={`/standards/#${s.id}`}>{s.name}</a></h4>
+  <p set:html={inline(compact ? s.agents : s.summary)} />
+</article>
+
+<style>
+  .std {
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem 0.95rem;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    margin-bottom: 0.45rem;
+  }
+  .ref {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-2);
+    word-break: break-word;
+  }
+  h4 {
+    margin: 0 0 0.25rem;
+    font-size: 1.05rem;
+  }
+  h4 a {
+    text-decoration: none;
+  }
+  h4 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--clay);
+  }
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.48;
+    color: var(--ink-2);
+  }
+</style>

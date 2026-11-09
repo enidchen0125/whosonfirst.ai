@@ -1,0 +1,22 @@
+{
+  "name": "whosonfirst-ai",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A field guide to authentication and authorization for AI agents.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/mdx": "^8.1.3",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "astro": "^7.4.8",
+    "typescript": "^6.0.3"
+  }
+}

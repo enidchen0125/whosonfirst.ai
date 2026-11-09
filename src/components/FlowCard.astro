@@ -1,0 +1,29 @@
+---
+import type { Flow } from '../data/types';
+import { HUMAN_LABEL, HUMAN_TONE, MATURITY_LABEL } from '../data/types';
+
+interface Props {
+  flow: Flow;
+}
+const { flow: f } = Astro.props;
+---
+
+<a class="card flow-card" href={`/flows/${f.slug}/`}>
+  <h3>{f.short}</h3>
+  <p>{f.tagline}</p>
+  <div class="chips">
+    <span class="chip" data-tone={HUMAN_TONE[f.human]}>{HUMAN_LABEL[f.human]}</span>
+    <span class="chip">{MATURITY_LABEL[f.maturity]}</span>
+  </div>
+</a>
+
+<style>
+  .flow-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .flow-card .chips {
+    margin-top: auto;
+    padding-top: 0.9rem;
+  }
+</style>

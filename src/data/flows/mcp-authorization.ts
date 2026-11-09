@@ -1,0 +1,264 @@
+import type { Flow } from '../types';
+
+export const mcpAuthorization: Flow = {
+  slug: 'mcp-authorization',
+  title: 'MCP authorization',
+  short: 'MCP authorization',
+  group: 'human-present',
+  human: 'present',
+  maturity: 'stable',
+  tagline:
+    'How an MCP client that has never seen a server before discovers where to sign in, identifies itself, and gets a token good for that server alone.',
+  summary: `The Model Context Protocol has a problem classic OAuth never had to solve: any client may meet any server, with no prior arrangement. A user pastes in a server URL, and the client has to work out which authorization server protects it, introduce itself to that server, and obtain a token, all at runtime.
+
+MCP answers this with a profile of OAuth 2.1 plus three discovery steps. The MCP server is an OAuth **resource server**. It points to its authorization server through protected resource metadata. The client identifies itself with a URL that the authorization server can fetch, called a Client ID Metadata Document, instead of registering in advance. Every token is bound to one MCP server through the \`resource\` parameter.
+
+This page describes the **2026-07-28** revision of the specification. Authorization is optional in MCP and applies to HTTP transports; a server launched over stdio takes its credentials from its environment.`,
+  fits: [
+    'Remote MCP servers that act on a user’s data.',
+    'Clients and servers that have no prior relationship.',
+    'A person is present to complete a browser sign-in on first connection.',
+  ],
+  watchOut: [
+    '**Token passthrough is forbidden.** An MCP server must only accept tokens issued for itself, and must not forward the token it received to an upstream API. If it needs upstream access it gets its own token.',
+    'Dynamic Client Registration is deprecated as of 2026-07-28 and kept only for compatibility. New clients should use Client ID Metadata Documents; new authorization servers should support them.',
+    'Client credentials must be stored per issuer and never reused with a different authorization server. A server that changes its metadata to point somewhere new is the start of a mix-up attack.',
+    'A Client ID Metadata Document proves control of a URL, not that the software on the user’s machine is the genuine client. Authorization servers must show the redirect host on the consent screen for this reason.',
+    'Scopes are whatever the server defines. The core specification has no per-tool permission model; fine-grained control is left to the server, a gateway, or an external policy engine.',
+  ],
+  participants: [
+    { id: 'user', label: 'User', role: 'human' },
+    { id: 'client', label: 'MCP client', sub: 'Agent host', role: 'agent' },
+    { id: 'as', label: 'Authorization server', role: 'authz' },
+    { id: 'mcp', label: 'MCP server', sub: 'Resource server', role: 'resource' },
+  ],
+  steps: [
+    {
+      from: 'client',
+      to: 'mcp',
+      kind: 'back',
+      label: 'MCP request, no token',
+      title: 'The client calls a server it knows nothing about',
+      body: `The user has added a server URL. The client simply tries a request.`,
+    },
+    {
+      from: 'mcp',
+      to: 'client',
+      kind: 'resp',
+      label: '401 + resource_metadata',
+      title: 'The server says where to look',
+      body: `The \`WWW-Authenticate\` header can carry the URL of the server’s protected resource metadata and the scopes needed for this request. The header is optional. If it is missing, the client constructs the well-known URL itself, trying the path-specific form before the root.`,
+      code: {
+        lang: 'http',
+        text: `HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer
+  resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
+  scope="files:read"`,
+      },
+    },
+    {
+      from: 'client',
+      to: 'mcp',
+      kind: 'back',
+      label: 'Get resource metadata',
+      title: 'The client reads the protected resource metadata',
+      body: `This document (RFC 9728) is the bridge between a resource and its authorization server. It must list at least one entry in \`authorization_servers\`. \`scopes_supported\` is meant to be the minimal set for basic use, not everything the server could ever ask for.`,
+      code: {
+        lang: 'json',
+        text: `{
+  "resource": "https://mcp.example.com/mcp",
+  "authorization_servers": ["https://auth.example.com"],
+  "scopes_supported": ["files:read"],
+  "bearer_methods_supported": ["header"]
+}`,
+      },
+    },
+    {
+      from: 'client',
+      to: 'as',
+      kind: 'back',
+      label: 'Get server metadata',
+      title: 'The client discovers the authorization server',
+      body: `The client fetches OAuth authorization server metadata (RFC 8414) or OpenID Connect discovery; it must support both. Three checks happen here. The \`issuer\` in the document must be identical to the one used to build the URL. \`code_challenge_methods_supported\` must be present, or the client must refuse to continue. And the client looks for \`client_id_metadata_document_supported\` to decide how to identify itself.`,
+      code: {
+        lang: 'json',
+        text: `{
+  "issuer": "https://auth.example.com",
+  "authorization_endpoint": "https://auth.example.com/authorize",
+  "token_endpoint": "https://auth.example.com/token",
+  "code_challenge_methods_supported": ["S256"],
+  "client_id_metadata_document_supported": true,
+  "authorization_response_iss_parameter_supported": true
+}`,
+      },
+    },
+    {
+      from: 'client',
+      kind: 'self',
+      label: 'Choose client ID; PKCE; note issuer',
+      title: 'The client decides who it will say it is',
+      body: `Preference order: credentials pre-registered for this server; otherwise a **Client ID Metadata Document** if the server supports them; otherwise Dynamic Client Registration (deprecated); otherwise ask the user. With a metadata document the \`client_id\` is an HTTPS URL the client’s publisher controls.
+
+The client also creates a PKCE verifier and records the validated issuer alongside it, to check the response against later.`,
+      code: {
+        lang: 'json',
+        text: `// served at https://app.example.com/oauth/client.json
+{
+  "client_id": "https://app.example.com/oauth/client.json",
+  "client_name": "Example Agent",
+  "redirect_uris": ["http://127.0.0.1:3000/callback"],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "token_endpoint_auth_method": "none"
+}`,
+      },
+      gain: [['client', 'code_verifier']],
+    },
+    {
+      from: 'client',
+      to: 'as',
+      kind: 'front',
+      label: 'Authorization request + resource',
+      title: 'The authorization request names the MCP server',
+      body: `Authorization code with PKCE, plus the \`resource\` parameter set to the canonical URI of the MCP server. Clients must send \`resource\` on both the authorization request and the token request, whether or not the authorization server is known to support it.`,
+      code: {
+        lang: 'http',
+        text: `GET /authorize?response_type=code
+  &client_id=https://app.example.com/oauth/client.json
+  &redirect_uri=http://127.0.0.1:3000/callback
+  &scope=files:read
+  &resource=https://mcp.example.com/mcp
+  &code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
+  &code_challenge_method=S256
+  &state=xyzABC123 HTTP/1.1
+Host: auth.example.com`,
+      },
+    },
+    {
+      from: 'as',
+      kind: 'self',
+      label: 'Fetch and check client metadata',
+      title: 'The authorization server looks the client up',
+      body: `Seeing a URL as \`client_id\`, the server fetches it. The \`client_id\` inside the document must match the URL exactly, and the redirect URI in the request must be listed in it. Because this is a server fetching a URL chosen by a stranger, it needs the usual protections against server-side request forgery, and may apply its own policy about which client domains it trusts.`,
+    },
+    {
+      from: 'user',
+      to: 'as',
+      kind: 'front',
+      label: 'Sign in and approve',
+      title: 'The user signs in and consents',
+      body: `The server shows the client’s name from the metadata document and must clearly display the redirect URI’s hostname. A client that redirects only to localhost deserves a warning, since anything on the machine can claim that address.`,
+    },
+    {
+      from: 'as',
+      to: 'client',
+      kind: 'front',
+      label: 'Redirect: code + iss',
+      title: 'The code comes back with the issuer',
+      body: `Authorization servers should include the \`iss\` parameter (RFC 9207), and the specification signals that this will become mandatory.`,
+      code: {
+        lang: 'http',
+        text: `GET /callback?code=SplxlOBeZQQYbYS6WxSbIA
+  &state=xyzABC123
+  &iss=https://auth.example.com HTTP/1.1
+Host: 127.0.0.1:3000`,
+      },
+      gain: [['client', 'authorization code']],
+    },
+    {
+      from: 'client',
+      kind: 'self',
+      label: 'Check iss and state',
+      title: 'The client verifies who answered',
+      body: `Before sending the code anywhere, the client compares \`iss\` with the issuer it recorded, as a plain string comparison. If the server advertised that it sends \`iss\` and none arrived, the client rejects the response. An MCP client deals with many authorization servers, some of them hostile; this check stops one from harvesting codes meant for another.`,
+    },
+    {
+      from: 'client',
+      to: 'as',
+      kind: 'back',
+      label: 'Token request + verifier',
+      title: 'The client redeems the code',
+      body: `With the PKCE verifier and, again, the \`resource\` parameter.`,
+      code: {
+        lang: 'http',
+        text: `POST /token HTTP/1.1
+Host: auth.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=SplxlOBeZQQYbYS6WxSbIA
+&redirect_uri=http://127.0.0.1:3000/callback
+&client_id=https://app.example.com/oauth/client.json
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+&resource=https://mcp.example.com/mcp`,
+      },
+      lose: [
+        ['client', 'authorization code'],
+        ['client', 'code_verifier'],
+      ],
+    },
+    {
+      from: 'as',
+      to: 'client',
+      kind: 'resp',
+      label: 'Access token for this server',
+      title: 'A token for one MCP server',
+      body: `The client stores it against this issuer and this server. A refresh token may or may not be issued; clients must not assume one.`,
+      gain: [['client', 'access token (aud: MCP server)']],
+    },
+    {
+      from: 'client',
+      to: 'mcp',
+      kind: 'back',
+      label: 'MCP request + Bearer token',
+      title: 'The client retries with the token',
+      body: `The token goes in the \`Authorization\` header on every request. As of 2026-07-28 MCP has no sessions and no initialization handshake, so the bearer token is the only thing identifying the caller from one request to the next. The \`Mcp-Method\` and \`Mcp-Name\` headers let a gateway apply per-tool policy without parsing the body.`,
+      code: {
+        lang: 'http',
+        text: `POST /mcp HTTP/1.1
+Host: mcp.example.com
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…
+Mcp-Method: tools/call
+Mcp-Name: search_files
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"search_files","arguments":{"query":"Q3 plan"}}}`,
+      },
+    },
+    {
+      from: 'mcp',
+      to: 'client',
+      kind: 'resp',
+      label: 'Validate audience; result',
+      title: 'The server validates and responds',
+      body: `The server must confirm the token was issued for it and reject anything else. If the tool needs a scope the token lacks, it answers \`403\` with an \`insufficient_scope\` challenge listing everything the operation needs, and the client runs a [step-up](/flows/step-up-authorization/) for the union of old and new scopes.`,
+    },
+  ],
+  standards: [
+    'mcp-authorization',
+    'oauth-2-1',
+    'rfc9728',
+    'rfc8414',
+    'cimd',
+    'rfc8707',
+    'rfc9207',
+    'rfc7591',
+  ],
+  related: ['authorization-code-pkce', 'url-elicitation', 'cross-app-access', 'step-up-authorization'],
+  notes: [
+    {
+      title: 'How the specification got here',
+      body: `**2025-03-26.** First authorization framework. The MCP server doubled as the authorization server.
+
+**2025-06-18.** The MCP server became a resource server. Protected resource metadata and resource indicators became mandatory; token passthrough was prohibited.
+
+**2025-11-25.** Client ID Metadata Documents became the preferred way to identify a client and Dynamic Client Registration became optional. Step-up through \`insufficient_scope\` challenges and URL-mode elicitation were added.
+
+**2026-07-28.** The protocol became stateless. Dynamic Client Registration was deprecated, issuer validation (RFC 9207) was added, client credentials were bound to their issuer, and the client-credentials and enterprise-managed authorization extensions were declared stable.`,
+    },
+    {
+      title: 'When no human is present',
+      body: `The same discovery steps apply to machine-to-machine use. The official **OAuth Client Credentials** extension has the client authenticate with a signed JWT assertion (recommended) or a secret, with pre-registered credentials. See [client credentials](/flows/client-credentials/).`,
+    },
+  ],
+};

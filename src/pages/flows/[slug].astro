@@ -1,0 +1,258 @@
+---
+import Base from '../../layouts/Base.astro';
+import FlowDiagram from '../../components/FlowDiagram.astro';
+import FlowCard from '../../components/FlowCard.astro';
+import StandardCard from '../../components/StandardCard.astro';
+import { flows, related } from '../../data/flows';
+import { std } from '../../data/standards';
+import { GROUPS, HUMAN_LABEL, HUMAN_TONE, MATURITY_LABEL } from '../../data/types';
+import type { Flow } from '../../data/types';
+import { block, inline } from '../../lib/md';
+
+export function getStaticPaths() {
+  return flows.map((flow) => ({ params: { slug: flow.slug }, props: { flow } }));
+}
+
+interface Props {
+  flow: Flow;
+}
+const { flow } = Astro.props;
+const group = GROUPS.find((g) => g.id === flow.group)!;
+const standards = flow.standards.map(std);
+const rel = related(flow);
+const i = flows.indexOf(flow);
+const prev = flows[i - 1];
+const next = flows[i + 1];
+---
+
+<Base title={flow.title} description={flow.tagline}>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow"><a href="/flows/">Flows</a> / {group.title}</p>
+      <h1>{flow.title}</h1>
+      <p class="lede">{flow.tagline}</p>
+      <div class="chips head-chips">
+        <span class="chip" data-tone={HUMAN_TONE[flow.human]}>{HUMAN_LABEL[flow.human]}</span>
+        <span class="chip">{MATURITY_LABEL[flow.maturity]}</span>
+        <span class="chip">{flow.steps.length} steps</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap body">
+    <div class="intro">
+      <div class="prose" set:html={block(flow.summary)} />
+      <aside class="fit">
+        <h2>Use it when</h2>
+        <ul>
+          {flow.fits.map((x) => <li set:html={inline(x)} />)}
+        </ul>
+      </aside>
+    </div>
+
+    <section aria-labelledby="walkthrough">
+      <div class="section-head">
+        <h2 id="walkthrough">Step by step</h2>
+        <p>
+          Use <kbd>←</kbd>
+          <kbd>→</kbd> or click any arrow. The panel tracks which credentials each party holds.
+        </p>
+      </div>
+      <FlowDiagram flow={flow} />
+    </section>
+
+    <section class="cols" aria-label="Cautions and notes">
+      <div>
+        <h2>Watch out for</h2>
+        <ul class="watch">
+          {flow.watchOut.map((x) => <li set:html={inline(x)} />)}
+        </ul>
+      </div>
+      {
+        flow.notes && (
+          <div class="notes">
+            {flow.notes.map((note) => (
+              <>
+                <h2>{note.title}</h2>
+                <div set:html={block(note.body)} />
+              </>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section aria-labelledby="standards">
+      <div class="section-head">
+        <h2 id="standards">Standards in play</h2>
+        <p><a href="/standards/">See the full tracker</a> for status and links.</p>
+      </div>
+      <div class="grid">
+        {standards.map((s) => <StandardCard standard={s} compact />)}
+      </div>
+    </section>
+
+    {
+      rel.length > 0 && (
+        <section aria-labelledby="related">
+          <h2 id="related">Related flows</h2>
+          <div class="grid">
+            {rel.map((f) => (
+              <FlowCard flow={f} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <nav class="pager" aria-label="More flows">
+      {
+        prev ? (
+          <a href={`/flows/${prev.slug}/`}>
+            <span>← Previous</span>
+            {prev.short}
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a class="next" href={`/flows/${next.slug}/`}>
+            <span>Next →</span>
+            {next.short}
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .head-chips {
+    margin-top: 1.3rem;
+  }
+  .body > section {
+    margin-top: clamp(2.5rem, 5vw, 3.75rem);
+  }
+  .body h2 {
+    margin-top: 0;
+    font-size: 1.55rem;
+  }
+  .intro {
+    display: grid;
+    gap: 1.5rem 3rem;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: clamp(1.8rem, 4vw, 2.6rem);
+    align-items: start;
+  }
+  @media (min-width: 60rem) {
+    .intro {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    }
+  }
+  .intro .prose {
+    font-size: 1.08rem;
+  }
+  .fit {
+    background: var(--grass-soft);
+    border: 1px solid var(--grass);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem 0.6rem;
+  }
+  .fit h2 {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--grass);
+    margin-bottom: 0.7rem;
+  }
+  .fit ul {
+    font-size: 0.96rem;
+    padding-left: 1.1em;
+  }
+
+  .section-head kbd {
+    font-size: 0.78rem;
+    border: 1px solid var(--rule-strong);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0 0.35em;
+    background: var(--chalk);
+  }
+
+  .cols {
+    display: grid;
+    gap: 2rem 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  }
+  .watch {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .watch li {
+    position: relative;
+    padding: 0.75rem 0 0.75rem 1.7rem;
+    border-top: 1px solid var(--rule);
+    margin: 0;
+    font-size: 0.98rem;
+  }
+  .watch li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  .watch li::before {
+    content: '!';
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--clay);
+    border: 1.3px solid var(--clay);
+    border-radius: 50%;
+  }
+  .notes h2:not(:first-child) {
+    margin-top: 1.8rem;
+  }
+  .notes {
+    font-size: 0.98rem;
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 3.75rem);
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  .pager a {
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 560;
+    line-height: 1.25;
+  }
+  .pager a span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: 0.3rem;
+  }
+  .pager .next {
+    text-align: right;
+    grid-column: 2;
+  }
+</style>

@@ -1,0 +1,322 @@
+---
+/**
+ * Annotated token examples. Each claim line is a native <details> element, so
+ * the explanations work without JavaScript. The script only adds tabs.
+ */
+import { tokens, CAT_LABEL, CAT_TONE } from '../data/tokens';
+import type { ClaimCat } from '../data/tokens';
+import { hasStd, std } from '../data/standards';
+import { inline } from '../lib/md';
+
+interface Props {
+  /** Limit to these token ids, in this order. */
+  only?: string[];
+}
+const { only } = Astro.props;
+const list = only ? only.map((id) => tokens.find((t) => t.id === id)!) : tokens;
+const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
+---
+
+<token-inspector class="ti">
+  <div class="ti-tabs" role="tablist" aria-label="Token type" hidden>
+    {
+      list.map((t, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`ti-tab-${t.id}`}
+          aria-controls={`ti-${t.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >
+          {t.name}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    list.map((t) => (
+      <section class="ti-panel" id={`ti-${t.id}`} role="tabpanel" aria-labelledby={`ti-tab-${t.id}`}>
+        <header>
+          <h3>{t.name}</h3>
+          <p class="ti-path">{t.path}</p>
+          <p set:html={inline(t.intro)} />
+        </header>
+        <div class="ti-code">
+          {t.lines.map((l) =>
+            l.note ? (
+              <details class={`claim tone-${CAT_TONE[l.cat ?? 'meta']}`} name={`ti-${t.id}`}>
+                <summary style={`--indent:${l.indent ?? 0}`}>
+                  <code>{l.text}</code>
+                </summary>
+                <div class="claim-note" style={`--indent:${l.indent ?? 0}`}>
+                  <span class="claim-cat">{CAT_LABEL[l.cat ?? 'meta']}</span>
+                  <p set:html={inline(l.note)} />
+                </div>
+              </details>
+            ) : (
+              <div class="plain" style={`--indent:${l.indent ?? 0}`}>
+                <code>{l.text}</code>
+              </div>
+            ),
+          )}
+        </div>
+        <footer>
+          {t.flow && (
+            <a class="btn small" href={`/flows/${t.flow}/`}>
+              See the flow →
+            </a>
+          )}
+          <span class="chips">
+            {t.standards.filter(hasStd).map((id) => (
+              <a class="chip" href={`/standards/#${id}`}>
+                {std(id).ref}
+              </a>
+            ))}
+          </span>
+        </footer>
+      </section>
+    ))
+  }
+
+  <ul class="ti-legend" aria-label="Colour key">
+    {
+      cats.map((c) => (
+        <li class={`tone-${CAT_TONE[c]}`}>
+          <span class="swatch" />
+          {CAT_LABEL[c]}
+        </li>
+      ))
+    }
+  </ul>
+</token-inspector>
+
+<script>
+  class TokenInspector extends HTMLElement {
+    connectedCallback() {
+      const tabs = [...this.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      const panels = [...this.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+      if (tabs.length < 2) return;
+      this.querySelector<HTMLElement>('.ti-tabs')!.hidden = false;
+      this.dataset.js = '';
+
+      const select = (i: number, focus = false) => {
+        tabs.forEach((t, k) => {
+          t.setAttribute('aria-selected', String(k === i));
+          t.tabIndex = k === i ? 0 : -1;
+        });
+        panels.forEach((p, k) => (p.hidden = k !== i));
+        if (focus) tabs[i].focus();
+      };
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', () => select(i));
+        t.addEventListener('keydown', (e) => {
+          const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!d) return;
+          e.preventDefault();
+          select((i + d + tabs.length) % tabs.length, true);
+        });
+      });
+
+      const wanted = panels.findIndex((p) => `#${p.id}` === location.hash);
+      select(wanted >= 0 ? wanted : 0);
+      // open the first annotated claim so the interaction is discoverable
+      panels.forEach((p) => p.querySelector<HTMLDetailsElement>('details.claim:nth-of-type(2)')?.setAttribute('open', ''));
+    }
+  }
+  customElements.define('token-inspector', TokenInspector);
+</script>
+
+<style>
+  .ti {
+    display: block;
+    --tone: var(--ink-3);
+  }
+  .ti-tabs {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .ti-tabs[hidden] {
+    display: none;
+  }
+  .ti-tabs button {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .ti-tabs button:hover {
+    color: var(--ink);
+    background: var(--paper-2);
+  }
+  .ti-tabs button[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .ti-panel {
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.3rem 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .ti[data-js] .ti-panel {
+    border-top: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .ti-panel[hidden] {
+    display: none;
+  }
+  .ti-panel header h3 {
+    margin: 0 0 0.2rem;
+  }
+  .ti-path {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.6rem;
+  }
+  .ti-panel header p:last-child {
+    max-width: 46rem;
+    font-size: 0.97rem;
+    margin-bottom: 1rem;
+  }
+
+  .ti-code {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 0.7rem 0;
+    font-size: 0.86rem;
+  }
+  .ti-code code {
+    font-size: 0.8rem;
+    background: none;
+    border: 0;
+    padding: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .plain,
+  .claim summary {
+    padding: 0.14rem 1rem 0.14rem calc(1rem + var(--indent) * 1.3rem);
+  }
+  .plain code {
+    color: var(--ink-3);
+  }
+  .claim summary {
+    list-style: none;
+    cursor: pointer;
+    border-left: 3px solid var(--tone);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .claim summary::-webkit-details-marker {
+    display: none;
+  }
+  .claim summary::after {
+    content: '+';
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    flex: none;
+  }
+  .claim[open] summary::after {
+    content: '–';
+  }
+  .claim summary:hover,
+  .claim[open] summary {
+    background: color-mix(in srgb, var(--tone) 12%, transparent);
+  }
+  .claim-note {
+    border-left: 3px solid var(--tone);
+    background: color-mix(in srgb, var(--tone) 7%, transparent);
+    padding: 0.5rem 1rem 0.7rem calc(1rem + var(--indent) * 1.3rem);
+    font-family: var(--font-body);
+  }
+  .claim-note p {
+    margin: 0;
+    font-size: 0.93rem;
+    max-width: 44rem;
+  }
+  .claim-cat {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tone);
+    margin-bottom: 0.2rem;
+  }
+
+  .tone-clay {
+    --tone: var(--clay);
+  }
+  .tone-sky {
+    --tone: var(--sky);
+  }
+  .tone-grass {
+    --tone: var(--grass);
+  }
+  .tone-plum {
+    --tone: var(--plum);
+  }
+  .tone-ochre {
+    --tone: var(--ochre);
+  }
+  .tone-ink {
+    --tone: var(--ink-3);
+  }
+
+  .ti-panel footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    margin-top: 1rem;
+  }
+
+  .ti-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0.8rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: var(--ink-2);
+  }
+  .ti-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+  }
+  .swatch {
+    width: 0.3rem;
+    height: 0.95rem;
+    background: var(--tone);
+    border-radius: 1px;
+  }
+</style>

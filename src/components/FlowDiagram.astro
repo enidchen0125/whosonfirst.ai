@@ -1,0 +1,788 @@
+---
+/**
+ * Sequence diagram with a step-through panel.
+ *
+ * The SVG and every step's explanation are rendered at build time, so the page
+ * reads fine without JavaScript (all steps listed in order). The script at the
+ * bottom upgrades it to a stepper: one step at a time, with the matching arrow
+ * highlighted and a snapshot of who holds which credential.
+ */
+import { Code } from 'astro:components';
+import type { Flow, StepKind } from '../data/types';
+import { block, inline } from '../lib/md';
+
+interface Props {
+  flow: Flow;
+}
+const { flow } = Astro.props;
+const P = flow.participants;
+const steps = flow.steps;
+const n = P.length;
+
+// ---- geometry ----
+const boxW = 132;
+const boxH = 46;
+const gap = n <= 3 ? 236 : n === 4 ? 190 : n === 5 ? 164 : 150;
+const padX = boxW / 2 + 18;
+const CHAR = 6.6; // approximate advance of the label font at 13px
+const W = padX * 2 + gap * (n - 1);
+const top = 8;
+const y0 = top + boxH + 46;
+const rowH = 58;
+const H = y0 + rowH * (steps.length - 1) + 38;
+
+const idx = (id: string) => {
+  const i = P.findIndex((p) => p.id === id);
+  if (i < 0) throw new Error(`[${flow.slug}] unknown participant "${id}"`);
+  return i;
+};
+const xOf = (id: string) => padX + gap * idx(id);
+const name = (id: string) => P[idx(id)].label;
+
+const KIND_LABEL: Record<StepKind, string> = {
+  back: 'Direct call',
+  front: 'Via the user’s browser or device',
+  resp: 'Response',
+  oob: 'Out of band',
+  self: 'Local action',
+};
+
+// ---- per-step drawing data + credential snapshots ----
+const held = new Map<string, string[]>(P.map((p) => [p.id, []]));
+
+const rows = steps.map((s, i) => {
+  const y = y0 + i * rowH;
+  const self = !s.to || s.to === s.from;
+  const x1 = xOf(s.from);
+
+  for (const [who, what] of s.lose ?? []) {
+    idx(who);
+    held.set(
+      who,
+      (held.get(who) ?? []).filter((a) => a !== what),
+    );
+  }
+  const fresh = new Set<string>();
+  for (const [who, what] of s.gain ?? []) {
+    idx(who);
+    const list = held.get(who) ?? [];
+    if (!list.includes(what)) list.push(what);
+    held.set(who, list);
+    fresh.add(`${who}\u0000${what}`);
+  }
+  const snapshot = P.map((p) => ({
+    ...p,
+    items: (held.get(p.id) ?? []).map((text) => ({ text, fresh: fresh.has(`${p.id}\u0000${text}`) })),
+  })).filter((p) => p.items.length > 0);
+
+  if (self) {
+    const w = Math.min(Math.max(118, s.label.length * CHAR + 50), W - 8);
+    const nx = Math.min(Math.max(x1 - w / 2, 4), W - w - 4);
+    return { s, i, y, self: true as const, x1, nx, w, snapshot, route: name(s.from) };
+  }
+
+  const x2 = xOf(s.to!);
+  const dir = x2 > x1 ? 1 : -1;
+  const span = Math.abs(x2 - x1);
+  // Labels that will not fit on one line are split into two balanced lines.
+  const room = span - 22;
+  let lines = [s.label];
+  if (s.label.length * CHAR > room) {
+    const words = s.label.split(' ');
+    let best = lines;
+    let bestLen = Infinity;
+    for (let k = 1; k < words.length; k++) {
+      const a = words.slice(0, k).join(' ');
+      const b = words.slice(k).join(' ');
+      const len = Math.max(a.length, b.length);
+      if (len < bestLen) {
+        bestLen = len;
+        best = [a, b];
+      }
+    }
+    lines = best;
+    if (bestLen * CHAR > room + 40) {
+      console.warn(`[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`);
+    }
+  }
+  const tip = x2 - dir * 3;
+  const head = `${tip},${y} ${tip - dir * 9},${y - 4.6} ${tip - dir * 9},${y + 4.6}`;
+  return {
+    s,
+    i,
+    y,
+    self: false as const,
+    x1,
+    x2,
+    dir,
+    head,
+    lineStart: x1 + dir * 11,
+    lineEnd: tip - dir * 7,
+    mid: (x1 + x2) / 2,
+    lines,
+    snapshot,
+    route: `${name(s.from)} → ${name(s.to!)}`,
+  };
+});
+
+const usedKinds = [...new Set(steps.map((s) => s.kind))];
+---
+
+<flow-diagram class="flow" data-count={steps.length}>
+  <div class="flow-stage">
+    <div class="flow-canvas" tabindex="0" role="group" aria-label={`Sequence diagram: ${flow.title}`}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width={W}
+        height={H}
+        role="img"
+        aria-label={`${flow.title}: ${steps.length} steps between ${P.map((p) => p.label).join(', ')}. Each step is described in the list that follows.`}
+      >
+        {
+          P.map((p) => {
+            const x = xOf(p.id);
+            return (
+              <g class={`actor role-${p.role}`} data-actor={p.id}>
+                <line class="lifeline" x1={x} y1={top + boxH} x2={x} y2={H - 6} />
+                <rect class="actor-box" x={x - boxW / 2} y={top} width={boxW} height={boxH} rx="4" />
+                <text class="actor-label" x={x} y={top + (p.sub ? 20 : 28)} text-anchor="middle">
+                  {p.label}
+                </text>
+                {p.sub && (
+                  <text class="actor-sub" x={x} y={top + 35} text-anchor="middle">
+                    {p.sub}
+                  </text>
+                )}
+              </g>
+            );
+          })
+        }
+
+        {
+          rows.map((r) =>
+            r.self ? (
+              <g class={`step kind-self`} data-step={r.i} data-actors={r.s.from}>
+                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <rect class="note" x={r.nx} y={r.y - 14} width={r.w} height="28" rx="14" />
+                <circle class="badge" cx={r.nx + 15} cy={r.y} r="10" />
+                <text class="badge-num" x={r.nx + 15} y={r.y + 3.8} text-anchor="middle">
+                  {r.i + 1}
+                </text>
+                <text class="note-label" x={r.nx + 30 + (r.w - 40) / 2} y={r.y + 4.2} text-anchor="middle">
+                  {r.s.label}
+                </text>
+              </g>
+            ) : (
+              <g class={`step kind-${r.s.kind}`} data-step={r.i} data-actors={`${r.s.from} ${r.s.to}`}>
+                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <line class="arrow" x1={r.lineStart} y1={r.y} x2={r.lineEnd} y2={r.y} />
+                <polygon class="head" points={r.head} />
+                <circle class="badge" cx={r.x1} cy={r.y} r="10" />
+                <text class="badge-num" x={r.x1} y={r.y + 3.8} text-anchor="middle">
+                  {r.i + 1}
+                </text>
+                {r.lines.map((line, k) => (
+                  <text
+                    class="arrow-label"
+                    x={r.mid + r.dir * 4}
+                    y={r.y - 9 - (r.lines.length - 1 - k) * 14}
+                    text-anchor="middle"
+                  >
+                    {line}
+                  </text>
+                ))}
+              </g>
+            ),
+          )
+        }
+      </svg>
+    </div>
+
+    <ul class="flow-legend" aria-label="Legend">
+      {
+        (['back', 'front', 'resp', 'oob', 'self'] as StepKind[])
+          .filter((k) => usedKinds.includes(k))
+          .map((k) => (
+            <li class={`kind-${k}`}>
+              <svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true">
+                {k === 'self' ? (
+                  <rect class="note" x="1" y="1" width="32" height="8" rx="4" />
+                ) : (
+                  <>
+                    <line class="arrow" x1="0" y1="5" x2="26" y2="5" />
+                    <polygon class="head" points="34,5 25,0.8 25,9.2" />
+                  </>
+                )}
+              </svg>
+              {KIND_LABEL[k]}
+            </li>
+          ))
+      }
+    </ul>
+  </div>
+
+  <div class="flow-panel">
+    <div class="flow-controls" hidden>
+      <button class="btn small" type="button" data-act="prev" aria-label="Previous step">← Prev</button>
+      <button class="btn small primary" type="button" data-act="next" aria-label="Next step">Next →</button>
+      <button class="btn small ghost" type="button" data-act="play" aria-pressed="false">Play</button>
+      <button class="btn small ghost" type="button" data-act="all" aria-pressed="false">All steps</button>
+      <span class="flow-count" aria-live="polite"></span>
+    </div>
+    <div class="flow-progress" aria-hidden="true" hidden>
+      {steps.map((_, i) => <button type="button" tabindex="-1" data-goto={i} />)}
+    </div>
+
+    <ol class="flow-steps">
+      {
+        rows.map((r) => (
+          <li class={`flow-step kind-${r.s.kind}`} data-step={r.i} id={`step-${r.i + 1}`}>
+            <p class="step-meta">
+              <span class="step-num">{r.i + 1}</span>
+              <span class="step-route">{r.route}</span>
+              <span class="step-kind">{KIND_LABEL[r.s.kind]}</span>
+            </p>
+            <h3 set:html={inline(r.s.title)} />
+            <div class="step-body" set:html={block(r.s.body)} />
+            {r.s.code && (
+              <Code
+                code={r.s.code.text.trim()}
+                lang={r.s.code.lang as any}
+                themes={{ light: 'vitesse-light', dark: 'vitesse-dark' }}
+                defaultColor={false}
+              />
+            )}
+            {r.snapshot.length > 0 && (
+              <div class="held">
+                <p class="held-title">Who holds what after this step</p>
+                <dl>
+                  {r.snapshot.map((p) => (
+                    <div class={`role-${p.role}`}>
+                      <dt>{p.label}</dt>
+                      <dd>
+                        {p.items.map((it) => (
+                          <span class:list={['held-chip', { fresh: it.fresh }]}>{it.text}</span>
+                        ))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</flow-diagram>
+
+<script>
+  class FlowDiagram extends HTMLElement {
+    index = 0;
+    count = 0;
+    all = false;
+    timer: number | undefined;
+
+    connectedCallback() {
+      this.count = Number(this.dataset.count ?? 0);
+      this.dataset.js = '';
+      this.querySelector<HTMLElement>('.flow-controls')!.hidden = false;
+      this.querySelector<HTMLElement>('.flow-progress')!.hidden = false;
+
+      this.addEventListener('click', (e) => {
+        const t = e.target as Element;
+        const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
+        if (act === 'prev') return this.go(this.index - 1, true);
+        if (act === 'next') return this.go(this.index + 1, true);
+        if (act === 'play') return this.togglePlay();
+        if (act === 'all') return this.toggleAll();
+        const goto = t.closest<HTMLElement>('[data-goto]')?.dataset.goto;
+        if (goto != null) return this.go(Number(goto), true);
+        const step = t.closest<SVGGElement>('svg .step');
+        if (step) {
+          if (this.all) this.toggleAll();
+          this.go(Number(step.dataset.step), true);
+        }
+      });
+
+      this.addEventListener('keydown', (e) => {
+        if ((e.target as Element).closest('pre, input, textarea')) return;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          this.go(this.index + 1, true);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          this.go(this.index - 1, true);
+        }
+      });
+
+      const fromHash = () => {
+        const m = /^#step-(\d+)$/.exec(location.hash);
+        if (m) this.go(Number(m[1]) - 1, false);
+      };
+      window.addEventListener('hashchange', fromHash);
+      this.go(0, false);
+      fromHash();
+    }
+
+    go(i: number, user: boolean) {
+      if (user) this.stop();
+      this.index = Math.max(0, Math.min(this.count - 1, i));
+      this.render(user);
+    }
+
+    render(reveal = false) {
+      const i = this.index;
+      let actors: string[] = [];
+      this.querySelectorAll<SVGGElement>('svg .step').forEach((g) => {
+        const s = Number(g.dataset.step);
+        g.classList.toggle('is-active', !this.all && s === i);
+        g.classList.toggle('is-done', !this.all && s < i);
+        g.classList.toggle('is-todo', !this.all && s > i);
+        if (s === i) actors = (g.dataset.actors ?? '').split(' ');
+      });
+      this.querySelectorAll<SVGGElement>('svg .actor').forEach((g) => {
+        g.classList.toggle('is-active', !this.all && actors.includes(g.dataset.actor ?? ''));
+      });
+      this.querySelectorAll<HTMLElement>('.flow-step').forEach((li) => {
+        li.hidden = !this.all && Number(li.dataset.step) !== i;
+      });
+      this.querySelectorAll<HTMLElement>('.flow-progress button').forEach((b, s) => {
+        b.classList.toggle('is-active', s === i);
+        b.classList.toggle('is-done', s < i);
+      });
+      this.querySelector<HTMLButtonElement>('[data-act="prev"]')!.disabled = this.all || i === 0;
+      this.querySelector<HTMLButtonElement>('[data-act="next"]')!.disabled = this.all || i === this.count - 1;
+      this.querySelector('.flow-count')!.textContent = this.all
+        ? `${this.count} steps`
+        : `Step ${i + 1} of ${this.count}`;
+
+      if (reveal && !this.all) {
+        const canvas = this.querySelector<HTMLElement>('.flow-canvas')!;
+        const g = this.querySelector<SVGGElement>(`svg .step[data-step="${i}"] .hit`);
+        if (g) {
+          // keep the active row visible inside the scrollable canvas without moving the page
+          const row = g.getBoundingClientRect();
+          const box = canvas.getBoundingClientRect();
+          if (row.top < box.top + 60 || row.bottom > box.bottom - 8) {
+            canvas.scrollTop += row.top - box.top - box.height / 2 + row.height / 2;
+          }
+          const mark = g.parentElement?.querySelector('.arrow, .note')?.getBoundingClientRect();
+          if (mark && (mark.left < box.left + 8 || mark.right > box.right - 8)) {
+            canvas.scrollLeft += mark.left + mark.width / 2 - (box.left + box.width / 2);
+          }
+        }
+        history.replaceState(null, '', `#step-${i + 1}`);
+      }
+    }
+
+    toggleAll() {
+      this.stop();
+      this.all = !this.all;
+      this.querySelector('[data-act="all"]')!.setAttribute('aria-pressed', String(this.all));
+      this.toggleAttribute('data-all', this.all);
+      this.render();
+    }
+
+    togglePlay() {
+      if (this.timer) return this.stop();
+      if (this.all) this.toggleAll();
+      if (this.index >= this.count - 1) this.index = -1;
+      const btn = this.querySelector('[data-act="play"]')!;
+      btn.setAttribute('aria-pressed', 'true');
+      btn.textContent = 'Pause';
+      const tick = () => {
+        if (this.index >= this.count - 1) return this.stop();
+        this.index += 1;
+        this.render(true);
+      };
+      tick();
+      this.timer = window.setInterval(tick, 2600);
+    }
+
+    stop() {
+      if (this.timer) window.clearInterval(this.timer);
+      this.timer = undefined;
+      const btn = this.querySelector('[data-act="play"]');
+      if (btn) {
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = 'Play';
+      }
+    }
+
+    disconnectedCallback() {
+      this.stop();
+    }
+  }
+  customElements.define('flow-diagram', FlowDiagram);
+</script>
+
+<style>
+  .flow {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (min-width: 68rem) {
+    .flow {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 1.75rem;
+    }
+    .flow-panel {
+      position: sticky;
+      top: 4.6rem;
+      max-height: calc(100dvh - 5.4rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    .flow[data-all] .flow-panel,
+    .flow:not([data-js]) .flow-panel {
+      position: static;
+      max-height: none;
+    }
+  }
+
+  .flow-stage {
+    min-width: 0;
+  }
+  .flow-canvas {
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: auto;
+    padding: 0.6rem;
+    scrollbar-width: thin;
+  }
+  @media (max-width: 67.99rem) {
+    .flow[data-js]:not([data-all]) .flow-canvas {
+      max-height: 62vh;
+    }
+  }
+  .flow-canvas svg {
+    display: block;
+    height: auto;
+    margin-inline: auto;
+    min-width: 33rem;
+    font-family: var(--font-body);
+  }
+
+  /* actors */
+  .lifeline {
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+  .actor-box {
+    fill: var(--role-soft);
+    stroke: var(--role);
+    stroke-width: 1.2;
+    transition: stroke-width 0.15s;
+  }
+  .actor-label {
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+  .actor-sub {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.03em;
+    fill: var(--ink-2);
+    text-transform: uppercase;
+  }
+  .actor.is-active .actor-box {
+    stroke-width: 2.6;
+  }
+  .actor.is-active .lifeline {
+    stroke: var(--role);
+    stroke-dasharray: none;
+    stroke-width: 1.4;
+  }
+
+  /* steps */
+  .step {
+    --line: var(--ink);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .kind-front {
+    --line: var(--clay);
+  }
+  .kind-oob {
+    --line: var(--ochre);
+  }
+  .hit {
+    fill: transparent;
+  }
+  .step:hover .hit {
+    fill: color-mix(in srgb, var(--paper-2) 70%, transparent);
+  }
+  .arrow {
+    stroke: var(--line);
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .kind-resp .arrow {
+    stroke-dasharray: 6 4;
+  }
+  .kind-oob .arrow {
+    stroke-dasharray: 1.5 4;
+    stroke-linecap: round;
+    stroke-width: 2;
+  }
+  .head {
+    fill: var(--line);
+  }
+  .badge {
+    fill: var(--chalk);
+    stroke: var(--line);
+    stroke-width: 1.3;
+  }
+  .badge-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    fill: var(--line);
+  }
+  .arrow-label,
+  .note-label {
+    font-size: 13px;
+    fill: var(--ink);
+  }
+  .arrow-label {
+    paint-order: stroke;
+    stroke: var(--chalk);
+    stroke-width: 5px;
+    stroke-linejoin: round;
+  }
+  .note {
+    fill: var(--paper-2);
+    stroke: var(--rule-strong);
+    stroke-width: 1.1;
+  }
+
+  .step.is-todo {
+    opacity: 0.26;
+  }
+  .step.is-done {
+    opacity: 0.55;
+  }
+  .step.is-active .arrow {
+    stroke-width: 2.6;
+  }
+  .step.is-active .badge {
+    fill: var(--line);
+  }
+  .step.is-active .badge-num {
+    fill: var(--chalk);
+  }
+  .step.is-active .arrow-label,
+  .step.is-active .note-label {
+    font-weight: 600;
+  }
+  .step.is-active .note {
+    stroke: var(--ink);
+    stroke-width: 1.8;
+  }
+  .step.is-active .hit {
+    fill: color-mix(in srgb, var(--paper-2) 60%, transparent);
+  }
+
+  /* legend */
+  .flow-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.2rem;
+    list-style: none;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: var(--ink-2);
+  }
+  .flow-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    --line: var(--ink);
+  }
+  .flow-legend .kind-front {
+    --line: var(--clay);
+  }
+  .flow-legend .kind-oob {
+    --line: var(--ochre);
+  }
+  .flow-legend svg {
+    flex: none;
+  }
+
+  /* panel */
+  .flow-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .flow-controls[hidden],
+  .flow-progress[hidden] {
+    display: none;
+  }
+  .flow-controls [aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .flow-count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .flow-progress {
+    display: flex;
+    gap: 3px;
+    margin: 0.7rem 0 0.2rem;
+  }
+  .flow-progress button {
+    flex: 1;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: var(--rule);
+    cursor: pointer;
+  }
+  .flow-progress button.is-done {
+    background: var(--ink-3);
+  }
+  .flow-progress button.is-active {
+    background: var(--clay);
+  }
+  .flow[data-all] .flow-progress {
+    visibility: hidden;
+  }
+
+  .flow-steps {
+    list-style: none;
+    margin: 0.9rem 0 0;
+    padding: 0;
+  }
+  .flow-step {
+    margin: 0;
+    padding: 1.1rem 1.2rem 1.2rem;
+    background: var(--chalk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .flow-step + .flow-step {
+    margin-top: 0.8rem;
+  }
+  .flow-step[hidden] {
+    display: none;
+  }
+  .step-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.7rem;
+    margin: 0 0 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .step-num {
+    display: grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 500;
+  }
+  .kind-front .step-num {
+    background: var(--clay);
+  }
+  .kind-oob .step-num {
+    background: var(--ochre);
+  }
+  .step-route {
+    color: var(--ink);
+  }
+  .step-kind {
+    margin-left: auto;
+  }
+  .flow-step h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.22rem;
+  }
+  .step-body {
+    font-size: 0.97rem;
+  }
+  .step-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .flow-step :global(pre) {
+    margin: 0.9rem 0 0;
+    background: var(--paper) !important;
+    font-size: 0.76rem;
+  }
+
+  .held {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--rule-strong);
+  }
+  .held-title {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 0.5rem;
+  }
+  .held dl {
+    margin: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .held dl > div {
+    display: grid;
+    grid-template-columns: 7.2rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: baseline;
+  }
+  .held dt {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--role);
+  }
+  .held dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .held-chip {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.25;
+    padding: 0.22em 0.5em;
+    border-radius: 3px;
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-2);
+  }
+  .held-chip.fresh {
+    border-color: var(--role);
+    background: var(--role-soft);
+    color: var(--ink);
+  }
+</style>
