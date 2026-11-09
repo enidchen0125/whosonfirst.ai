@@ -30,6 +30,10 @@ npm run build
 npm run check
 ```
 
+```bash
+npm run check:rendered
+```
+
 `npm run build` writes a fully static site to `dist/`. There is no server component and no client-side framework: interactive pieces are small custom elements that enhance HTML rendered at build time, so every page reads correctly with JavaScript off.
 
 ## Where things are
@@ -42,7 +46,10 @@ npm run check
 | `src/data/guide.ts` | Questions and rules for the decision guide |
 | `src/data/glossary.ts` | Glossary terms |
 | `src/data/site.ts` | The "last reviewed" date shown across the site |
-| `src/components/FlowDiagram.astro` | Sequence diagram and step-through panel |
+| `src/components/FlowDiagram.astro` | Sequence diagram and step-through panel; a step narrative on a phone |
+| `src/components/LastHopBrief.astro` | “What does the last hop know?” on the home page |
+| `src/components/LastHop.astro` | The longer version of the same comparison, on the Concepts page |
+| `src/components/DocMeta.astro` | Page facts: kind of document, primary specification, review date |
 | `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram |
 | `src/pages/deployments/*.mdx` | Long-form deployment guides |
 
@@ -52,7 +59,7 @@ Most changes are data changes.
 
 **Add or change a flow.** Edit or create a file in `src/data/flows/` and register it in `src/data/flows/index.ts`. Arrow labels wrap onto two lines automatically; the build warns if one is still too long. Add the flow to the comparison table in `src/pages/flows/index.astro`, or the build will tell you to.
 
-**Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`.
+**Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`. The first standard a flow lists is shown at the top of its page as the primary specification, with its status and revision, so list the one the flow follows most closely first.
 
 **Cross-references are checked at build time.** A flow that names an unknown standard or related flow, or a decision-guide rule that names an unknown flow or answer, fails the build.
 
@@ -60,18 +67,28 @@ Most changes are data changes.
 
 ## Design
 
-The look is under exploration. Four directions share one set of token names and differ only in values:
+The look is under exploration. Five directions share one set of token names and differ only in values. Internet-Draft -01 is the one being developed; the others are kept for comparison until it has been reviewed.
 
 | Direction | File | Idea |
 | --- | --- | --- |
+| Internet-Draft -01 | `src/styles/directions/draft01.css` | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
+| Internet-Draft -00 | `src/styles/directions/draft.css` | The first pass: monospace throughout |
 | Scorecard (default) | `src/styles/directions/scorecard.css` | A paper scorecard: warm stock, serif titles |
 | Scoreboard | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals |
 | Line Map | `src/styles/directions/linemap.css` | Transit signage: black, white and five line colours |
-| Internet-Draft | `src/styles/directions/draft.css` | An Internet-Draft: monospace throughout |
 
-Switch with the control at the bottom right of any page, or with `?direction=scoreboard` (or `linemap`, `draft`, `scorecard`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
+Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
 
-`npm run check` includes a contrast audit (`scripts/contrast-check.mjs`) that fails if any text pairing in any direction falls below 4.5:1.
+Three rules hold in every direction:
+
+- **Colour in a diagram means role.** User, agent, authorization server, resource server and infrastructure each keep one colour. The kind of message (direct call, response, through the browser, out of band) is carried by the line style.
+- **Nothing is dimmed with opacity.** Steps before and after the current one use the muted text colour, which the audit holds to 4.5:1.
+- **Buttons are boxes, links are underlined, metadata is neither.**
+
+Two checks cover this:
+
+- `npm run check` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing in any direction falls below 4.5:1.
+- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow, accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the home page explainer, the phone step narrative and each page's review date and specification link are present. It checks Internet-Draft -01 by default; add `--direction=all` for the rest. It needs Chromium: `npx playwright install chromium`.
 
 ```bash
 npm run ds:build
