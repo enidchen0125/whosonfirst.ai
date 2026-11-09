@@ -24,6 +24,8 @@ The first four identify the **workload**: which pod, which service account, whic
 
 The current stable release is **v1.37** (August 2026); v1.38 is planned for December. Everything in the first group below is generally available in supported releases.
 
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: What ships in Kubernetes">
+
 | Capability | Since | What it gives an agent |
 | --- | --- | --- |
 | Bound ServiceAccount tokens (TokenRequest API, projected volumes) | GA v1.20; default for pods since v1.22 | A short-lived, audience-scoped JWT tied to one pod |
@@ -35,6 +37,8 @@ The current stable release is **v1.37** (August 2026); v1.38 is planned for Dece
 | **ClusterTrustBundle** | GA v1.37 | Trust anchors distributed to pods as a projected volume |
 | ServiceAccount tokens for image credential providers | Beta since v1.34 | Image pulls with workload identity instead of pull secrets |
 | Constrained impersonation | Beta since v1.36 | Impersonation limited to specific resources and verbs |
+
+</div>
 
 Two things are worth knowing about the newest entries. Kubernetes 1.37 ships the Pod Certificates API **without a signer**: you install one. And there is no built-in SPIFFE identity or token-exchange feature in Kubernetes itself; those come from projects layered on top.
 
@@ -94,11 +98,15 @@ spec:
 
 All three major clouds accept a pod's ServiceAccount token in place of a stored key. The mechanics differ; the shape is the same as [workload identity federation](/flows/workload-identity-federation/).
 
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Reaching the cloud">
+
 | Platform | Mechanism | In one line |
 | --- | --- | --- |
 | GKE | Workload Identity Federation for GKE | IAM roles are granted directly to the Kubernetes service account as a federated principal; a node metadata server performs the exchange |
 | EKS | EKS Pod Identity, or IAM Roles for Service Accounts | An association maps a namespace and service account to an IAM role; an agent on the node, or the STS web identity call, returns role credentials |
 | AKS | Microsoft Entra Workload ID | The token is presented as a client assertion and matched against a federated identity credential on a managed identity |
+
+</div>
 
 Whatever the platform, the trust rule should pin the issuer, the audience, **and** the exact subject (`system:serviceaccount:<namespace>:<name>`). Wildcards in the subject are how one compromised pod becomes every pod.
 

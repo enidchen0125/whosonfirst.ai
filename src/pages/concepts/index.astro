@@ -1,21 +1,94 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Lineup from '../../components/Lineup.astro';
 import LastHop from '../../components/LastHop.astro';
 import TokenInspector from '../../components/TokenInspector.astro';
-import { ROLE_LABEL } from '../../data/types';
+import DocMeta from '../../components/DocMeta.astro';
+import { REVIEWED } from '../../data/site';
 import type { Role } from '../../data/types';
+import { inline } from '../../lib/md';
 
-const roles: { role: Role; who: string; examples: string }[] = [
-  { role: 'human', who: 'A person with authority to grant', examples: 'End user, employee, approver' },
-  { role: 'agent', who: 'Software acting for someone', examples: 'Agent, MCP client, tool server in the middle' },
-  { role: 'authz', who: 'Whoever issues credentials', examples: 'Authorization server, identity provider, SPIRE' },
-  { role: 'resource', who: 'The thing being protected', examples: 'API, MCP server, remote agent, website' },
-  { role: 'infra', who: 'The platform underneath', examples: 'Kubernetes, gateway, egress proxy' },
+/** The parties in every flow, under the names the specifications use. */
+const roles: { role: Role; name: string; term: string; holds: string; verifies: string; examples: string }[] = [
+  {
+    role: 'human',
+    name: 'User',
+    term: 'Resource owner',
+    holds: 'The authority to grant: their own data and permissions.',
+    verifies: 'Proves who they are to the authorization server, never to the agent.',
+    examples: 'End user, employee, approver',
+  },
+  {
+    role: 'agent',
+    name: 'Agent',
+    term: 'Client',
+    holds: 'A client identity of its own, and whatever tokens are issued to it.',
+    verifies: 'Which authorization server it is talking to, and that responses come from it.',
+    examples: 'Agent, MCP client, tool server in the middle',
+  },
+  {
+    role: 'authz',
+    name: 'Authorization server',
+    term: 'Issuer',
+    holds: 'Signing keys, and the record of who approved what.',
+    verifies: 'The user, the client, and whether policy allows the request. Then issues a token.',
+    examples: 'Authorization server, identity provider, SPIRE server',
+  },
+  {
+    role: 'resource',
+    name: 'Resource server',
+    term: 'The API being called',
+    holds: 'Nothing of the user’s or the agent’s. It only receives tokens.',
+    verifies: 'Each token’s issuer, audience, scope and expiry, and proof of possession where required.',
+    examples: 'API, MCP server, remote agent, website',
+  },
+  {
+    role: 'infra',
+    name: 'Infrastructure',
+    term: 'The platform underneath',
+    holds: 'Knowledge of which workload is actually running, and where.',
+    verifies: 'A workload’s identity, which it can attest to an authorization server.',
+    examples: 'Kubernetes, gateway, egress proxy',
+  },
+];
+
+/** What a request should be able to answer, grouped by the three clauses of the site’s question. */
+const asks: { group: string; rows: [string, string][] }[] = [
+  {
+    group: 'Who is acting',
+    rows: [
+      ['What software is acting?', '`client_id`, the `act` claim, and the workload identity of the process making the call.'],
+      [
+        'Which agent, exactly?',
+        'Often nothing. Most tokens name the application that hosts an agent, not the agent. Several current drafts are trying to fix that.',
+      ],
+      ['Does it matter who holds the token?', 'A bearer token works for anyone. A token with a `cnf` claim works only for the holder of a key.'],
+    ],
+  },
+  {
+    group: 'For whom',
+    rows: [
+      ['Whose authority is this?', 'The subject of the token: `sub`. A person, or the agent itself.'],
+      ['Was it meant for this resource?', 'The audience, `aud`, and whether the first two answers survive all the way to the last hop.'],
+    ],
+  },
+  {
+    group: 'Who said they could',
+    rows: [
+      ['On what grounds?', 'A user’s consent, an administrator’s policy, or a signed mandate. Something outside the agent said yes.'],
+      ['What is it for?', '`scope`, `authorization_details`, and transaction context.'],
+      ['When does it stop?', '`exp`, and whether anyone can revoke it sooner.'],
+      ['How fresh is it?', '`iat`, `auth_time` and `acr`: when and how strongly the person last proved who they are.'],
+    ],
+  },
+];
+
+const meta = [
+  { label: 'Document', value: 'Explainer', note: 'Background for the flow guides' },
+  { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
 ];
 
 const toc = [
-  ['lineup', 'The lineup'],
+  ['roles', 'The roles'],
   ['different', 'Why agents are different'],
   ['delegation', 'Delegation or impersonation'],
   ['human', 'With and without a human'],
@@ -31,32 +104,94 @@ const toc = [
   <div class="page-head">
     <div class="wrap">
       <p class="eyebrow">Concepts</p>
-      <h1>Who’s on first?</h1>
+      <h1>Who is acting, for whom, and who said they could?</h1>
       <p class="lede">
-        In the old routine, a man asks a simple question about a baseball team and never gets a straight answer,
-        because the players are named Who, What and I Don’t Know. Ask a production system “who made this API call?” when
-        an AI agent is involved and you will often have the same conversation.
+        An API that receives a request from an AI agent needs three answers: which software is calling, whose
+        authority it carries, and what that authority covers. This page explains the parties involved, the ways
+        authority is handed on, and the claims in a token that carry the answers.
       </p>
       <nav class="toc" aria-label="On this page">
         {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
       </nav>
+      <DocMeta items={meta} />
     </div>
   </div>
 
-  <section class="section" id="lineup">
+  <div class="numbered">
+  <section class="section" id="roles">
     <div class="wrap">
       <div class="section-head">
-        <h2>The lineup</h2>
-        <p>Nine positions, nine questions. Hover a position or a row.</p>
+        <h2>The roles</h2>
+        <p>Five kinds of party. Every diagram on this site uses the same names and the same colours for them.</p>
       </div>
-      <Lineup />
+      <div class="table-scroll" tabindex="0" role="region" aria-label="The roles">
+        <table class="roles">
+          <thead>
+            <tr>
+              <th scope="col">Role</th>
+              <th scope="col">What it holds</th>
+              <th scope="col">What it verifies</th>
+              <th scope="col">Appears as</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              roles.map((r) => (
+                <tr class={`role-${r.role}`}>
+                  <th scope="row">
+                    <span class="role-cell">
+                      <span class="swatch" />
+                      <span class="name">{r.name}</span>
+                      <span class="term">{r.term}</span>
+                    </span>
+                  </th>
+                  <td>{r.holds}</td>
+                  <td>{r.verifies}</td>
+                  <td class="ex">{r.examples}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
       <div class="prose after">
         <p>
-          Every request an agent makes should be able to answer these. The first three decide almost everything.{' '}
-          <strong>Who</strong> is the principal: the party whose authority is being exercised. <strong>What</strong> is
-          the actor: the software exercising it. And on third base is the resource at the end of the chain, which in
-          too many systems really does not know either of them.
+          The <strong>principal</strong> is whichever party’s authority a request exercises: usually the user, sometimes
+          the agent itself. The <strong>actor</strong> is the software exercising it. Most of what goes wrong with agents
+          comes from a resource server at the end of a chain that cannot tell the two apart, or knows neither.
         </p>
+      </div>
+
+      <h3 class="asks-title">What a request should be able to answer</h3>
+      <p class="muted">Nine questions, and where in a token or a request each answer is carried.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="What a request should be able to answer">
+        <table class="asks">
+          <thead>
+            <tr>
+              <th scope="col">Question</th>
+              <th scope="col">Where the answer lives</th>
+            </tr>
+          </thead>
+          {
+            asks.map((g) => (
+              <tbody>
+                <tr class="group">
+                  <th scope="rowgroup" colspan="2">
+                    {g.group}
+                  </th>
+                </tr>
+                {g.rows.map(([q, a]) => (
+                  <tr>
+                    <th scope="row">{q}</th>
+                    <td set:html={inline(a)} />
+                  </tr>
+                ))}
+              </tbody>
+            ))
+          }
+        </table>
+      </div>
+      <div class="prose after">
         <p>
           The rest of this site is about the mechanisms that carry those answers from where they are known to where
           they are needed.
@@ -117,21 +252,6 @@ const toc = [
           </p>
         </div>
       </div>
-
-      <h3 class="legend-title">The five roles, and their colours</h3>
-      <p class="muted">Every diagram on this site uses the same five.</p>
-      <ul class="roles">
-        {
-          roles.map((r) => (
-            <li class={`role-${r.role}`}>
-              <span class="swatch" />
-              <strong>{ROLE_LABEL[r.role]}</strong>
-              <span class="who">{r.who}</span>
-              <span class="ex">{r.examples}</span>
-            </li>
-          ))
-        }
-      </ul>
     </div>
   </section>
 
@@ -163,7 +283,8 @@ const toc = [
     <div class="wrap">
       <h2>With and without a human</h2>
       <p class="lede">
-        The most useful first question about any agent workflow is whether a person is involved, and if so, when.
+        Once it is settled whose authority the agent is using, the next question is whether that person is available
+        when access is needed.
       </p>
       <div class="grid modes">
         <a class="card" href="/flows/#g-human-present">
@@ -259,6 +380,7 @@ const toc = [
       </p>
     </div>
   </section>
+  </div>
 </Base>
 
 <style>
@@ -292,25 +414,27 @@ const toc = [
     margin-bottom: 0;
   }
 
-  .legend-title {
-    margin-top: 2.4rem;
-    margin-bottom: 0.2rem;
+  .roles,
+  .asks {
+    min-width: 40rem;
   }
-  .roles {
-    list-style: none;
-    padding: 0;
-    margin: 0.8rem 0 0;
-    border-top: 1.5px solid var(--fg);
-  }
-  .roles li {
-    display: grid;
-    grid-template-columns: 0.9rem 9rem minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 0.9rem;
-    align-items: baseline;
-    padding: 0.6rem 0;
-    margin: 0;
+  .roles tbody th,
+  .asks tbody th {
+    font-family: var(--font-body);
+    font-size: inherit;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: normal;
     border-bottom: 1px solid var(--border);
-    font-size: 0.95rem;
+  }
+  .role-cell {
+    display: grid;
+    grid-template-columns: 0.9rem minmax(0, 1fr);
+    column-gap: 0.6rem;
+    align-items: center;
+    min-width: 10.5rem;
   }
   .roles .swatch {
     width: 0.9rem;
@@ -318,24 +442,39 @@ const toc = [
     background: var(--role-soft);
     border: 1.5px solid var(--role);
     border-radius: 2px;
-    align-self: center;
   }
-  .roles strong {
+  .roles .name {
     color: var(--role);
+  }
+  .roles .term {
+    grid-column: 2;
+    font-size: 0.84rem;
+    font-weight: 400;
+    color: var(--fg-muted);
   }
   .roles .ex {
     color: var(--fg-muted);
     font-size: 0.9rem;
   }
-  @media (max-width: 44rem) {
-    .roles li {
-      grid-template-columns: 0.9rem minmax(0, 1fr);
-      row-gap: 0.1rem;
-    }
-    .roles .who,
-    .roles .ex {
-      grid-column: 2;
-    }
+  .asks-title {
+    margin-top: 2.4rem;
+    margin-bottom: 0.2rem;
+  }
+  .asks-title + p {
+    margin-bottom: 0.8rem;
+  }
+  .asks tbody th {
+    width: 38%;
+  }
+  .asks .group th {
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    background: var(--bg-sunken);
+    padding-block: 0.4rem;
   }
 
   .modes .card h3 {
@@ -377,7 +516,7 @@ const toc = [
   }
   .rules strong {
     display: block;
-    font-family: var(--font-display);
+    font-family: var(--font-heading);
     font-size: 1.18rem;
     font-weight: 560;
     margin-bottom: 0.15rem;

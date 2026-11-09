@@ -182,7 +182,7 @@ function head(a: [number, number], b: [number, number]) {
   </div>
 
   <div class="km-body">
-    <div class="km-canvas">
+    <div class="km-canvas" tabindex="0" role="region" aria-label="Kubernetes identity layers diagram">
       <svg
         viewBox="0 0 900 540"
         role="img"
@@ -429,12 +429,16 @@ function head(a: [number, number], b: [number, number]) {
     font-size: 9.5px;
     fill: var(--fg-muted);
   }
-  .km[data-js] .km-node {
-    opacity: 0.32;
-    transition: opacity 0.2s;
+  /* Parts outside the chosen layer step back to an outline and the muted ink,
+     which is held to 4.5:1 here. They are never faded with opacity. */
+  .km[data-js] .km-node:not(.is-on) rect {
+    fill: var(--bg-raised);
+    stroke: var(--border-strong);
+    stroke-dasharray: 3 3;
   }
-  .km[data-js] .km-node.is-on {
-    opacity: 1;
+  .km[data-js] .km-node:not(.is-on) .km-label {
+    fill: var(--fg-muted);
+    font-weight: 500;
   }
   .km-node.is-on rect {
     stroke-width: 2.2;

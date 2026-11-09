@@ -6,6 +6,11 @@
  * reads fine without JavaScript (all steps listed in order). The script at the
  * bottom upgrades it to a stepper: one step at a time, with the matching arrow
  * highlighted and a snapshot of who holds which credential.
+ *
+ * Colour means one thing here: the role of a participant. The kind of message
+ * (direct call, response, through the browser, out of band) is carried by the
+ * line style and named in the step. On a phone the steps read as a narrative
+ * and the diagram opens on demand at full size.
  */
 import { Code } from 'astro:components';
 import type { Flow, StepKind } from '../data/types';
@@ -21,16 +26,19 @@ const steps = flow.steps;
 const n = P.length;
 
 // ---- geometry ----
-const boxW = 132;
-const boxH = 46;
-const gap = n <= 3 ? 236 : n === 4 ? 190 : n === 5 ? 164 : 150;
-const padX = boxW / 2 + 18;
-const CHAR = 6.6; // approximate advance of the label font at 13px
+// Sized so that a four-party diagram is about 660 units wide and is drawn at
+// its natural size beside the step panel: labels render at 14px, not smaller.
+const boxW = 150;
+const boxH = 48;
+const gap = n <= 3 ? 214 : n === 4 ? 162 : n === 5 ? 156 : 152;
+const padX = boxW / 2 + 14;
+const CHAR = 7.1; // approximate advance of the label face at 14px
 const W = padX * 2 + gap * (n - 1);
 const top = 8;
-const y0 = top + boxH + 46;
-const rowH = 58;
-const H = y0 + rowH * (steps.length - 1) + 38;
+const y0 = top + boxH + 52;
+const rowH = 64;
+const LINE = 17; // line height of a two-line arrow label
+const H = y0 + rowH * (steps.length - 1) + 40;
 
 const idx = (id: string) => {
   const i = P.findIndex((p) => p.id === id);
@@ -39,6 +47,7 @@ const idx = (id: string) => {
 };
 const xOf = (id: string) => padX + gap * idx(id);
 const name = (id: string) => P[idx(id)].label;
+const who = (id: string) => P[idx(id)];
 
 const KIND_LABEL: Record<StepKind, string> = {
   back: 'Direct call',
@@ -56,37 +65,41 @@ const rows = steps.map((s, i) => {
   const self = !s.to || s.to === s.from;
   const x1 = xOf(s.from);
 
-  for (const [who, what] of s.lose ?? []) {
-    idx(who);
+  const spent = new Map<string, string[]>();
+  for (const [id, what] of s.lose ?? []) {
+    idx(id);
     held.set(
-      who,
-      (held.get(who) ?? []).filter((a) => a !== what),
+      id,
+      (held.get(id) ?? []).filter((a) => a !== what),
     );
+    spent.set(id, [...(spent.get(id) ?? []), what]);
   }
   const fresh = new Set<string>();
-  for (const [who, what] of s.gain ?? []) {
-    idx(who);
-    const list = held.get(who) ?? [];
+  for (const [id, what] of s.gain ?? []) {
+    idx(id);
+    const list = held.get(id) ?? [];
     if (!list.includes(what)) list.push(what);
-    held.set(who, list);
-    fresh.add(`${who}\u0000${what}`);
+    held.set(id, list);
+    fresh.add(`${id}\u0000${what}`);
   }
   const snapshot = P.map((p) => ({
     ...p,
     items: (held.get(p.id) ?? []).map((text) => ({ text, fresh: fresh.has(`${p.id}\u0000${text}`) })),
-  })).filter((p) => p.items.length > 0);
+    spent: spent.get(p.id) ?? [],
+  })).filter((p) => p.items.length > 0 || p.spent.length > 0);
+  const from = who(s.from);
 
   if (self) {
-    const w = Math.min(Math.max(118, s.label.length * CHAR + 50), W - 8);
+    const w = Math.min(Math.max(118, s.label.length * CHAR + 54), W - 8);
     const nx = Math.min(Math.max(x1 - w / 2, 4), W - w - 4);
-    return { s, i, y, self: true as const, x1, nx, w, snapshot, route: name(s.from) };
+    return { s, i, y, self: true as const, x1, nx, w, snapshot, from, to: undefined, route: name(s.from) };
   }
 
   const x2 = xOf(s.to!);
   const dir = x2 > x1 ? 1 : -1;
   const span = Math.abs(x2 - x1);
   // Labels that will not fit on one line are split into two balanced lines.
-  const room = span - 22;
+  const room = span - 26;
   let lines = [s.label];
   if (s.label.length * CHAR > room) {
     const words = s.label.split(' ');
@@ -102,12 +115,16 @@ const rows = steps.map((s, i) => {
       }
     }
     lines = best;
-    if (bestLen * CHAR > room + 40) {
+    // a label may run past its arrow (it is clamped to the canvas below), but not by much
+    if (Math.max(...lines.map((l) => l.length)) * CHAR > room + 70) {
       console.warn(`[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`);
     }
   }
   const tip = x2 - dir * 3;
   const head = `${tip},${y} ${tip - dir * 9},${y - 4.6} ${tip - dir * 9},${y + 4.6}`;
+  // a label may run a little past its arrow, but never off the canvas
+  const half = (Math.max(...lines.map((l) => l.length)) * CHAR) / 2;
+  const labelX = Math.min(Math.max((x1 + x2) / 2 + dir * 4, half + 6), W - half - 6);
   return {
     s,
     i,
@@ -117,11 +134,13 @@ const rows = steps.map((s, i) => {
     x2,
     dir,
     head,
-    lineStart: x1 + dir * 11,
+    lineStart: x1 + dir * 12,
     lineEnd: tip - dir * 7,
-    mid: (x1 + x2) / 2,
+    labelX,
     lines,
     snapshot,
+    from,
+    to: who(s.to!),
     route: `${name(s.from)} → ${name(s.to!)}`,
   };
 });
@@ -130,75 +149,11 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 ---
 
 <flow-diagram class="flow" data-count={steps.length}>
-  <div class="flow-stage">
-    <div class="flow-canvas" tabindex="0" role="group" aria-label={`Sequence diagram: ${flow.title}`}>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        width={W}
-        height={H}
-        role="img"
-        aria-label={`${flow.title}: ${steps.length} steps between ${P.map((p) => p.label).join(', ')}. Each step is described in the list that follows.`}
-      >
-        {
-          P.map((p) => {
-            const x = xOf(p.id);
-            return (
-              <g class={`actor role-${p.role}`} data-actor={p.id}>
-                <line class="lifeline" x1={x} y1={top + boxH} x2={x} y2={H - 6} />
-                <rect class="actor-box" x={x - boxW / 2} y={top} width={boxW} height={boxH} rx="4" />
-                <text class="actor-label" x={x} y={top + (p.sub ? 20 : 28)} text-anchor="middle">
-                  {p.label}
-                </text>
-                {p.sub && (
-                  <text class="actor-sub" x={x} y={top + 35} text-anchor="middle">
-                    {p.sub}
-                  </text>
-                )}
-              </g>
-            );
-          })
-        }
-
-        {
-          rows.map((r) =>
-            r.self ? (
-              <g class={`step kind-self`} data-step={r.i} data-actors={r.s.from}>
-                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
-                <rect class="note" x={r.nx} y={r.y - 14} width={r.w} height="28" rx="14" />
-                <circle class="badge" cx={r.nx + 15} cy={r.y} r="10" />
-                <text class="badge-num" x={r.nx + 15} y={r.y + 3.8} text-anchor="middle">
-                  {r.i + 1}
-                </text>
-                <text class="note-label" x={r.nx + 30 + (r.w - 40) / 2} y={r.y + 4.2} text-anchor="middle">
-                  {r.s.label}
-                </text>
-              </g>
-            ) : (
-              <g class={`step kind-${r.s.kind}`} data-step={r.i} data-actors={`${r.s.from} ${r.s.to}`}>
-                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
-                <line class="arrow" x1={r.lineStart} y1={r.y} x2={r.lineEnd} y2={r.y} />
-                <polygon class="head" points={r.head} />
-                <circle class="badge" cx={r.x1} cy={r.y} r="10" />
-                <text class="badge-num" x={r.x1} y={r.y + 3.8} text-anchor="middle">
-                  {r.i + 1}
-                </text>
-                {r.lines.map((line, k) => (
-                  <text
-                    class="arrow-label"
-                    x={r.mid + r.dir * 4}
-                    y={r.y - 9 - (r.lines.length - 1 - k) * 14}
-                    text-anchor="middle"
-                  >
-                    {line}
-                  </text>
-                ))}
-              </g>
-            ),
-          )
-        }
-      </svg>
-    </div>
-
+  <details class="flow-stage" open>
+    <summary>
+      <span class="flow-stage-title">Sequence diagram</span>
+      <span class="flow-stage-count">{n} participants, {steps.length} steps</span>
+    </summary>
     <ul class="flow-legend" aria-label="Legend">
       {
         (['back', 'front', 'resp', 'oob', 'self'] as StepKind[])
@@ -220,12 +175,93 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
           ))
       }
     </ul>
-  </div>
+    <p class="flow-hint">Scroll sideways to see every party. Tap a step to jump to its explanation.</p>
+    <div class="flow-canvas" tabindex="0" role="group" aria-label={`Sequence diagram: ${flow.title}`}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width={W}
+        height={H}
+        style={`--natural: ${W}px`}
+        role="img"
+        aria-label={`${flow.title}: ${steps.length} steps between ${P.map((p) => p.label).join(', ')}. Each step is described in the list that follows.`}
+      >
+        {
+          P.map((p) => {
+            const x = xOf(p.id);
+            return (
+              <g class={`actor role-${p.role}`} data-actor={p.id}>
+                <line class="lifeline" x1={x} y1={top + boxH} x2={x} y2={H - 6} />
+                <rect class="actor-box" x={x - boxW / 2} y={top} width={boxW} height={boxH} rx="4" />
+                <text class="actor-label" x={x} y={top + (p.sub ? 21 : 29)} text-anchor="middle">
+                  {p.label}
+                </text>
+                {p.sub && (
+                  <text class="actor-sub" x={x} y={top + 37} text-anchor="middle">
+                    {p.sub}
+                  </text>
+                )}
+              </g>
+            );
+          })
+        }
+
+        {
+          rows.map((r) =>
+            r.self ? (
+              <g class={`step kind-self role-${r.from.role}`} data-step={r.i} data-actors={r.s.from}>
+                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <rect class="note" x={r.nx} y={r.y - 15} width={r.w} height="30" rx="15" />
+                <circle class="badge" cx={r.nx + 16} cy={r.y} r="11" />
+                <text class="badge-num" x={r.nx + 16} y={r.y + 4.4} text-anchor="middle">
+                  {r.i + 1}
+                </text>
+                <text class="note-label" x={r.nx + 32 + (r.w - 44) / 2} y={r.y + 4.8} text-anchor="middle">
+                  {r.s.label}
+                </text>
+              </g>
+            ) : (
+              <g class={`step kind-${r.s.kind} role-${r.from.role}`} data-step={r.i} data-actors={`${r.s.from} ${r.s.to}`}>
+                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <line class="arrow" x1={r.lineStart} y1={r.y} x2={r.lineEnd} y2={r.y} />
+                <polygon class="head" points={r.head} />
+                <circle class="badge" cx={r.x1} cy={r.y} r="11" />
+                <text class="badge-num" x={r.x1} y={r.y + 4.4} text-anchor="middle">
+                  {r.i + 1}
+                </text>
+                {r.lines.map((line, k) => (
+                  <rect
+                    class="label-bg"
+                    x={r.labelX - (line.length * CHAR) / 2 - 4}
+                    y={r.y - 13 - (r.lines.length - 1 - k) * LINE - 13}
+                    width={line.length * CHAR + 8}
+                    height={LINE + 1}
+                  />
+                ))}
+                {r.lines.map((line, k) => (
+                  <text
+                    class="arrow-label"
+                    x={r.labelX}
+                    y={r.y - 13 - (r.lines.length - 1 - k) * LINE}
+                    text-anchor="middle"
+                  >
+                    {line}
+                  </text>
+                ))}
+              </g>
+            ),
+          )
+        }
+      </svg>
+    </div>
+    <p class="flow-back">
+      <button class="btn small" type="button" data-act="close">Back to the steps</button>
+    </p>
+  </details>
 
   <div class="flow-panel">
     <div class="flow-controls" hidden>
-      <button class="btn small" type="button" data-act="prev" aria-label="Previous step">← Prev</button>
-      <button class="btn small primary" type="button" data-act="next" aria-label="Next step">Next →</button>
+      <button class="btn small" type="button" data-act="prev"><span aria-hidden="true">←</span> Previous</button>
+      <button class="btn small primary" type="button" data-act="next">Next <span aria-hidden="true">→</span></button>
       <button class="btn small ghost" type="button" data-act="play" aria-pressed="false">Play</button>
       <button class="btn small ghost" type="button" data-act="all" aria-pressed="false">All steps</button>
       <span class="flow-count" aria-live="polite"></span>
@@ -239,8 +275,17 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         rows.map((r) => (
           <li class={`flow-step kind-${r.s.kind}`} data-step={r.i} id={`step-${r.i + 1}`}>
             <p class="step-meta">
-              <span class="step-num">{r.i + 1}</span>
-              <span class="step-route">{r.route}</span>
+              <span class={`step-num role-${r.from.role}`}>{r.i + 1}</span>
+              <span class="step-route">
+                <span class={`who role-${r.from.role}`}>{r.from.label}</span>
+                {r.to && (
+                  <>
+                    <span class="to" aria-hidden="true">→</span>
+                    <span class="visually-hidden"> to </span>
+                    <span class={`who role-${r.to.role}`}>{r.to.label}</span>
+                  </>
+                )}
+              </span>
               <span class="step-kind">{KIND_LABEL[r.s.kind]}</span>
             </p>
             <h3 set:html={inline(r.s.title)} />
@@ -262,12 +307,22 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
                       <dt>{p.label}</dt>
                       <dd>
                         {p.items.map((it) => (
-                          <span class:list={['held-chip', { fresh: it.fresh }]}>{it.text}</span>
+                          <span class:list={['held-chip', { fresh: it.fresh }]}>
+                            {it.fresh && <span class="held-flag">new</span>}
+                            {it.text}
+                          </span>
+                        ))}
+                        {p.spent.map((text) => (
+                          <span class="held-chip spent">
+                            <span class="held-flag">used up</span>
+                            <s>{text}</s>
+                          </span>
                         ))}
                       </dd>
                     </div>
                   ))}
                 </dl>
+                <p class="held-note">Parties not listed hold none of this flow’s credentials at this point.</p>
               </div>
             )}
           </li>
@@ -282,7 +337,10 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     index = 0;
     count = 0;
     all = false;
+    /** On a phone the steps read as one narrative and the diagram opens on demand. */
+    narrative = false;
     timer: number | undefined;
+    narrow = window.matchMedia('(max-width: 47.99rem)');
 
     connectedCallback() {
       this.count = Number(this.dataset.count ?? 0);
@@ -297,17 +355,30 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         if (act === 'next') return this.go(this.index + 1, true);
         if (act === 'play') return this.togglePlay();
         if (act === 'all') return this.toggleAll();
+        if (act === 'close') {
+          const stage = this.querySelector<HTMLDetailsElement>('.flow-stage')!;
+          stage.open = false;
+          stage.querySelector('summary')?.scrollIntoView({ block: 'center' });
+          return;
+        }
         const goto = t.closest<HTMLElement>('[data-goto]')?.dataset.goto;
         if (goto != null) return this.go(Number(goto), true);
         const step = t.closest<SVGGElement>('svg .step');
         if (step) {
+          const i = Number(step.dataset.step);
+          if (this.narrative) {
+            // the diagram is a map of the narrative: jump to that step's text
+            this.querySelector(`#step-${i + 1}`)?.scrollIntoView({ block: 'start' });
+            history.replaceState(null, '', `#step-${i + 1}`);
+            return;
+          }
           if (this.all) this.toggleAll();
-          this.go(Number(step.dataset.step), true);
+          this.go(i, true);
         }
       });
 
       this.addEventListener('keydown', (e) => {
-        if ((e.target as Element).closest('pre, input, textarea')) return;
+        if (this.narrative || (e.target as Element).closest('pre, input, textarea, summary')) return;
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
           e.preventDefault();
           this.go(this.index + 1, true);
@@ -322,9 +393,20 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         if (m) this.go(Number(m[1]) - 1, false);
       };
       window.addEventListener('hashchange', fromHash);
+      this.narrow.addEventListener('change', this.setMode);
+      this.setMode();
       this.go(0, false);
       fromHash();
     }
+
+    setMode = () => {
+      this.narrative = this.narrow.matches;
+      this.toggleAttribute('data-narrative', this.narrative);
+      // closed on a phone until asked for; always open beside the panel
+      this.querySelector<HTMLDetailsElement>('.flow-stage')!.open = !this.narrative;
+      if (this.narrative) this.stop();
+      this.render();
+    };
 
     go(i: number, user: boolean) {
       if (user) this.stop();
@@ -334,31 +416,30 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
     render(reveal = false) {
       const i = this.index;
+      const all = this.all || this.narrative;
       let actors: string[] = [];
       this.querySelectorAll<SVGGElement>('svg .step').forEach((g) => {
         const s = Number(g.dataset.step);
-        g.classList.toggle('is-active', !this.all && s === i);
-        g.classList.toggle('is-done', !this.all && s < i);
-        g.classList.toggle('is-todo', !this.all && s > i);
+        g.classList.toggle('is-active', !all && s === i);
+        g.classList.toggle('is-done', !all && s < i);
+        g.classList.toggle('is-todo', !all && s > i);
         if (s === i) actors = (g.dataset.actors ?? '').split(' ');
       });
       this.querySelectorAll<SVGGElement>('svg .actor').forEach((g) => {
-        g.classList.toggle('is-active', !this.all && actors.includes(g.dataset.actor ?? ''));
+        g.classList.toggle('is-active', !all && actors.includes(g.dataset.actor ?? ''));
       });
       this.querySelectorAll<HTMLElement>('.flow-step').forEach((li) => {
-        li.hidden = !this.all && Number(li.dataset.step) !== i;
+        li.hidden = !all && Number(li.dataset.step) !== i;
       });
       this.querySelectorAll<HTMLElement>('.flow-progress button').forEach((b, s) => {
         b.classList.toggle('is-active', s === i);
         b.classList.toggle('is-done', s < i);
       });
-      this.querySelector<HTMLButtonElement>('[data-act="prev"]')!.disabled = this.all || i === 0;
-      this.querySelector<HTMLButtonElement>('[data-act="next"]')!.disabled = this.all || i === this.count - 1;
-      this.querySelector('.flow-count')!.textContent = this.all
-        ? `${this.count} steps`
-        : `Step ${i + 1} of ${this.count}`;
+      this.querySelector<HTMLButtonElement>('[data-act="prev"]')!.disabled = all || i === 0;
+      this.querySelector<HTMLButtonElement>('[data-act="next"]')!.disabled = all || i === this.count - 1;
+      this.querySelector('.flow-count')!.textContent = all ? `${this.count} steps` : `Step ${i + 1} of ${this.count}`;
 
-      if (reveal && !this.all) {
+      if (reveal && !all) {
         const canvas = this.querySelector<HTMLElement>('.flow-canvas')!;
         const g = this.querySelector<SVGGElement>(`svg .step[data-step="${i}"] .hit`);
         if (g) {
@@ -413,6 +494,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
     disconnectedCallback() {
       this.stop();
+      this.narrow.removeEventListener('change', this.setMode);
     }
   }
   customElements.define('flow-diagram', FlowDiagram);
@@ -427,7 +509,8 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   }
   @media (min-width: 68rem) {
     .flow {
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      /* the diagram gets the room: it is drawn at its natural size here */
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
       gap: 1.75rem;
     }
     .flow-panel {
@@ -448,6 +531,12 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .flow-stage {
     min-width: 0;
   }
+  /* the disclosure only exists on a phone; elsewhere the diagram is simply there */
+  .flow-stage > summary,
+  .flow-hint,
+  .flow-back {
+    display: none;
+  }
   .flow-canvas {
     background: var(--bg-raised);
     border: 1px solid var(--border);
@@ -457,99 +546,184 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     scrollbar-width: thin;
   }
   @media (max-width: 67.99rem) {
-    .flow[data-js]:not([data-all]) .flow-canvas {
+    .flow[data-js]:not([data-all]):not([data-narrative]) .flow-canvas {
       max-height: 62vh;
     }
   }
   .flow-canvas svg {
     display: block;
+    width: 100%;
+    max-width: calc(var(--natural) * 1.08);
     height: auto;
     margin-inline: auto;
     min-width: 33rem;
     font-family: var(--font-body);
   }
 
-  /* actors */
+  @media (max-width: 47.99rem) {
+    .flow[data-narrative] .flow-stage > summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.2rem 0.8rem;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--fg);
+      border-radius: var(--radius);
+      background: var(--bg-raised);
+      cursor: pointer;
+      list-style: none;
+      box-shadow: 2px 2px 0 var(--border);
+    }
+    .flow[data-narrative] .flow-stage > summary::-webkit-details-marker {
+      display: none;
+    }
+    /* says what a tap will do */
+    .flow[data-narrative] .flow-stage > summary::after {
+      content: 'Show';
+      margin-left: auto;
+      font-family: var(--font-label);
+      font-size: 0.76rem;
+      font-weight: 500;
+      text-decoration: underline;
+      color: var(--accent);
+    }
+    .flow[data-narrative] .flow-stage[open] > summary::after {
+      content: 'Hide';
+    }
+    .flow-stage-title {
+      font-weight: 600;
+    }
+    .flow-stage-count {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--fg-muted);
+    }
+    .flow[data-narrative] .flow-stage[open] > summary {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      box-shadow: none;
+    }
+    .flow[data-narrative] .flow-hint {
+      display: block;
+      margin: 0;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.84rem;
+      color: var(--fg-muted);
+      background: var(--bg-sunken);
+      border-inline: 1px solid var(--border);
+    }
+    .flow[data-narrative] .flow-canvas {
+      border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .flow[data-narrative] .flow-back {
+      display: block;
+      margin: 0.6rem 0 0;
+    }
+    /* edge shadows appear wherever more of the diagram lies off to that side */
+    .flow[data-narrative] .flow-canvas {
+      background:
+        linear-gradient(to right, var(--bg-raised) 40%, transparent) left / 2.4rem 100% no-repeat local,
+        linear-gradient(to left, var(--bg-raised) 40%, transparent) right / 2.4rem 100% no-repeat local,
+        linear-gradient(to right, color-mix(in srgb, var(--fg) 30%, transparent), transparent) left / 0.8rem 100% no-repeat scroll,
+        linear-gradient(to left, color-mix(in srgb, var(--fg) 30%, transparent), transparent) right / 0.8rem 100% no-repeat scroll,
+        var(--bg-raised);
+    }
+    /* opened on demand, the diagram keeps its natural size and scrolls sideways */
+    .flow[data-narrative] .flow-canvas svg {
+      width: var(--natural);
+      max-width: none;
+      margin-inline: 0;
+    }
+    .flow[data-narrative] :is([data-act='prev'], [data-act='next'], [data-act='play'], [data-act='all']),
+    .flow[data-narrative] .flow-progress {
+      display: none;
+    }
+    .flow[data-narrative] .flow-count {
+      margin-left: 0;
+    }
+  }
+
+  /* actors: the role colour runs from the box down the lifeline */
   .lifeline {
-    stroke: var(--border-strong);
-    stroke-width: 1;
-    stroke-dasharray: 3 4;
+    stroke: color-mix(in srgb, var(--role) 50%, var(--bg-raised));
+    stroke-width: 1.5;
   }
   .actor-box {
     fill: var(--role-soft);
     stroke: var(--role);
-    stroke-width: 1.2;
+    stroke-width: 1.3;
     transition: stroke-width 0.15s;
   }
   .actor-label {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
     fill: var(--fg);
   }
   .actor-sub {
-    font-family: var(--font-label);
-    font-size: 9.5px;
-    letter-spacing: 0.03em;
+    font-size: 12.5px;
     fill: var(--fg-muted);
-    text-transform: uppercase;
   }
   .actor.is-active .actor-box {
     stroke-width: 2.6;
   }
   .actor.is-active .lifeline {
     stroke: var(--role);
-    stroke-dasharray: none;
-    stroke-width: 1.4;
+    stroke-width: 2;
   }
 
-  /* steps */
+  /* steps: one ink for every message; the line style says what kind it is */
   .step {
-    --line: var(--fg);
     cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .kind-front {
-    --line: var(--red);
-  }
-  .kind-oob {
-    --line: var(--amber);
   }
   .hit {
     fill: transparent;
   }
-  .step:hover .hit {
-    fill: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
+  .label-bg {
+    fill: var(--bg-raised);
+  }
+  /* a tap leaves :hover stuck on a touch screen, so only pointers get the hover band */
+  @media (hover: hover) {
+    .step:hover .hit,
+    .step:hover .label-bg {
+      fill: color-mix(in srgb, var(--bg-sunken) 70%, var(--bg-raised));
+    }
   }
   .arrow {
-    stroke: var(--line);
-    stroke-width: 1.5;
+    stroke: var(--fg);
+    stroke-width: 1.4;
     fill: none;
   }
   .kind-resp .arrow {
     stroke-dasharray: 6 4;
   }
+  .kind-front .arrow {
+    stroke-dasharray: 11 3 2 3;
+  }
   .kind-oob .arrow {
-    stroke-dasharray: 1.5 4;
+    stroke-dasharray: 1.5 4.5;
     stroke-linecap: round;
     stroke-width: 2;
   }
   .head {
-    fill: var(--line);
+    fill: var(--fg);
   }
+  /* the number sits on the sender's lifeline and wears the sender's colour */
   .badge {
     fill: var(--bg-raised);
-    stroke: var(--line);
-    stroke-width: 1.3;
+    stroke: var(--role);
+    stroke-width: 1.6;
   }
   .badge-num {
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 500;
-    fill: var(--line);
+    fill: var(--fg);
   }
   .arrow-label,
   .note-label {
-    font-size: 13px;
+    font-size: 14px;
     fill: var(--fg);
   }
   .arrow-label {
@@ -564,44 +738,56 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     stroke-width: 1.1;
   }
 
-  .step.is-todo {
-    opacity: 0.26;
+  /* Steps before and after the current one stay readable: they step back to the
+     muted ink, which is held to 4.5:1 on this surface, never to an opacity. */
+  .step:is(.is-todo, .is-done) :is(.arrow-label, .note-label) {
+    fill: var(--fg-muted);
   }
-  .step.is-done {
-    opacity: 0.55;
+  .step:is(.is-todo, .is-done) .arrow {
+    stroke: var(--fg-muted);
+  }
+  .step:is(.is-todo, .is-done) .head {
+    fill: var(--fg-muted);
+  }
+  .step.is-done .badge {
+    fill: var(--role-soft);
   }
   .step.is-active .arrow {
     stroke-width: 2.6;
   }
   .step.is-active .badge {
-    fill: var(--line);
+    fill: var(--role);
+    stroke-width: 2;
   }
   .step.is-active .badge-num {
     fill: var(--bg-raised);
+    font-weight: 600;
   }
   .step.is-active .arrow-label,
   .step.is-active .note-label {
     font-weight: 600;
   }
+  .step.is-active .arrow-label {
+    stroke: var(--bg-inset);
+  }
   .step.is-active .note {
+    fill: var(--bg-raised);
     stroke: var(--fg);
     stroke-width: 1.8;
   }
-  .step.is-active .hit {
-    fill: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
+  .step.is-active :is(.hit, .label-bg) {
+    fill: var(--bg-inset);
   }
 
   /* legend */
   .flow-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem 1.2rem;
+    gap: 0.3rem 1.3rem;
     list-style: none;
-    margin: 0.7rem 0 0;
+    margin: 0 0 0.6rem;
     padding: 0;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.03em;
+    font-size: 0.82rem;
     color: var(--fg-muted);
   }
   .flow-legend li {
@@ -609,13 +795,6 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     align-items: center;
     gap: 0.5rem;
     margin: 0;
-    --line: var(--fg);
-  }
-  .flow-legend .kind-front {
-    --line: var(--red);
-  }
-  .flow-legend .kind-oob {
-    --line: var(--amber);
   }
   .flow-legend svg {
     flex: none;
@@ -680,6 +859,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    scroll-margin-top: 5rem;
   }
   .flow-step + .flow-step {
     margin-top: 0.8rem;
@@ -692,55 +872,77 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem 0.7rem;
-    margin: 0 0 0.6rem;
-    font-family: var(--font-label);
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--fg-muted);
+    margin: 0 0 0.7rem;
   }
   .step-num {
     display: grid;
     place-items: center;
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border-radius: var(--radius-round);
-    background: var(--fg);
-    color: var(--bg);
-    font-weight: 500;
+    background: var(--role);
+    color: var(--bg-raised);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    flex: none;
   }
-  .kind-front .step-num {
-    background: var(--red);
-  }
-  .kind-oob .step-num {
-    background: var(--amber);
-  }
+  /* who is talking to whom, in the colours the diagram uses */
   .step-route {
-    color: var(--fg);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.45rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .step-route .who,
+  .held dt {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+  }
+  .step-route .who::before,
+  .held dt::before {
+    content: '';
+    width: 0.62em;
+    height: 0.62em;
+    flex: none;
+    background: var(--role-soft);
+    box-shadow: inset 0 0 0 1.5px var(--role);
+  }
+  .step-route .to {
+    color: var(--fg-muted);
+    font-weight: 400;
   }
   .step-kind {
     margin-left: auto;
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
   }
   .flow-step h3 {
     margin: 0 0 0.5rem;
     font-size: 1.22rem;
   }
   .step-body {
-    font-size: 0.97rem;
+    font-size: 1rem;
   }
   .step-body :global(p:last-child) {
     margin-bottom: 0;
   }
   .flow-step :global(pre) {
     margin: 0.9rem 0 0;
-    background: var(--bg) !important;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
   }
 
   .held {
     margin-top: 1rem;
     padding-top: 0.8rem;
-    border-top: 1px dashed var(--border-strong);
+    border-top: 1px solid var(--border);
   }
   .held-title {
     font-family: var(--font-label);
@@ -753,18 +955,17 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .held dl {
     margin: 0;
     display: grid;
-    gap: 0.4rem;
+    gap: 0.45rem;
   }
   .held dl > div {
     display: grid;
-    grid-template-columns: 7.2rem minmax(0, 1fr);
+    grid-template-columns: 8.2rem minmax(0, 1fr);
     gap: 0.6rem;
     align-items: baseline;
   }
   .held dt {
-    font-size: 0.82rem;
+    font-size: 0.86rem;
     font-weight: 600;
-    color: var(--role);
   }
   .held dd {
     margin: 0;
@@ -774,16 +975,29 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   }
   .held-chip {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    line-height: 1.25;
-    padding: 0.22em 0.5em;
-    border-radius: 3px;
-    border: 1px solid var(--border-strong);
-    color: var(--fg-muted);
+    font-size: 0.76rem;
+    line-height: 1.3;
+    padding: 0.2em 0.5em;
+    border-radius: 2px;
+    background: var(--bg-sunken);
+    color: var(--fg);
+  }
+  .held-flag {
+    font-size: 0.86em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-right: 0.5em;
   }
   .held-chip.fresh {
-    border-color: var(--role);
     background: var(--role-soft);
-    color: var(--fg);
+  }
+  .held-chip.spent {
+    color: var(--fg-muted);
+  }
+  .held-note {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
+    color: var(--fg-muted);
   }
 </style>

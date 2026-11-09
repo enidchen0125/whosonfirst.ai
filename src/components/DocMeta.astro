@@ -1,0 +1,37 @@
+---
+/**
+ * Facts about the page itself: what kind of document it is, which
+ * specification it follows and when it was last checked. These are real
+ * properties of the guide, kept apart from the status of any standard.
+ */
+export interface MetaItem {
+  label: string;
+  value: string;
+  href?: string;
+  /** Second line, in smaller type. */
+  note?: string;
+  noteHref?: string;
+  /** Takes the full row on a phone: for values that should not be squeezed. */
+  wide?: boolean;
+}
+interface Props {
+  items: MetaItem[];
+}
+const { items } = Astro.props;
+---
+
+<dl class="doc-meta">
+  {
+    items.map((it) => (
+      <div class:list={{ wide: it.wide }}>
+        <dt>{it.label}</dt>
+        <dd>
+          {it.href ? <a href={it.href}>{it.value}</a> : it.value}
+          {it.note && (
+            <span class="doc-meta-note">{it.noteHref ? <a href={it.noteHref}>{it.note}</a> : it.note}</span>
+          )}
+        </dd>
+      </div>
+    ))
+  }
+</dl>

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import DocMeta from '../../components/DocMeta.astro';
 import { standards } from '../../data/standards';
 import { flows } from '../../data/flows';
 import { REVIEWED } from '../../data/site';
@@ -14,6 +15,18 @@ const bodies = [...new Set(standards.map((s) => s.body))].sort(
 );
 const count = (fn: (s: (typeof standards)[number]) => boolean) => standards.filter(fn).length;
 const usedIn = (id: string) => flows.filter((f) => f.standards.includes(id));
+const published = count((x) => x.status === 'rfc' || x.status === 'final');
+const draftCount = count((x) => x.status === 'wg-draft' || x.status === 'draft');
+const meta = [
+  { label: 'Document', value: 'Reference', note: 'Every entry links to its source' },
+  {
+    label: 'Entries',
+    value: `${standards.length}`,
+    note: `${published} published, ${draftCount} drafts, ${standards.length - published - draftCount} projects and guidance`,
+  },
+  { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+  { label: 'Process states', value: 'As reported', note: 'From secondary sources; check the source' },
+];
 
 const moved = [
   {
@@ -63,6 +76,7 @@ const moved = [
         {standards.length} RFCs, drafts, specifications and projects that shape how agents authenticate and what they
         are allowed to do. Each entry says what it defines, where it stands, and why it matters for agents.
       </p>
+      <DocMeta items={meta} />
     </div>
   </div>
 

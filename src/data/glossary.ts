@@ -201,7 +201,7 @@ export const glossary: Term[] = [
   {
     term: 'Principal',
     def: 'The party whose authority is being exercised. A person, an organization, or the agent itself.',
-    see: { href: '/concepts/#lineup', label: 'The lineup' },
+    see: { href: '/concepts/#roles', label: 'The roles' },
   },
   {
     term: 'Proof of possession',

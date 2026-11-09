@@ -29,6 +29,8 @@
   --amber-soft: light-dark(#f8ecc8, #3a2c08);
 
   --font-display: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* card, step and list headings; the same face as titles unless a direction says otherwise */
+  --font-heading: var(--font-display);
   --font-body: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-label: var(--font-mono);
@@ -152,14 +154,17 @@
 :root[data-direction='draft'] .flow .actor-label {
   font-size: 10.5px;
 }
+:root[data-direction='draft'] .flow .actor-sub {
+  font-size: 10px;
+}
+:root[data-direction='draft'] .flow .badge-num {
+  font-size: 11px;
+}
 :root[data-direction='draft'] .km .km-label {
   font-size: 12px;
 }
 :root[data-direction='draft'] .km .km-edge-label {
   font-size: 10.5px;
-}
-:root[data-direction='draft'] .lu .lu-name {
-  font-size: 11.5px;
 }
 :root[data-direction='draft'] .flow-controls .btn {
   font-size: 0.8rem;

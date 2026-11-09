@@ -1,0 +1,273 @@
+/* ------------------------------------------------------------------
+   Internet-Draft -01 — the document format's structure, not its typewriter.
+   Fine rules, link blue, compact metadata and numbered sections stay.
+   Prose and diagram labels move to a proportional face; the monospaced
+   face is kept for titles, metadata and anything literal: identifiers,
+   parameters, messages on the wire.
+------------------------------------------------------------------- */
+:root[data-direction='draft01'] {
+  --bg: light-dark(#ffffff, #0e0f11);
+  --bg-raised: light-dark(#ffffff, #16171a);
+  --bg-sunken: light-dark(#f3f4f6, #090a0b);
+  --bg-inset: light-dark(#e6e8eb, #23252a);
+  --fg: light-dark(#15171a, #e9e9e7);
+  --fg-muted: light-dark(#434850, #b3b5b2);
+  --fg-subtle: light-dark(#5c6169, #94968f);
+  --border: light-dark(#cfd2d7, #32343a);
+  --border-strong: light-dark(#757a82, #7b7e85);
+  --accent: light-dark(#0b3fc4, #93b5ff);
+  --accent-soft: light-dark(#e7edfd, #18254e);
+  --on-accent: light-dark(#ffffff, #0e0f11);
+  --red: light-dark(#a61b1b, #ff8f8f);
+  --red-soft: light-dark(#fbe4e4, #3a1515);
+  /* teal, to stay distinct from link blue */
+  --blue: light-dark(#00607a, #6cd0e8);
+  --blue-soft: light-dark(#d9eef4, #0d2f3a);
+  --violet: light-dark(#5b2a86, #cfa8f5);
+  --violet-soft: light-dark(#ece2f6, #2c1a42);
+  --green: light-dark(#1c6b2a, #7fd491);
+  --green-soft: light-dark(#dff1e2, #12301a);
+  --amber: light-dark(#7a5200, #e8c063);
+  --amber-soft: light-dark(#f8ecc8, #3a2c08);
+
+  --font-display: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-heading: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-label: var(--font-mono);
+  --display-weight: 600;
+  --display-tracking: -0.015em;
+  --display-tracking-tight: -0.03em;
+  --display-transform: none;
+  --display-italic: normal;
+  --display-scale: 0.74;
+  /* prose is 17px: the root steps up, so every rem-based size follows */
+  font-size: 106.25%;
+  --body-size: 1rem;
+  --body-leading: 1.62;
+  /* about 72 characters a line at this size */
+  --prose: 35rem;
+  --article-measure: 35rem;
+
+  --radius: 2px;
+  --radius-pill: 2px;
+  --radius-round: 50%;
+  --card-hover-shadow: none;
+
+  --page-head-bg: var(--bg);
+  --hero-bg: var(--bg);
+}
+
+/* ---------- document structure ---------- */
+
+:root[data-direction='draft01'] :is(.page-head, .hero) {
+  border-bottom: 1px solid var(--fg);
+}
+:root[data-direction='draft01'] :is(h1, h2) {
+  line-height: 1.18;
+}
+:root[data-direction='draft01'] :is(h3, h4) {
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+}
+:root[data-direction='draft01'] .wordmark {
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+}
+:root[data-direction='draft01'] .lede {
+  color: var(--fg);
+  font-size: clamp(1.1rem, 1.7vw, 1.22rem);
+  line-height: 1.55;
+}
+/* section numbers only where a table of contents refers to them */
+:root[data-direction='draft01'] :is(.article, .numbered) {
+  counter-reset: sec;
+}
+:root[data-direction='draft01'] :is(.article > h2, .numbered > .section > .wrap > h2, .numbered .section-head > h2) {
+  counter-increment: sec;
+}
+:root[data-direction='draft01'] :is(.article > h2, .numbered > .section > .wrap > h2, .numbered .section-head > h2)::before {
+  content: counter(sec) '.\00a0';
+  color: var(--fg-subtle);
+  font-weight: 400;
+}
+:root[data-direction='draft01'] :is(.article-toc ol, .toc) {
+  counter-reset: toc;
+}
+:root[data-direction='draft01'] :is(.article-toc li, .toc a) {
+  counter-increment: toc;
+}
+:root[data-direction='draft01'] :is(.article-toc li a, .toc a)::before {
+  content: counter(toc) '.\00a0';
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--fg-subtle);
+}
+:root[data-direction='draft01'] .article-toc ol {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* ---------- what can be clicked ---------- */
+
+/* links are blue and underlined wherever they sit in text */
+:root[data-direction='draft01'] main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card) {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+}
+:root[data-direction='draft01'] main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card):hover {
+  text-decoration-thickness: 2px;
+}
+:root[data-direction='draft01'] .eyebrow a {
+  text-decoration: underline;
+}
+/* a card that is a link says so in its title */
+:root[data-direction='draft01'] a.card {
+  border-color: var(--border-strong);
+}
+:root[data-direction='draft01'] a.card :is(h3, h4) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+:root[data-direction='draft01'] a.card:hover {
+  transform: none;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+/* buttons are boxes with a solid edge; nothing else on the page is */
+:root[data-direction='draft01'] .btn {
+  border: 1px solid var(--fg);
+  background: var(--bg-raised);
+  box-shadow: 2px 2px 0 var(--border);
+  font-size: 0.82rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.7em 1em;
+}
+:root[data-direction='draft01'] .btn.small {
+  font-size: 0.76rem;
+  padding: 0.55em 0.8em;
+}
+:root[data-direction='draft01'] .btn:hover:not(:disabled) {
+  background: var(--fg);
+  color: var(--bg);
+}
+:root[data-direction='draft01'] .btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+:root[data-direction='draft01'] .btn.primary:hover:not(:disabled) {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+:root[data-direction='draft01'] .btn.ghost {
+  border-color: var(--border-strong);
+  color: var(--fg);
+}
+:root[data-direction='draft01'] .btn:disabled {
+  box-shadow: none;
+}
+
+/* blue is for links: labels that are not links give it up */
+:root[data-direction='draft01'] ol.moved span.when,
+:root[data-direction='draft01'] .gl-letter {
+  color: var(--fg-muted);
+}
+
+/* ---------- metadata is text, never a box ---------- */
+
+:root[data-direction='draft01'] .chip {
+  border: 0;
+  background: none;
+  padding: 0;
+  gap: 0.5em;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+:root[data-direction='draft01'] .chip::before {
+  content: '';
+  width: 0.62em;
+  height: 0.62em;
+  background: currentColor;
+  flex: none;
+}
+/* a tag with no tone has no marker: an empty square reads as a checkbox */
+:root[data-direction='draft01'] .chip:not([data-tone])::before,
+:root[data-direction='draft01'] .chip[data-tone='']::before {
+  display: none;
+}
+:root[data-direction='draft01'] .chip[data-tone]:not([data-tone='']) {
+  background: none;
+}
+:root[data-direction='draft01'] .chips {
+  gap: 0.45rem 1.3rem;
+}
+:root[data-direction='draft01'] a.chip {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+:root[data-direction='draft01'] a.chip::before {
+  display: none;
+}
+:root[data-direction='draft01'] .eyebrow::before {
+  display: none;
+}
+
+/* ---------- literal syntax stands apart from prose ---------- */
+
+:root[data-direction='draft01'] pre {
+  background: var(--bg-sunken) !important;
+  border: 0;
+  border-left: 2px solid var(--fg);
+  border-radius: 0;
+  font-size: 0.8rem;
+}
+:root[data-direction='draft01'] :not(pre) > code {
+  background: var(--bg-sunken);
+  border: 0;
+  border-radius: 2px;
+  padding: 0.1em 0.3em;
+}
+
+/* ---------- surfaces ---------- */
+
+/* "use it when" is a ruled note, not a coloured box */
+:root[data-direction='draft01'] aside.fit {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--fg);
+  border-radius: 0;
+  padding: 0.9rem 0 0;
+}
+:root[data-direction='draft01'] aside.fit h2 {
+  color: var(--fg-muted);
+}
+
+:root[data-direction='draft01'] .site-header {
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-direction='draft01'] .callout {
+  background: var(--bg);
+  border-width: 0 0 0 3px;
+  border-radius: 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  font-size: 0.96rem;
+}
+:root[data-direction='draft01'] .table-scroll {
+  border-width: 1px 0;
+  border-color: var(--fg) transparent var(--border);
+  border-radius: 0;
+}
+:root[data-direction='draft01'] .site-footer {
+  border-top-color: var(--fg);
+}

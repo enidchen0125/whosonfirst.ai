@@ -22,6 +22,7 @@ import '../styles/directions/scorecard.css';
 import '../styles/directions/scoreboard.css';
 import '../styles/directions/linemap.css';
 import '../styles/directions/draft.css';
+import '../styles/directions/draft01.css';
 import '../styles/global.css';
 import Logo from '../components/Logo.astro';
 import DesignSwitcher from '../components/DesignSwitcher.astro';
@@ -87,9 +88,10 @@ const directionIds = directions.map((d) => d.id);
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap bar">
-        <a class="brand" href="/" aria-label="Who's on First — home">
+        <a class="brand" href="/">
           <Logo />
           <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
+          <span class="visually-hidden">, home</span>
         </a>
         <nav aria-label="Primary">
           <ul>
@@ -276,6 +278,12 @@ const directionIds = directions.map((d) => d.id);
       overflow-x: auto;
       scrollbar-width: none;
       border-top: 1px solid var(--border);
+      /* edge shadows appear wherever more links lie off to that side */
+      background:
+        linear-gradient(to right, var(--bg) 40%, transparent) left / 2rem 100% no-repeat local,
+        linear-gradient(to left, var(--bg) 40%, transparent) right / 2rem 100% no-repeat local,
+        linear-gradient(to right, color-mix(in srgb, var(--fg) 28%, transparent), transparent) left / 0.7rem 100% no-repeat scroll,
+        linear-gradient(to left, color-mix(in srgb, var(--fg) 28%, transparent), transparent) right / 0.7rem 100% no-repeat scroll;
     }
     nav::-webkit-scrollbar {
       display: none;

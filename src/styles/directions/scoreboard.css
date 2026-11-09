@@ -30,6 +30,8 @@
   --amber-soft: light-dark(#f3e7b8, #3a3210);
 
   --font-display: 'Big Shoulders Display Variable', 'Arial Narrow', 'Helvetica Neue Condensed', Impact, sans-serif;
+  /* card, step and list headings; the same face as titles unless a direction says otherwise */
+  --font-heading: var(--font-display);
   --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-label: var(--font-body);

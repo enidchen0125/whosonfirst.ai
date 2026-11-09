@@ -43,12 +43,21 @@ export const directions: Direction[] = [
   },
   {
     id: 'draft',
-    name: 'Internet-Draft',
+    name: 'Internet-Draft -00',
     source: 'The subject’s own document format',
     idea: 'Plain-text RFC conventions: one monospaced face, numbered sections, controls drawn in brackets, hyperlinks in link blue.',
     type: 'IBM Plex Mono throughout',
     tradeoff:
       'Monospaced prose reads more slowly and the look is austere. It flatters readers who live in specifications and may put off those who do not.',
+  },
+  {
+    id: 'draft01',
+    name: 'Internet-Draft -01',
+    source: 'Revision of -00 after review',
+    idea: 'The document’s structure without its typewriter: fine rules, link blue, compact metadata and numbered sections, with prose and diagram labels in a proportional face at 17px. Monospace marks titles, metadata and anything literal. Buttons are boxes; metadata never is.',
+    type: 'IBM Plex Mono for titles and literals, IBM Plex Sans for reading',
+    tradeoff:
+      'Quieter than the others: with no display face and one accent colour, the personality has to come from the diagrams and the writing.',
   },
 ];
 

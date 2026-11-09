@@ -3,9 +3,11 @@ import Base from '../../layouts/Base.astro';
 import FlowDiagram from '../../components/FlowDiagram.astro';
 import FlowCard from '../../components/FlowCard.astro';
 import StandardCard from '../../components/StandardCard.astro';
+import DocMeta from '../../components/DocMeta.astro';
 import { flows, related } from '../../data/flows';
 import { std } from '../../data/standards';
-import { GROUPS, HUMAN_LABEL, HUMAN_TONE, MATURITY_LABEL } from '../../data/types';
+import { REVIEWED } from '../../data/site';
+import { GROUPS, HUMAN_LABEL, MATURITY_LABEL, STATUS_LABEL } from '../../data/types';
 import type { Flow } from '../../data/types';
 import { block, inline } from '../../lib/md';
 
@@ -23,6 +25,39 @@ const rel = related(flow);
 const i = flows.indexOf(flow);
 const prev = flows[i - 1];
 const next = flows[i + 1];
+
+// The first standard a flow lists is the one it follows most closely.
+const primary = standards[0];
+const revision = primary.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '');
+const nDraft = standards.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
+const nPublished = standards.filter((s) => s.status === 'rfc' || s.status === 'final').length;
+const nOther = standards.length - nDraft - nPublished;
+const makeup = [
+  `${nPublished} published`,
+  nDraft > 0 && `${nDraft} ${nDraft === 1 ? 'draft' : 'drafts'}`,
+  nOther > 0 && `${nOther} ${nOther === 1 ? 'project' : 'projects'}`,
+]
+  .filter(Boolean)
+  .join(', ');
+const meta = [
+  { label: 'Document', value: 'Implementation guide', note: 'An explanation, not a specification' },
+  {
+    label: 'Primary specification',
+    wide: true,
+    value: primary.ref,
+    href: `/standards/#${primary.id}`,
+    note: [STATUS_LABEL[primary.status], revision].filter(Boolean).join(' · '),
+  },
+  {
+    label: `All ${standards.length} specifications`,
+    value: makeup,
+    href: '#standards',
+    note: `Flow rated ${MATURITY_LABEL[flow.maturity].replace(' standards', '').toLowerCase()}: what that means`,
+    noteHref: '/about/#how-status-is-worded',
+  },
+  { label: 'Human involvement', value: HUMAN_LABEL[flow.human] },
+  { label: 'Guide last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+];
 ---
 
 <Base title={flow.title} description={flow.tagline}>
@@ -31,11 +66,7 @@ const next = flows[i + 1];
       <p class="eyebrow"><a href="/flows/">Flows</a> / {group.title}</p>
       <h1>{flow.title}</h1>
       <p class="lede">{flow.tagline}</p>
-      <div class="chips head-chips">
-        <span class="chip" data-tone={HUMAN_TONE[flow.human]}>{HUMAN_LABEL[flow.human]}</span>
-        <span class="chip">{MATURITY_LABEL[flow.maturity]}</span>
-        <span class="chip">{flow.steps.length} steps</span>
-      </div>
+      <DocMeta items={meta} />
     </div>
   </div>
 
@@ -54,8 +85,9 @@ const next = flows[i + 1];
       <div class="section-head">
         <h2 id="walkthrough">Step by step</h2>
         <p>
-          Use <kbd>←</kbd>
-          <kbd>→</kbd> or click any arrow. The panel tracks which credentials each party holds.
+          {flow.steps.length} steps between {flow.participants.length} parties. Each step shows the message and
+          who holds which credential afterwards. <span class="keys">Use <kbd>←</kbd>
+          <kbd>→</kbd> or select any arrow.</span>
         </p>
       </div>
       <FlowDiagram flow={flow} />
@@ -129,8 +161,11 @@ const next = flows[i + 1];
 </Base>
 
 <style>
-  .head-chips {
-    margin-top: 1.3rem;
+  /* arrow keys only step the diagram where it is a stepper */
+  @media (max-width: 47.99rem) {
+    .keys {
+      display: none;
+    }
   }
   .body > section {
     margin-top: clamp(2.5rem, 5vw, 3.75rem);
@@ -236,7 +271,7 @@ const next = flows[i + 1];
   }
   .pager a {
     text-decoration: none;
-    font-family: var(--font-display);
+    font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 560;
     line-height: 1.25;

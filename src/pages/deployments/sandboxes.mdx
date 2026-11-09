@@ -41,6 +41,8 @@ The step-by-step version, including what happens when an injected instruction tr
 
 There is no standard for this pattern. These are implementations and building blocks, described as their own documentation describes them.
 
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Where it is implemented">
+
 | Implementation | Approach |
 | --- | --- |
 | Claude Managed Agents vaults | Credentials are attached to a session by reference and never enter the sandbox. Calls to MCP servers and git go through proxies that add the credential; environment-variable secrets appear as placeholders that are substituted at egress, only for their allowed hosts, and only in headers and bodies |
@@ -48,6 +50,8 @@ There is no standard for this pattern. These are implementations and building bl
 | agentgateway (open source) | An egress-proxy mode with destination allow-listing and optional TLS termination, plus backend authentication policies that attach or exchange credentials |
 | Agent Router (open source) | Per-backend credential injection for MCP servers, with a policy for whether a caller-supplied token may override it |
 | Kubernetes Agent Sandbox | No built-in broker. Sandboxes created from a template get no ServiceAccount token and a restrictive network policy; an example shows per-execution gateway tokens that are revoked when the process exits |
+
+</div>
 
 Hosted sandbox products and several newer open-source proxies offer the same idea. The landscape is moving fast enough that a list here would be out of date; the design choices above are the questions to ask of any of them.
 
