@@ -16,13 +16,13 @@ export const CAT_LABEL: Record<ClaimCat, string> = {
 };
 
 export const CAT_TONE: Record<ClaimCat, string> = {
-  who: 'clay',
-  what: 'sky',
-  where: 'grass',
-  may: 'plum',
-  proof: 'ochre',
-  when: 'ink',
-  meta: 'ink',
+  who: 'red',
+  what: 'blue',
+  where: 'green',
+  may: 'violet',
+  proof: 'amber',
+  when: 'neutral',
+  meta: 'neutral',
 };
 
 export interface ClaimLine {

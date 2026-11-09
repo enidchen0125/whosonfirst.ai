@@ -1,0 +1,1065 @@
+---
+/**
+ * The living style guide. Everything on this page is rendered with the real
+ * tokens and components, so it shows whichever design direction is active.
+ * Values and contrast ratios are read from the browser, not written by hand.
+ */
+import { Code } from 'astro:components';
+import Base from '../../layouts/Base.astro';
+import FlowDiagram from '../../components/FlowDiagram.astro';
+import FlowCard from '../../components/FlowCard.astro';
+import TokenInspector from '../../components/TokenInspector.astro';
+import LastHop from '../../components/LastHop.astro';
+import { directions } from '../../data/directions';
+import { flow } from '../../data/flows';
+import { ROLE_LABEL, STATUS_LABEL, STATUS_TONE } from '../../data/types';
+import type { Role, StdStatus } from '../../data/types';
+import { codeThemes } from '../../lib/code-themes.mjs';
+
+const surfaces = [
+  ['--bg', 'The page.'],
+  ['--bg-raised', 'Cards, panels and code blocks: anything that sits on the page.'],
+  ['--bg-sunken', 'Wells, hovered rows, the footer: anything set into the page.'],
+  ['--bg-inset', 'The deepest step. Rare.'],
+];
+const text = [
+  ['--fg', 'Body text and headings.'],
+  ['--fg-muted', 'Ledes, captions, secondary text.'],
+  ['--fg-subtle', 'The lightest text allowed. Counts, placeholders, fine print.'],
+];
+const lines = [
+  ['--border', 'Hairlines between rows and around cards.'],
+  ['--border-strong', 'Control outlines and rules that need to be seen.'],
+];
+const accent = [
+  ['--accent', 'Links, focus rings, the primary button, the current item.'],
+  ['--accent-soft', 'The highlight behind a targeted entry.'],
+  ['--on-accent', 'Text on an accent fill.'],
+];
+const hues: { id: string; role: Role; also: string }[] = [
+  { id: 'red', role: 'human', also: 'Also: danger, “no”, cautions.' },
+  { id: 'blue', role: 'agent', also: 'Also: working group drafts.' },
+  { id: 'violet', role: 'authz', also: 'Also: projects and platforms.' },
+  { id: 'green', role: 'resource', also: 'Also: success, “yes”, published standards.' },
+  { id: 'amber', role: 'infra', also: 'Also: “partly”, individual drafts, out-of-band messages.' },
+];
+
+const textTokens = ['--fg', '--fg-muted', '--fg-subtle', '--accent', '--red', '--blue', '--violet', '--green', '--amber'];
+const grounds = ['--bg', '--bg-raised', '--bg-sunken'];
+
+const families = [
+  ['--font-display', 'Display', 'Who’s on first?'],
+  ['--font-body', 'Body', 'Exchange, never forward.'],
+  ['--font-label', 'Label', 'HUMAN PRESENT · 14 STEPS'],
+  ['--font-mono', 'Mono', 'grant_type=client_credentials'],
+];
+
+const shape = [
+  ['--radius', 'Cards, buttons, code blocks.'],
+  ['--radius-pill', 'Chips and segmented choices.'],
+  ['--radius-round', 'Step numbers and markers.'],
+];
+
+const statuses = Object.keys(STATUS_LABEL) as StdStatus[];
+const sample = flow('client-credentials');
+const cards = ['mcp-authorization', 'ciba', 'spiffe-workload-identity'].map(flow);
+
+const toc = [
+  ['directions', 'Directions'],
+  ['colour', 'Colour'],
+  ['contrast', 'Contrast'],
+  ['type', 'Type'],
+  ['shape', 'Shape'],
+  ['components', 'Components'],
+  ['diagrams', 'Diagrams'],
+  ['voice', 'Voice'],
+];
+---
+
+<Base
+  title="Style guide"
+  description="The living style guide for Who's on First: design directions, colour and type tokens with live contrast ratios, and every component rendered with the real code."
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Style guide</p>
+      <h1>How the site looks, and why</h1>
+      <p class="lede">
+        Every swatch, specimen and component below is the real thing, rendered from the same tokens the site uses.
+        Choose a direction and the whole page, and the whole site, changes with it.
+      </p>
+      <nav class="sg-toc" aria-label="On this page">
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </nav>
+    </div>
+  </div>
+
+  <style-guide>
+    <section class="section" id="directions">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Directions</h2>
+          <p>Four complete options. Each is one file of token values and a few rules of its own.</p>
+        </div>
+        <fieldset class="sg-directions">
+          <legend class="visually-hidden">Design direction</legend>
+          {
+            directions.map((d) => (
+              <label>
+                <input type="radio" name="sg-direction" value={d.id} />
+                <span class="sg-direction">
+                  <span class="sg-direction-name">{d.name}</span>
+                  <span class="sg-direction-source">{d.source}</span>
+                  <span class="sg-direction-idea">{d.idea}</span>
+                  <span class="sg-kv">
+                    <span>Type</span>
+                    {d.type}
+                  </span>
+                  <span class="sg-kv">
+                    <span>Trade-off</span>
+                    {d.tradeoff}
+                  </span>
+                </span>
+              </label>
+            ))
+          }
+        </fieldset>
+        <p class="sg-note">
+          Use the theme button in the header to see each direction in light and dark. To link someone straight to a
+          direction, add <code>?direction=scoreboard</code>, <code>linemap</code>, <code>draft</code> or
+          <code>scorecard</code> to any page address.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="colour">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Colour</h2>
+          <p>Values shown are read from this page as rendered, in the current direction and theme.</p>
+        </div>
+
+        <h3>Surfaces</h3>
+        <div class="sw-grid">
+          {
+            surfaces.map(([t, use]) => (
+              <div class="sw">
+                <span class="sw-chip" style={`background: var(${t})`} data-swatch />
+                <code>{t}</code>
+                <span class="sw-val" />
+                <p>{use}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <h3>Text and lines</h3>
+        <div class="sw-grid">
+          {
+            [...text, ...lines].map(([t, use]) => (
+              <div class="sw">
+                <span class="sw-chip" style={`background: var(${t})`} data-swatch />
+                <code>{t}</code>
+                <span class="sw-val" />
+                <p>{use}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <h3>Accent</h3>
+        <p class="sg-para">
+          The accent marks interaction: something you can follow, press, or are currently on. It is separate from the
+          five hues so that a link never reads as a role.
+        </p>
+        <div class="sw-grid">
+          {
+            accent.map(([t, use]) => (
+              <div class="sw">
+                <span class="sw-chip" style={`background: var(${t})`} data-swatch />
+                <code>{t}</code>
+                <span class="sw-val" />
+                <p>{use}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <h3>The five hues</h3>
+        <p class="sg-para">
+          Every diagram on the site assigns one hue to each kind of principal, and keeps that assignment everywhere.
+          Each hue has a solid value for text and outlines and a soft value for fills.
+        </p>
+        <div class="hue-grid">
+          {
+            hues.map((h) => (
+              <div class={`hue role-${h.role}`}>
+                <div class="hue-pair">
+                  <span class="sw-chip" style={`background: var(--${h.id})`} data-swatch />
+                  <span class="sw-chip" style={`background: var(--${h.id}-soft)`} data-swatch />
+                </div>
+                <strong>{ROLE_LABEL[h.role]}</strong>
+                <code>--{h.id}</code>
+                <code>--{h.id}-soft</code>
+                <p>{h.also}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contrast">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Contrast</h2>
+          <p>Each cell is measured live. Text needs 4.5 to 1 to pass WCAG AA.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="cx-table">
+            <thead>
+              <tr>
+                <th scope="col">Text token</th>
+                {grounds.map((g) => <th scope="col">on {g}</th>)}
+                <th scope="col">on its own soft fill</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                textTokens.map((t) => {
+                  const soft = hues.some((h) => `--${h.id}` === t) ? `${t}-soft` : t === '--accent' ? '--accent-soft' : null;
+                  return (
+                    <tr>
+                      <th scope="row">
+                        <code>{t}</code>
+                      </th>
+                      {grounds.map((g) => (
+                        <td>
+                          <span class="cx" style={`color: var(${t}); background: var(${g})`} data-contrast>
+                            Aa
+                          </span>
+                          <span class="cx-r" />
+                        </td>
+                      ))}
+                      <td>
+                        {soft ? (
+                          <>
+                            <span
+                              class="cx"
+                              style={`color: var(${t === '--accent' ? '--fg' : t}); background: var(${soft})`}
+                              data-contrast
+                            >
+                              Aa
+                            </span>
+                            <span class="cx-r" />
+                          </>
+                        ) : (
+                          <span class="muted">–</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              }
+              <tr>
+                <th scope="row"><code>--on-accent</code></th>
+                <td colspan={grounds.length + 1}>
+                  <span class="cx" style="color: var(--on-accent); background: var(--accent)" data-contrast>
+                    Aa on --accent
+                  </span>
+                  <span class="cx-r" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sg-note">
+          The same pairs are checked for every direction in both themes by <code>npm run check:contrast</code>, which
+          fails if any text pair drops below 4.5 to 1.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="type">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Type</h2>
+          <p>Four roles. A direction may fill several roles with one family.</p>
+        </div>
+        <div class="fam-list">
+          {
+            families.map(([t, role, sample]) => (
+              <div class="fam">
+                <div class="fam-meta">
+                  <strong>{role}</strong>
+                  <code>{t}</code>
+                  <span class="fam-name" data-family={t} />
+                </div>
+                <p class="fam-sample" style={`font-family: var(${t})`} data-kind={role.toLowerCase()}>
+                  {sample}
+                </p>
+              </div>
+            ))
+          }
+        </div>
+
+        <h3>Scale</h3>
+        <div class="scale">
+          <div><span>h1</span><p class="as-h1">Who is acting?</p></div>
+          <div><span>h2</span><p class="as-h2">Delegation or impersonation</p></div>
+          <div><span>h3</span><p class="as-h3">The agent redeems the code directly</p></div>
+          <div><span>h4</span><p class="as-h4">Token Exchange</p></div>
+          <div><span>lede</span><p class="lede">A field guide to every way an AI agent can prove what it is and what it may do.</p></div>
+          <div>
+            <span>body</span>
+            <p>
+              A service that needs to call another gets a new token for that hop. Passing along the one it received is
+              how a token meant for one place ends up everywhere.
+            </p>
+          </div>
+          <div><span>label</span><p class="eyebrow">Flows / Human present</p></div>
+          <div><span>code</span><p><code>aud</code>, <code>act.sub</code>, <code>cnf.jkt</code></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="shape">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Shape</h2>
+          <p>Three radii, and three widths that every page shares.</p>
+        </div>
+        <div class="sw-grid">
+          {
+            shape.map(([t, use]) => (
+              <div class="sw">
+                <span class="shape-box" style={`border-radius: var(${t})`} />
+                <code>{t}</code>
+                <span class="sw-val" data-length={t} />
+                <p>{use}</p>
+              </div>
+            ))
+          }
+        </div>
+        <div class="table-scroll widths">
+          <table>
+            <thead>
+              <tr><th>Token</th><th>Value</th><th>Use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--wide</code></td><td>72rem</td><td>The widest a page gets. Diagrams and grids use all of it.</td></tr>
+              <tr><td><code>--prose</code></td><td>44rem</td><td>Running text. About 70 characters a line.</td></tr>
+              <tr><td><code>--gutter</code></td><td>1rem to 2.5rem</td><td>Side padding, growing with the viewport.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="components">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Components</h2>
+          <p>The building blocks, with what each is for.</p>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Buttons</h3>
+            <p>
+              One primary action per view. Everything else is a plain button, and tertiary actions are ghosts. Labels
+              say what happens: “Explore the flows”, never “Click here”.
+            </p>
+          </div>
+          <div class="spec-demo row">
+            <a class="btn primary" href="#components">Explore the flows</a>
+            <a class="btn" href="#components">Find the one you need</a>
+            <button class="btn ghost" type="button">All steps</button>
+            <button class="btn small" type="button">← Prev</button>
+            <button class="btn small" type="button" disabled>Next →</button>
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Chips</h3>
+            <p>
+              Short facts about the thing they sit on. A neutral chip states a property. A toned chip states a
+              category, and takes its hue from the table above, so the same colour always means the same thing.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <div class="chips">
+              <span class="chip">14 steps</span>
+              <span class="chip" data-tone="red">Human present</span>
+              <span class="chip" data-tone="amber">Human reachable</span>
+              <span class="chip" data-tone="blue">No human</span>
+            </div>
+            <div class="chips">
+              {
+                statuses.map((s) => (
+                  <span class="chip" data-tone={STATUS_TONE[s]}>
+                    {STATUS_LABEL[s]}
+                  </span>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Cards</h3>
+            <p>
+              A card is a link to one thing. The whole card is the target. Use cards for a set of peers, not for
+              emphasis: a paragraph does not become more important by getting a border.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <div class="grid">
+              {cards.map((f) => <FlowCard flow={f} />)}
+            </div>
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Callouts</h3>
+            <p>
+              For the one thing on a page a reader must not miss. If a page has three, none of them is a callout.
+              Red is for a risk, amber for a caveat.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <div class="callout">
+              <p class="callout-title">Reading status correctly</p>
+              <p>A working group draft has been adopted, and can still change in incompatible ways.</p>
+            </div>
+            <div class="callout" data-tone="red">
+              <p class="callout-title">The trap in the middle</p>
+              <p>An unattended agent holding a person’s long-lived token has a human’s authority and no human watching.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Roles</h3>
+            <p>
+              Five kinds of participant appear in every diagram. The class <code>role-human</code>,
+              <code>role-agent</code> and so on sets <code>--role</code> and <code>--role-soft</code> for anything inside
+              it.
+            </p>
+          </div>
+          <div class="spec-demo row">
+            {
+              hues.map((h) => (
+                <span class={`role-box role-${h.role}`}>
+                  <strong>{ROLE_LABEL[h.role]}</strong>
+                </span>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Tables</h3>
+            <p>
+              For comparing the same facts across several things. Column heads are labels; the first column names the
+              row. Wide tables scroll inside their own frame, never the page.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr><th>Flow</th><th>Human</th><th>Token subject</th><th>Maturity</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Authorization code + PKCE</td><td>present</td><td>User</td><td>Stable standards</td></tr>
+                  <tr><td>Backchannel approval (CIBA)</td><td>reachable</td><td>User, for one action</td><td>Stable standards</td></tr>
+                  <tr><td>Workload identity federation</td><td>absent</td><td>Agent, as a workload</td><td>Stable standards</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Code</h3>
+            <p>
+              Inline code names a real identifier: a claim, a parameter, a header. Blocks show what is on the wire.
+              Examples are abbreviated for reading and say so.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <p>
+              The <code>resource</code> parameter asks for a token that is valid for one API only, and the API checks
+              <code>aud</code>.
+            </p>
+            <Code
+              code={`POST /token HTTP/1.1
+Host: auth.example
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&resource=https://erp.example/api`}
+              lang="http"
+              themes={codeThemes as any}
+              defaultColor={false}
+            />
+          </div>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Comparison</h3>
+            <p>
+              Yes, no and partly are stated in words as well as colour, so the answer survives a greyscale print and a
+              colour-blind reader.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <LastHop />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="diagrams">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Diagrams</h2>
+          <p>Sequence diagrams are drawn at build time from data, so they take the tokens like everything else.</p>
+        </div>
+        <div class="sg-rules">
+          <p><strong>One column per participant</strong>, coloured by role.</p>
+          <p><strong>Line style is meaning.</strong> Solid for a direct call, dashed for a response, dotted for out of band, and the human hue for anything that passes through a person’s browser.</p>
+          <p><strong>Labels stay short.</strong> Two lines at most; the panel carries the explanation.</p>
+        </div>
+        <FlowDiagram flow={sample} />
+
+        <h3 class="sg-gap">Annotated tokens</h3>
+        <TokenInspector only={['user-access-token', 'delegated-token']} />
+      </div>
+    </section>
+
+    <section class="section" id="voice">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Voice</h2>
+          <p>How the site talks. This part does not change with the direction.</p>
+        </div>
+        <div class="voice">
+          <div>
+            <h3>Say who does what</h3>
+            <p>“The agent redeems the code.” Not “the code is redeemed”. Auth is about who acts; passive sentences hide exactly that.</p>
+          </div>
+          <div>
+            <h3>State it, then stop</h3>
+            <p>One clear sentence beats a hedge. Where something is uncertain, say what is uncertain and why, once, in the place it applies.</p>
+          </div>
+          <div>
+            <h3>Name a thing once</h3>
+            <p>Pick the term, define it in the glossary, and keep using it. A “grant” in one paragraph is not a “permission” in the next.</p>
+          </div>
+          <div>
+            <h3>Status is a fact</h3>
+            <p>“Working group draft, revision 11” is a status. “Emerging standard” is an opinion. Report what a source says and link to it.</p>
+          </div>
+          <div>
+            <h3>The joke is the frame, not the filling</h3>
+            <p>Who, What and I Don’t Know organise the ideas. They do not appear in every heading. A reference page earns trust by being plain.</p>
+          </div>
+          <div>
+            <h3>Cautions come with a way out</h3>
+            <p>Every “watch out” says what to do instead. A warning with no alternative is just worry.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </style-guide>
+</Base>
+
+<script>
+  // Reads rendered values so the guide can never drift from the stylesheet.
+  class StyleGuide extends HTMLElement {
+    connectedCallback() {
+      const root = document.documentElement;
+      const radios = [...this.querySelectorAll<HTMLInputElement>('input[name="sg-direction"]')];
+
+      const rgb = (s: string) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      const hex = (s: string) => '#' + rgb(s).map((n) => Math.round(n).toString(16).padStart(2, '0')).join('');
+      const lum = (s: string) => {
+        const [r, g, b] = rgb(s).map((v) => {
+          const c = v / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+
+      const refresh = () => {
+        const id = root.dataset.direction ?? radios[0]?.value;
+        for (const r of radios) r.checked = r.value === id;
+
+        this.querySelectorAll<HTMLElement>('[data-swatch]').forEach((el) => {
+          const out = el.parentElement?.classList.contains('hue-pair')
+            ? null
+            : el.parentElement?.querySelector<HTMLElement>('.sw-val');
+          if (out) out.textContent = hex(getComputedStyle(el).backgroundColor);
+        });
+        this.querySelectorAll<HTMLElement>('[data-contrast]').forEach((el) => {
+          const cs = getComputedStyle(el);
+          const [a, b] = [lum(cs.color), lum(cs.backgroundColor)].sort((x, y) => y - x);
+          const ratio = (a + 0.05) / (b + 0.05);
+          const out = el.nextElementSibling as HTMLElement | null;
+          if (!out) return;
+          out.textContent = `${ratio.toFixed(2)} ${ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'large only' : 'fails'}`;
+          out.dataset.level = ratio >= 4.5 ? 'pass' : ratio >= 3 ? 'large' : 'fail';
+        });
+        this.querySelectorAll<HTMLElement>('[data-family]').forEach((el) => {
+          const sample = el.closest('.fam')?.querySelector<HTMLElement>('.fam-sample');
+          if (sample) el.textContent = getComputedStyle(sample).fontFamily.split(',')[0].replace(/["']/g, '').replace(/ Variable$/, '');
+        });
+        this.querySelectorAll<HTMLElement>('[data-length]').forEach((el) => {
+          el.textContent = getComputedStyle(root).getPropertyValue(el.dataset.length!).trim();
+        });
+      };
+
+      this.addEventListener('change', (e) => {
+        const input = e.target as HTMLInputElement;
+        if (input.name !== 'sg-direction') return;
+        root.dataset.direction = input.value;
+        try {
+          localStorage.setItem('direction', input.value);
+        } catch {}
+        document.dispatchEvent(new CustomEvent('directionchange', { detail: input.value }));
+      });
+      document.addEventListener('directionchange', refresh);
+      new MutationObserver(refresh).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-direction'] });
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refresh);
+      document.fonts?.ready.then(refresh);
+      refresh();
+    }
+  }
+  customElements.define('style-guide', StyleGuide);
+</script>
+
+<style>
+  style-guide {
+    display: block;
+  }
+  .sg-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    margin-top: 1.4rem;
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .sg-toc a {
+    color: var(--fg-muted);
+    text-decoration-color: var(--border-strong);
+  }
+  .section h2 {
+    margin-top: 0;
+  }
+  .section h3 {
+    margin-top: 2.2rem;
+  }
+  .sg-para,
+  .sg-note {
+    max-width: 46rem;
+    color: var(--fg-muted);
+  }
+  .sg-note {
+    margin: 1.2rem 0 0;
+    font-size: 0.94rem;
+  }
+  .sg-gap {
+    margin-top: 3rem;
+  }
+
+  /* directions */
+  .sg-directions {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr));
+  }
+  .sg-directions label {
+    cursor: pointer;
+    display: grid;
+  }
+  .sg-directions input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sg-direction {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1rem 1.1rem 1.1rem;
+    background: var(--bg-raised);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .sg-directions label:hover .sg-direction {
+    border-color: var(--border-strong);
+  }
+  .sg-directions input:checked + .sg-direction {
+    border-color: var(--fg);
+    box-shadow: inset 0 0 0 1.5px var(--fg);
+  }
+  .sg-directions input:focus-visible + .sg-direction {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .sg-direction-name {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: 1.4rem;
+    line-height: 1.1;
+  }
+  .sg-direction-name::after {
+    content: 'Select';
+    float: right;
+    font-family: var(--font-label);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    padding: 0.3em 0.6em;
+    line-height: 1;
+  }
+  input:checked + .sg-direction .sg-direction-name::after {
+    content: 'In use';
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+  .sg-direction-source {
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .sg-direction-idea {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .sg-kv {
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: var(--fg-muted);
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-strong);
+  }
+  .sg-kv > span {
+    display: block;
+    font-family: var(--font-label);
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  /* swatches */
+  .sw-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr));
+    margin-top: 0.8rem;
+  }
+  .sw {
+    display: grid;
+    gap: 0.15rem;
+    align-content: start;
+  }
+  .sw-chip,
+  .shape-box {
+    display: block;
+    height: 4.2rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    margin-bottom: 0.4rem;
+  }
+  .shape-box {
+    width: 4.2rem;
+    background: var(--bg-sunken);
+    border: 1.5px solid var(--fg);
+  }
+  .sw code,
+  .hue code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 0.82rem;
+  }
+  .sw-val {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+    min-height: 1.2em;
+  }
+  .sw p,
+  .hue p {
+    margin: 0.2rem 0 0;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: var(--fg-muted);
+  }
+  .hue-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+    margin-top: 0.8rem;
+  }
+  .hue {
+    display: grid;
+    gap: 0.1rem;
+    align-content: start;
+  }
+  .hue-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 0.4rem;
+  }
+  .hue-pair .sw-chip {
+    margin: 0;
+  }
+  .hue-pair .sw-chip:first-child {
+    border-radius: var(--radius) 0 0 var(--radius);
+    border-right: 0;
+  }
+  .hue-pair .sw-chip:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .hue strong {
+    color: var(--role);
+  }
+
+  /* contrast matrix */
+  .cx-table td {
+    white-space: nowrap;
+  }
+  .cx-table th code {
+    background: none;
+    border: 0;
+    padding: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.82rem;
+    color: var(--fg);
+  }
+  .cx {
+    display: inline-block;
+    min-width: 3rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-align: center;
+  }
+  .cx-r {
+    margin-left: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+  }
+  .cx-r[data-level='fail'],
+  .cx-r[data-level='large'] {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  /* type */
+  .fam-list {
+    border-top: 1.5px solid var(--fg);
+  }
+  .fam {
+    display: grid;
+    grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+    gap: 0.5rem 2rem;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .fam-meta {
+    display: grid;
+    gap: 0.1rem;
+  }
+  .fam-meta code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+  }
+  .fam-name {
+    font-size: 0.86rem;
+    color: var(--fg-muted);
+  }
+  .fam-sample {
+    margin: 0;
+    font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .fam-sample[data-kind='display'] {
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    text-transform: var(--display-transform);
+  }
+  .fam-sample[data-kind='label'] {
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+  .fam-sample[data-kind='mono'] {
+    font-size: 1.15rem;
+  }
+  @media (max-width: 40rem) {
+    .fam {
+      grid-template-columns: 1fr;
+    }
+  }
+  .scale {
+    border-top: 1.5px solid var(--fg);
+    margin-top: 0.8rem;
+  }
+  .scale > div {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .scale > div > span {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+  }
+  .scale p {
+    margin: 0;
+    max-width: 46rem;
+  }
+  .as-h1,
+  .as-h2,
+  .as-h3,
+  .as-h4 {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    line-height: 1.12;
+    letter-spacing: var(--display-tracking);
+  }
+  .as-h1 {
+    font-size: calc(clamp(2.3rem, 5.4vw, 3.9rem) * var(--display-scale));
+    letter-spacing: var(--display-tracking-tight);
+    text-transform: var(--display-transform);
+  }
+  .as-h2 {
+    font-size: calc(clamp(1.6rem, 3.2vw, 2.2rem) * var(--display-scale));
+    text-transform: var(--display-transform);
+  }
+  .as-h3 {
+    font-size: 1.3rem;
+  }
+  .as-h4 {
+    font-size: 1.05rem;
+  }
+  .widths {
+    margin-top: 1.5rem;
+  }
+
+  /* component specs */
+  .spec {
+    display: grid;
+    gap: 1rem 2.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.6rem 0;
+    border-top: 1px solid var(--border);
+    align-items: start;
+  }
+  .spec:first-of-type {
+    border-top: 1.5px solid var(--fg);
+  }
+  @media (min-width: 62rem) {
+    .spec {
+      grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+    }
+  }
+  .spec-text h3 {
+    margin: 0 0 0.4rem;
+  }
+  .spec-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--fg-muted);
+  }
+  .spec-demo {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+  .spec-demo.row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .spec-demo :global(.callout),
+  .spec-demo :global(pre),
+  .spec-demo :global(.table-scroll),
+  .spec-demo p {
+    margin: 0;
+  }
+  .role-box {
+    padding: 0.5rem 0.9rem;
+    border: 1.3px solid var(--role);
+    background: var(--role-soft);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+  }
+
+  .sg-rules {
+    display: grid;
+    gap: 0.4rem 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+  }
+  .sg-rules p {
+    margin: 0;
+  }
+
+  .voice {
+    display: grid;
+    gap: 1.4rem 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    border-top: 1.5px solid var(--fg);
+    padding-top: 1.4rem;
+  }
+  .voice h3 {
+    margin: 0 0 0.3rem;
+    font-size: 1.2rem;
+  }
+  .voice p {
+    margin: 0;
+    font-size: 0.96rem;
+    color: var(--fg-muted);
+  }
+</style>

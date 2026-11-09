@@ -292,21 +292,21 @@ const data = {
     flex: none;
     width: 1.7rem;
     height: 1.7rem;
-    border: 1.5px solid var(--ink);
-    border-radius: 50%;
+    border: 1.5px solid var(--fg);
+    border-radius: var(--radius-round);
     font-family: var(--font-mono);
     font-size: 0.78rem;
     font-weight: 500;
   }
   fieldset:has(input:checked) .dg-num {
-    background: var(--clay);
-    border-color: var(--clay);
-    color: var(--paper);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
   }
   .dg-help {
     margin: 0 0 0.3rem 2.4rem;
     font-size: 0.92rem;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .dg-options {
     display: grid;
@@ -326,8 +326,8 @@ const data = {
   .dg-options span {
     display: block;
     padding: 0.65rem 0.85rem;
-    background: var(--chalk);
-    border: 1.5px solid var(--rule);
+    background: var(--bg-raised);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
     transition:
       border-color 0.12s,
@@ -343,72 +343,72 @@ const data = {
     display: block;
     font-style: normal;
     font-size: 0.8rem;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     line-height: 1.35;
     margin-top: 0.15rem;
   }
   .dg-options label:hover span {
-    border-color: var(--ink);
+    border-color: var(--fg);
   }
   .dg-options input:checked + span {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: var(--paper);
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
   }
   .dg-options input:checked + span em {
-    color: color-mix(in srgb, var(--paper) 75%, transparent);
+    color: color-mix(in srgb, var(--bg) 75%, transparent);
   }
   .dg-options input:focus-visible + span {
-    outline: 2px solid var(--clay);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 
   .dg-results {
-    background: var(--chalk);
-    border: 1.5px solid var(--ink);
+    background: var(--bg-raised);
+    border: 1.5px solid var(--fg);
     border-radius: var(--radius);
     padding: 1.2rem 1.3rem 1.3rem;
   }
   .dg-kicker {
     font-family: var(--font-display);
-    font-style: italic;
+    font-style: var(--display-italic);
     font-size: 1.5rem;
     font-weight: 560;
     margin: 0 0 0.4rem;
   }
   .dg-out :global(.dg-status) {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     margin: 0 0 0.4rem;
   }
   .dg-out :global(.dg-empty) {
-    color: var(--ink-2);
+    color: var(--fg-muted);
     margin: 0.4rem 0 0;
   }
   .dg-out :global(.dg-group) {
     margin-top: 1.1rem;
   }
   .dg-out :global(.dg-group h2) {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.72rem;
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     margin: 0 0 0.2rem;
     padding-bottom: 0.35rem;
-    border-bottom: 1.5px solid var(--ink);
-    color: var(--ink);
+    border-bottom: 1.5px solid var(--fg);
+    color: var(--fg);
   }
   .dg-out :global(.dg-start h2) {
-    color: var(--grass);
-    border-color: var(--grass);
+    color: var(--green);
+    border-color: var(--green);
   }
   .dg-out :global(.dg-caution h2) {
-    color: var(--clay);
-    border-color: var(--clay);
+    color: var(--red);
+    border-color: var(--red);
   }
   .dg-out :global(ul) {
     list-style: none;
@@ -418,7 +418,7 @@ const data = {
   .dg-out :global(li) {
     margin: 0;
     padding: 0.7rem 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
   }
   .dg-out :global(li:last-child) {
     border-bottom: 0;
@@ -436,16 +436,16 @@ const data = {
     font-size: 1.16rem;
     font-weight: 560;
     text-decoration: underline;
-    text-decoration-color: var(--clay);
+    text-decoration-color: var(--accent);
     text-decoration-thickness: 1.5px;
     text-underline-offset: 0.18em;
   }
   .dg-out :global(.dg-meta) {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.66rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .dg-out :global(li p) {
     margin: 0.25rem 0 0;
@@ -455,7 +455,7 @@ const data = {
   .dg-out :global(.dg-deploy) {
     margin: 1.1rem 0 0;
     padding-top: 0.8rem;
-    border-top: 1.5px solid var(--ink);
+    border-top: 1.5px solid var(--fg);
     font-size: 0.93rem;
   }
 </style>

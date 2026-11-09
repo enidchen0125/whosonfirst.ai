@@ -21,8 +21,8 @@ const { standard: s, compact = false } = Astro.props;
 
 <style>
   .std {
-    background: var(--chalk);
-    border: 1px solid var(--rule);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 0.85rem 1rem 0.95rem;
   }
@@ -36,7 +36,7 @@ const { standard: s, compact = false } = Astro.props;
   .ref {
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     word-break: break-word;
   }
   h4 {
@@ -48,12 +48,12 @@ const { standard: s, compact = false } = Astro.props;
   }
   h4 a:hover {
     text-decoration: underline;
-    text-decoration-color: var(--clay);
+    text-decoration-color: var(--accent);
   }
   p {
     margin: 0;
     font-size: 0.9rem;
     line-height: 1.48;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
 </style>

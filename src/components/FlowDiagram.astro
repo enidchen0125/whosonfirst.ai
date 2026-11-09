@@ -449,8 +449,8 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     min-width: 0;
   }
   .flow-canvas {
-    background: var(--chalk);
-    border: 1px solid var(--rule);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: auto;
     padding: 0.6rem;
@@ -471,7 +471,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
   /* actors */
   .lifeline {
-    stroke: var(--rule-strong);
+    stroke: var(--border-strong);
     stroke-width: 1;
     stroke-dasharray: 3 4;
   }
@@ -484,13 +484,13 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .actor-label {
     font-size: 13px;
     font-weight: 600;
-    fill: var(--ink);
+    fill: var(--fg);
   }
   .actor-sub {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 9.5px;
     letter-spacing: 0.03em;
-    fill: var(--ink-2);
+    fill: var(--fg-muted);
     text-transform: uppercase;
   }
   .actor.is-active .actor-box {
@@ -504,21 +504,21 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
   /* steps */
   .step {
-    --line: var(--ink);
+    --line: var(--fg);
     cursor: pointer;
     transition: opacity 0.2s;
   }
   .kind-front {
-    --line: var(--clay);
+    --line: var(--red);
   }
   .kind-oob {
-    --line: var(--ochre);
+    --line: var(--amber);
   }
   .hit {
     fill: transparent;
   }
   .step:hover .hit {
-    fill: color-mix(in srgb, var(--paper-2) 70%, transparent);
+    fill: color-mix(in srgb, var(--bg-sunken) 70%, transparent);
   }
   .arrow {
     stroke: var(--line);
@@ -537,7 +537,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     fill: var(--line);
   }
   .badge {
-    fill: var(--chalk);
+    fill: var(--bg-raised);
     stroke: var(--line);
     stroke-width: 1.3;
   }
@@ -550,17 +550,17 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .arrow-label,
   .note-label {
     font-size: 13px;
-    fill: var(--ink);
+    fill: var(--fg);
   }
   .arrow-label {
     paint-order: stroke;
-    stroke: var(--chalk);
+    stroke: var(--bg-raised);
     stroke-width: 5px;
     stroke-linejoin: round;
   }
   .note {
-    fill: var(--paper-2);
-    stroke: var(--rule-strong);
+    fill: var(--bg-sunken);
+    stroke: var(--border-strong);
     stroke-width: 1.1;
   }
 
@@ -577,18 +577,18 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     fill: var(--line);
   }
   .step.is-active .badge-num {
-    fill: var(--chalk);
+    fill: var(--bg-raised);
   }
   .step.is-active .arrow-label,
   .step.is-active .note-label {
     font-weight: 600;
   }
   .step.is-active .note {
-    stroke: var(--ink);
+    stroke: var(--fg);
     stroke-width: 1.8;
   }
   .step.is-active .hit {
-    fill: color-mix(in srgb, var(--paper-2) 60%, transparent);
+    fill: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
   }
 
   /* legend */
@@ -602,20 +602,20 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     font-family: var(--font-mono);
     font-size: 0.68rem;
     letter-spacing: 0.03em;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .flow-legend li {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     margin: 0;
-    --line: var(--ink);
+    --line: var(--fg);
   }
   .flow-legend .kind-front {
-    --line: var(--clay);
+    --line: var(--red);
   }
   .flow-legend .kind-oob {
-    --line: var(--ochre);
+    --line: var(--amber);
   }
   .flow-legend svg {
     flex: none;
@@ -633,17 +633,17 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     display: none;
   }
   .flow-controls [aria-pressed='true'] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--paper);
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
   }
   .flow-count {
     margin-left: auto;
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.72rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .flow-progress {
     display: flex;
@@ -656,14 +656,14 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     padding: 0;
     border: 0;
     border-radius: 3px;
-    background: var(--rule);
+    background: var(--border);
     cursor: pointer;
   }
   .flow-progress button.is-done {
-    background: var(--ink-3);
+    background: var(--fg-subtle);
   }
   .flow-progress button.is-active {
-    background: var(--clay);
+    background: var(--accent);
   }
   .flow[data-all] .flow-progress {
     visibility: hidden;
@@ -677,8 +677,8 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .flow-step {
     margin: 0;
     padding: 1.1rem 1.2rem 1.2rem;
-    background: var(--chalk);
-    border: 1px solid var(--rule);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
   }
   .flow-step + .flow-step {
@@ -693,30 +693,30 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     align-items: center;
     gap: 0.4rem 0.7rem;
     margin: 0 0 0.6rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.7rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .step-num {
     display: grid;
     place-items: center;
     width: 1.55rem;
     height: 1.55rem;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--paper);
+    border-radius: var(--radius-round);
+    background: var(--fg);
+    color: var(--bg);
     font-weight: 500;
   }
   .kind-front .step-num {
-    background: var(--clay);
+    background: var(--red);
   }
   .kind-oob .step-num {
-    background: var(--ochre);
+    background: var(--amber);
   }
   .step-route {
-    color: var(--ink);
+    color: var(--fg);
   }
   .step-kind {
     margin-left: auto;
@@ -733,21 +733,21 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   }
   .flow-step :global(pre) {
     margin: 0.9rem 0 0;
-    background: var(--paper) !important;
+    background: var(--bg) !important;
     font-size: 0.76rem;
   }
 
   .held {
     margin-top: 1rem;
     padding-top: 0.8rem;
-    border-top: 1px dashed var(--rule-strong);
+    border-top: 1px dashed var(--border-strong);
   }
   .held-title {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.68rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     margin: 0 0 0.5rem;
   }
   .held dl {
@@ -778,12 +778,12 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     line-height: 1.25;
     padding: 0.22em 0.5em;
     border-radius: 3px;
-    border: 1px solid var(--rule-strong);
-    color: var(--ink-2);
+    border: 1px solid var(--border-strong);
+    color: var(--fg-muted);
   }
   .held-chip.fresh {
     border-color: var(--role);
     background: var(--role-soft);
-    color: var(--ink);
+    color: var(--fg);
   }
 </style>

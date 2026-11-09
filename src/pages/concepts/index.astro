@@ -167,7 +167,7 @@ const toc = [
       </p>
       <div class="grid modes">
         <a class="card" href="/flows/#g-human-present">
-          <span class="chip" data-tone="clay">Human present</span>
+          <span class="chip" data-tone="red">Human present</span>
           <h3>Someone is at the keyboard</h3>
           <p>
             They can be redirected to sign in and shown a consent screen. The agent ends up with a token that carries
@@ -175,7 +175,7 @@ const toc = [
           </p>
         </a>
         <a class="card" href="/flows/#g-human-in-the-loop">
-          <span class="chip" data-tone="ochre">Human reachable</span>
+          <span class="chip" data-tone="amber">Human reachable</span>
           <h3>Someone can be asked</h3>
           <p>
             The agent works alone but stops for approval at specific points. The approval must reach the person on a
@@ -184,7 +184,7 @@ const toc = [
           </p>
         </a>
         <a class="card" href="/flows/#g-autonomous">
-          <span class="chip" data-tone="sky">No human</span>
+          <span class="chip" data-tone="blue">No human</span>
           <h3>Nobody is there</h3>
           <p>
             The agent is the principal. Its identity should come from the platform it runs on, not from a stored
@@ -192,7 +192,7 @@ const toc = [
           </p>
         </a>
       </div>
-      <div class="callout" data-tone="clay">
+      <div class="callout" data-tone="red">
         <p class="callout-title">The trap in the middle</p>
         <p>
           The dangerous configuration is the one that is neither: an unattended agent holding a person’s long-lived
@@ -267,17 +267,17 @@ const toc = [
     flex-wrap: wrap;
     gap: 0.4rem 1.2rem;
     margin-top: 1.4rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.76rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
   .toc a {
-    color: var(--ink-2);
-    text-decoration-color: var(--rule-strong);
+    color: var(--fg-muted);
+    text-decoration-color: var(--border-strong);
   }
   .toc a:hover {
-    color: var(--clay);
+    color: var(--accent);
   }
   .section h2 {
     margin-top: 0;
@@ -300,7 +300,7 @@ const toc = [
     list-style: none;
     padding: 0;
     margin: 0.8rem 0 0;
-    border-top: 1.5px solid var(--ink);
+    border-top: 1.5px solid var(--fg);
   }
   .roles li {
     display: grid;
@@ -309,7 +309,7 @@ const toc = [
     align-items: baseline;
     padding: 0.6rem 0;
     margin: 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
     font-size: 0.95rem;
   }
   .roles .swatch {
@@ -324,7 +324,7 @@ const toc = [
     color: var(--role);
   }
   .roles .ex {
-    color: var(--ink-2);
+    color: var(--fg-muted);
     font-size: 0.9rem;
   }
   @media (max-width: 44rem) {
@@ -350,7 +350,7 @@ const toc = [
     counter-reset: rule;
     padding: 0;
     margin: 1.2rem 0 2rem;
-    border-top: 1.5px solid var(--ink);
+    border-top: 1.5px solid var(--fg);
     max-width: 54rem;
   }
   .rules li {
@@ -358,7 +358,7 @@ const toc = [
     position: relative;
     padding: 0.9rem 0 0.9rem 3rem;
     margin: 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
   }
   .rules li::before {
     content: counter(rule);
@@ -372,8 +372,8 @@ const toc = [
     font-family: var(--font-mono);
     font-size: 0.8rem;
     font-weight: 500;
-    border: 1.5px solid var(--ink);
-    border-radius: 50%;
+    border: 1.5px solid var(--fg);
+    border-radius: var(--radius-round);
   }
   .rules strong {
     display: block;

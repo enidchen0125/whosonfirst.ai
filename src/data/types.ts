@@ -123,9 +123,9 @@ export const HUMAN_LABEL: Record<HumanPresence, string> = {
 };
 
 export const HUMAN_TONE: Record<HumanPresence, string> = {
-  present: 'clay',
-  reachable: 'ochre',
-  absent: 'sky',
+  present: 'red',
+  reachable: 'amber',
+  absent: 'blue',
   any: '',
 };
 
@@ -155,11 +155,11 @@ export const STATUS_LABEL: Record<StdStatus, string> = {
 };
 
 export const STATUS_TONE: Record<StdStatus, string> = {
-  rfc: 'grass',
-  final: 'grass',
-  'wg-draft': 'sky',
-  draft: 'ochre',
-  project: 'plum',
+  rfc: 'green',
+  final: 'green',
+  'wg-draft': 'blue',
+  draft: 'amber',
+  project: 'violet',
   guidance: '',
 };
 

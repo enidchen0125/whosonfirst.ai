@@ -28,7 +28,7 @@ const positions: Pos[] = [
     name: 'Who',
     x: 318,
     y: 226,
-    tone: 'clay',
+    tone: 'red',
     question: 'Whose authority is this?',
     answer: 'The subject of the token: `sub`. A person, or the agent itself.',
     dx: 16,
@@ -41,7 +41,7 @@ const positions: Pos[] = [
     name: 'What',
     x: 210,
     y: 124,
-    tone: 'sky',
+    tone: 'blue',
     question: 'What software is acting?',
     answer: '`client_id`, the `act` claim, and the workload identity of the process making the call.',
     dx: 16,
@@ -54,7 +54,7 @@ const positions: Pos[] = [
     name: 'I Don’t Know',
     x: 102,
     y: 226,
-    tone: 'grass',
+    tone: 'green',
     question: 'Does the resource know the first two?',
     answer: 'The audience, `aud`, and whether Who and What survive all the way to the last hop.',
     dx: -16,
@@ -67,7 +67,7 @@ const positions: Pos[] = [
     name: 'Why',
     x: 86,
     y: 104,
-    tone: 'plum',
+    tone: 'violet',
     question: 'What is it for?',
     answer: '`scope`, `authorization_details`, and transaction context.',
     dx: 0,
@@ -80,7 +80,7 @@ const positions: Pos[] = [
     name: 'Because',
     x: 210,
     y: 52,
-    tone: 'plum',
+    tone: 'violet',
     question: 'On what grounds?',
     answer: 'A user’s consent, an administrator’s policy, or a signed mandate. Something outside the agent said yes.',
     dx: 0,
@@ -93,7 +93,7 @@ const positions: Pos[] = [
     name: 'Tomorrow',
     x: 210,
     y: 232,
-    tone: 'ink',
+    tone: 'neutral',
     question: 'When does it stop?',
     answer: '`exp`, and whether anyone can revoke it sooner.',
     dx: 0,
@@ -106,7 +106,7 @@ const positions: Pos[] = [
     name: 'Today',
     x: 210,
     y: 346,
-    tone: 'ink',
+    tone: 'neutral',
     question: 'How fresh is it?',
     answer: '`iat`, `auth_time` and `acr`: when and how strongly the person last proved who they are.',
     dx: 16,
@@ -119,7 +119,7 @@ const positions: Pos[] = [
     name: 'I Don’t Give a Darn',
     x: 150,
     y: 166,
-    tone: 'ochre',
+    tone: 'amber',
     question: 'Does it matter who holds it?',
     answer: 'A bearer token works for anyone. A token with a `cnf` claim works only for the holder of a key.',
     dx: -14,
@@ -263,50 +263,50 @@ const positions: Pos[] = [
     font-family: var(--font-body);
   }
   .lu-grass {
-    fill: var(--grass-soft);
+    fill: var(--green-soft);
   }
   .lu-dirt {
-    fill: var(--clay-soft);
+    fill: var(--red-soft);
   }
   .lu-line {
     fill: none;
-    stroke: var(--rule-strong);
+    stroke: var(--border-strong);
     stroke-width: 1.2;
   }
   .lu-line.strong {
-    stroke: var(--ink);
+    stroke: var(--fg);
     stroke-width: 1.4;
   }
   .lu-mound {
-    fill: var(--paper);
-    stroke: var(--rule-strong);
+    fill: var(--bg);
+    stroke: var(--border-strong);
   }
   .lu-base {
-    fill: var(--chalk);
-    stroke: var(--ink);
+    fill: var(--bg-raised);
+    stroke: var(--fg);
     stroke-width: 1.3;
   }
 
-  .tone-clay {
-    --tone: var(--clay);
+  .tone-red {
+    --tone: var(--red);
   }
-  .tone-sky {
-    --tone: var(--sky);
+  .tone-blue {
+    --tone: var(--blue);
   }
-  .tone-grass {
-    --tone: var(--grass);
+  .tone-green {
+    --tone: var(--green);
   }
-  .tone-plum {
-    --tone: var(--plum);
+  .tone-violet {
+    --tone: var(--violet);
   }
-  .tone-ochre {
-    --tone: var(--ochre);
+  .tone-amber {
+    --tone: var(--amber);
   }
-  .tone-ink {
-    --tone: var(--ink);
+  .tone-neutral {
+    --tone: var(--fg);
   }
   .tone-none {
-    --tone: var(--ink-3);
+    --tone: var(--fg-subtle);
   }
 
   .lu-pos {
@@ -317,7 +317,7 @@ const positions: Pos[] = [
     fill: transparent;
   }
   .lu-dot {
-    fill: var(--chalk);
+    fill: var(--bg-raised);
     stroke: var(--tone);
     stroke-width: 1.8;
     transition: fill 0.12s;
@@ -334,17 +334,17 @@ const positions: Pos[] = [
   }
   .lu-name {
     font-family: var(--font-display);
-    font-style: italic;
+    font-style: var(--display-italic);
     font-size: 14px;
     font-weight: 600;
-    fill: var(--ink);
+    fill: var(--fg);
     paint-order: stroke;
-    stroke: var(--paper);
+    stroke: var(--bg);
     stroke-width: 4px;
     stroke-linejoin: round;
   }
   .tone-none .lu-name {
-    fill: var(--ink-3);
+    fill: var(--fg-subtle);
     font-weight: 400;
   }
   .lu-pos.is-on .lu-dot,
@@ -353,10 +353,10 @@ const positions: Pos[] = [
   }
   .lu-pos.is-on .lu-abbr,
   .lu-pos:focus-visible .lu-abbr {
-    fill: var(--chalk);
+    fill: var(--bg-raised);
   }
   .lu-pos:focus-visible .lu-dot {
-    stroke: var(--ink);
+    stroke: var(--fg);
   }
   .lu.has-on .lu-pos:not(.is-on) {
     opacity: 0.45;
@@ -372,13 +372,13 @@ const positions: Pos[] = [
   }
   tbody th {
     font-family: var(--font-display);
-    font-style: italic;
+    font-style: var(--display-italic);
     font-size: 1.02rem;
     font-weight: 600;
     letter-spacing: 0;
     text-transform: none;
-    color: var(--ink);
-    border-bottom: 1px solid var(--rule);
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }
   tbody tr {

@@ -115,10 +115,10 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     font-size: 0.95rem;
     padding: 0.55rem 0.75rem;
     width: min(100%, 16rem);
-    border: 1.5px solid var(--ink);
+    border: 1.5px solid var(--fg);
     border-radius: var(--radius);
-    background: var(--chalk);
-    color: var(--ink);
+    background: var(--bg-raised);
+    color: var(--fg);
   }
   .gl-tools nav {
     display: flex;
@@ -133,12 +133,12 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     width: 1.7rem;
     height: 1.7rem;
     text-decoration: none;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     border-radius: 3px;
   }
   .gl-tools nav a:hover {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--fg);
+    color: var(--bg);
   }
   .gl[data-filtering] .gl-tools nav,
   .gl[data-filtering] .gl-letter {
@@ -147,7 +147,7 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
 
   dl {
     margin: 0;
-    border-top: 1.5px solid var(--ink);
+    border-top: 1.5px solid var(--fg);
   }
   .gl-term {
     position: relative;
@@ -155,17 +155,17 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
     gap: 0.2rem 2rem;
     padding: 0.85rem 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
     scroll-margin-top: 5rem;
   }
   .gl-term[hidden] {
     display: none;
   }
   .gl-term:target {
-    background: var(--clay-soft);
+    background: var(--accent-soft);
     box-shadow:
-      -0.75rem 0 0 var(--clay-soft),
-      0.75rem 0 0 var(--clay-soft);
+      -0.75rem 0 0 var(--accent-soft),
+      0.75rem 0 0 var(--accent-soft);
   }
   .gl-letter {
     position: absolute;
@@ -173,11 +173,11 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     top: 0.7rem;
     margin-right: 1.2rem;
     font-family: var(--font-display);
-    font-style: italic;
+    font-style: var(--display-italic);
     font-size: 1.6rem;
     font-weight: 600;
     line-height: 1;
-    color: var(--clay);
+    color: var(--accent);
     scroll-margin-top: 5rem;
   }
   @media (max-width: 78rem) {
@@ -197,7 +197,7 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     font-size: 0.7rem;
     font-weight: 400;
     letter-spacing: 0.02em;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     margin-top: 0.2rem;
   }
   dd {
@@ -216,7 +216,7 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     }
   }
   .gl-empty {
-    color: var(--ink-2);
+    color: var(--fg-muted);
     padding: 1.5rem 0;
   }
 </style>

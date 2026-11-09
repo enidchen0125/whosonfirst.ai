@@ -131,20 +131,20 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
 <style>
   .ti {
     display: block;
-    --tone: var(--ink-3);
+    --tone: var(--fg-subtle);
   }
   .ti-tabs {
     display: flex;
     gap: 0.25rem;
     overflow-x: auto;
     scrollbar-width: none;
-    border-bottom: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--fg);
   }
   .ti-tabs[hidden] {
     display: none;
   }
   .ti-tabs button {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.74rem;
     font-weight: 500;
     letter-spacing: 0.04em;
@@ -155,21 +155,21 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     border-bottom: 0;
     border-radius: var(--radius) var(--radius) 0 0;
     background: transparent;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     cursor: pointer;
   }
   .ti-tabs button:hover {
-    color: var(--ink);
-    background: var(--paper-2);
+    color: var(--fg);
+    background: var(--bg-sunken);
   }
   .ti-tabs button[aria-selected='true'] {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--fg);
+    color: var(--bg);
   }
 
   .ti-panel {
-    background: var(--chalk);
-    border: 1px solid var(--rule);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1.2rem 1.3rem 1.1rem;
     margin-bottom: 1rem;
@@ -185,11 +185,11 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     margin: 0 0 0.2rem;
   }
   .ti-path {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.72rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: var(--fg-muted);
     margin: 0 0 0.6rem;
   }
   .ti-panel header p:last-child {
@@ -199,8 +199,8 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
   }
 
   .ti-code {
-    background: var(--paper);
-    border: 1px solid var(--rule);
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 0.7rem 0;
     font-size: 0.86rem;
@@ -218,7 +218,7 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     padding: 0.14rem 1rem 0.14rem calc(1rem + var(--indent) * 1.3rem);
   }
   .plain code {
-    color: var(--ink-3);
+    color: var(--fg-subtle);
   }
   .claim summary {
     list-style: none;
@@ -236,7 +236,7 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     margin-left: auto;
     font-family: var(--font-mono);
     font-size: 0.8rem;
-    color: var(--ink-3);
+    color: var(--fg-subtle);
     flex: none;
   }
   .claim[open] summary::after {
@@ -259,7 +259,7 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
   }
   .claim-cat {
     display: block;
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: 0.66rem;
     font-weight: 500;
     letter-spacing: 0.08em;
@@ -268,23 +268,23 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     margin-bottom: 0.2rem;
   }
 
-  .tone-clay {
-    --tone: var(--clay);
+  .tone-red {
+    --tone: var(--red);
   }
-  .tone-sky {
-    --tone: var(--sky);
+  .tone-blue {
+    --tone: var(--blue);
   }
-  .tone-grass {
-    --tone: var(--grass);
+  .tone-green {
+    --tone: var(--green);
   }
-  .tone-plum {
-    --tone: var(--plum);
+  .tone-violet {
+    --tone: var(--violet);
   }
-  .tone-ochre {
-    --tone: var(--ochre);
+  .tone-amber {
+    --tone: var(--amber);
   }
-  .tone-ink {
-    --tone: var(--ink-3);
+  .tone-neutral {
+    --tone: var(--fg-subtle);
   }
 
   .ti-panel footer {
@@ -305,7 +305,7 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
     font-family: var(--font-mono);
     font-size: 0.68rem;
     letter-spacing: 0.03em;
-    color: var(--ink-2);
+    color: var(--fg-muted);
   }
   .ti-legend li {
     display: inline-flex;
