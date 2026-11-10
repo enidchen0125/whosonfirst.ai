@@ -62,7 +62,7 @@ const asks: { group: string; rows: [string, string][] }[] = [
         'Which agent, exactly?',
         'Often nothing. Most tokens name the application that hosts an agent, not the agent. Several current drafts are trying to fix that.',
       ],
-      ['Does it matter who holds the token?', 'A bearer token works for anyone. A token with a `cnf` claim works only for the holder of a key.'],
+      ['Does it matter who holds the token?', 'A bearer token can be used by anyone holding a copy. A token with a `cnf` claim additionally requires proof of the key it names.'],
     ],
   },
   {

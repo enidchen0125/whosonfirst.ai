@@ -39,7 +39,7 @@ export const checks: Check[] = [
   { id: 'software', clause: 'Who is acting', question: 'Which software the credential was issued to', compact: true },
   { id: 'user', clause: 'For whom', question: 'Which user the request is for', compact: true },
   { id: 'grant', clause: 'Who said they could', question: 'What was granted for that user', compact: true },
-  { id: 'sender', clause: 'Proof', question: 'That the sender is the software it was issued to', compact: false },
+  { id: 'sender', clause: 'Proof', question: 'That the sender is the party it was issued to', compact: false },
 ];
 
 export interface Credential {
@@ -138,14 +138,15 @@ export const credentials: Credential[] = [
       },
       sender: {
         verdict: 'conditional',
-        brief: 'only if the token is bound to a key',
+        brief: 'only for a sender-constrained token',
         detail:
-          'Only if the token is bound to a key the agent holds, with DPoP or mutual TLS. A plain bearer token works for anyone who has a copy.',
+          'Only for a sender-constrained token. A bearer token can be used by anyone holding a copy. A sender-constrained token additionally requires proof of the key it is bound to, with DPoP or mutual TLS. That proof shows the sender holds the key. It does not establish which software is running.',
       },
     },
     consequence:
       'The API can use both identifiers in its access policy: for example, blocking this client while still allowing Alice to use another.',
-    boundary: 'Not proven: who is sending it. A bearer token works for anyone holding a copy, unless it is bound to a key.',
+    boundary:
+      'Not proven: who is sending it. A bearer token can be used by anyone holding a copy. Sender-constrained tokens additionally require proof of the bound key.',
     stop: {
       policy:
         'The API can use both identifiers: for example, block this client while still allowing Alice to use another, or the reverse. That takes a validated token and a policy that reads both `sub` and `client_id`. Carrying two identifiers does not do it by itself.',
@@ -176,7 +177,7 @@ export const exampleToken: string[] = [
 export const notProven: { claim: string; why: string }[] = [
   {
     claim: 'That the sender is the software named',
-    why: 'Both are bearer credentials: whoever holds a copy can present it. Binding the token to a key the agent holds, with DPoP or mutual TLS, is what closes this. It is the fourth check above.',
+    why: 'Both are bearer credentials: anyone holding a copy can use them. A sender-constrained token additionally requires proof of the key it is bound to, with DPoP or mutual TLS; that is the fourth check above. Even then, the proof shows possession of a key. It does not establish which software is running.',
   },
   {
     claim: 'That Alice approved this particular request',
