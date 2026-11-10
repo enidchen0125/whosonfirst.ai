@@ -236,7 +236,12 @@ const data = {
       render(false);
 
       form.addEventListener('change', () => render());
-      form.addEventListener('reset', () => setTimeout(() => render(), 0));
+      form.addEventListener('reset', () => {
+        // the form forgets its answers, so the record of which one was selected has to go too:
+        // otherwise the next click on a former answer is taken as clearing it
+        form.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((i) => (i.dataset.was = 'false'));
+        setTimeout(() => render(), 0);
+      });
       // clicking a selected option again clears it
       form.addEventListener('click', (e) => {
         // A click on a label is followed by a synthesized click on its input.

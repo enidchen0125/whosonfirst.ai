@@ -830,6 +830,32 @@ await ctx.close();
   );
   await ctx.close();
 }
+// decision guide: after "Start over", an answer chosen before can be chosen again at once
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+  });
+  const page = await ctx.newPage();
+  const again = [];
+  for (const url of ["/guide/", "/guide/?principal=user"]) {
+    await page.goto(`${origin}${url}`, { waitUntil: "networkidle" });
+    const answer = page.locator(
+      'decision-guide input[name="principal"][value="user"]',
+    );
+    if (!(await answer.isChecked())) await answer.check({ force: true });
+    await page.click('decision-guide button[type="reset"]');
+    await answer.click({ force: true });
+    await page.waitForTimeout(50);
+    again.push(await answer.isChecked());
+  }
+  record(
+    "decision guide",
+    "an answer can be chosen again straight after Start over",
+    again.every(Boolean),
+    again.every(Boolean) ? "" : `selected after one click: ${again.join(", ")}`,
+  );
+  await ctx.close();
+}
 await browser.close();
 server.close();
 
