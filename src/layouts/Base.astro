@@ -39,12 +39,14 @@ const { title, description = 'A field guide to authentication and authorization 
 const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — auth for AI agents`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
+// The task most readers arrive with comes first, and stays in reach on a phone.
+const QUICK = { href: '/guide/', label: 'Choose a flow' };
 const nav = [
-  { href: '/concepts/', label: 'Concepts' },
+  QUICK,
   { href: '/flows/', label: 'Flows' },
+  { href: '/concepts/', label: 'Concepts' },
   { href: '/deployments/', label: 'Deployments' },
   { href: '/standards/', label: 'Standards' },
-  { href: '/guide/', label: 'Decision guide' },
   { href: '/glossary/', label: 'Glossary' },
 ];
 const path = Astro.url.pathname;
@@ -93,7 +95,11 @@ const directionIds = directions.map((d) => d.id);
           <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
           <span class="visually-hidden">, home</span>
         </a>
-        <nav aria-label="Primary">
+        <a class="quick" href={QUICK.href} aria-current={path.startsWith(QUICK.href) ? 'page' : undefined}>
+          {QUICK.label}
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
+        <nav id="site-nav" aria-label="Primary">
           <ul>
             {
               nav.map((item) => (
@@ -106,11 +112,12 @@ const directionIds = directions.map((d) => d.id);
             }
           </ul>
         </nav>
-        <button class="theme" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+        <button class="theme" type="button" title="Switch colour theme">
           <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
             <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
             <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor"></path>
           </svg>
+          <span class="theme-text">Switch colour theme</span>
         </button>
       </div>
     </header>
@@ -146,6 +153,31 @@ const directionIds = directions.map((d) => d.id);
     <DesignSwitcher />
 
     <script>
+      // The phone menu. Without this script the navigation is simply shown in full.
+      const header = document.querySelector<HTMLElement>('.site-header')!;
+      const toggle = header.querySelector<HTMLButtonElement>('.menu-toggle')!;
+      const setOpen = (open: boolean) => {
+        header.toggleAttribute('data-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.textContent = open ? 'Close' : 'Menu';
+      };
+      toggle.hidden = false;
+      header.dataset.js = '';
+      toggle.addEventListener('click', () => setOpen(!header.hasAttribute('data-open')));
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && header.hasAttribute('data-open')) {
+          setOpen(false);
+          toggle.focus();
+        }
+      });
+      header.querySelector('nav')!.addEventListener('click', (e) => {
+        if ((e.target as Element).closest('a')) setOpen(false);
+      });
+      document.addEventListener('click', (e) => {
+        if (!header.contains(e.target as Node)) setOpen(false);
+      });
+      window.matchMedia('(min-width: 62.01rem)').addEventListener('change', () => setOpen(false));
+
       const btn = document.querySelector<HTMLButtonElement>('.theme');
       btn?.addEventListener('click', () => {
         const root = document.documentElement;
@@ -266,26 +298,157 @@ const directionIds = directions.map((d) => d.id);
     background: var(--bg-sunken);
   }
 
+  .quick,
+  .menu-toggle {
+    display: none;
+  }
+  /* beside the navigation the theme button is an icon; its name is still there to be read */
+  .theme-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Phone and tablet: the brand, the one task link and a menu button. Every
+     destination is one tap away and none is off the edge of the screen. */
   @media (max-width: 62rem) {
     .bar {
-      padding-bottom: 0;
+      gap: 0 0.7rem;
+    }
+    /* one row: the brand takes what is left after the two controls */
+    .site-header[data-js] .bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+    }
+    .site-header[data-js] .brand {
+      margin-right: 0;
+      min-width: 0;
+      gap: 0.45rem;
+    }
+    .site-header[data-js] :is(nav, .theme) {
+      grid-column: 1 / -1;
+    }
+    .quick {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      white-space: nowrap;
+      text-decoration-thickness: 1px;
+    }
+    .quick[aria-current='page'] {
+      text-decoration-thickness: 2px;
+    }
+    .menu-toggle:not([hidden]) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 4rem;
+      min-height: 2.75rem;
+      padding: 0 0.7rem;
+      border: 1px solid var(--fg);
+      border-radius: var(--radius);
+      background: var(--bg-raised);
+      color: var(--fg);
+      font-family: var(--font-label);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .menu-toggle[aria-expanded='true'] {
+      background: var(--fg);
+      color: var(--bg);
     }
     nav {
       order: 3;
-      width: calc(100% + 2 * var(--gutter));
-      margin-inline: calc(-1 * var(--gutter));
-      padding-inline: calc(var(--gutter) - 0.6rem);
-      overflow-x: auto;
-      scrollbar-width: none;
-      border-top: 1px solid var(--border);
-      /* edge shadows appear wherever more links lie off to that side */
-      background:
-        linear-gradient(to right, var(--bg) 40%, transparent) left / 2rem 100% no-repeat local,
-        linear-gradient(to left, var(--bg) 40%, transparent) right / 2rem 100% no-repeat local,
-        linear-gradient(to right, color-mix(in srgb, var(--fg) 28%, transparent), transparent) left / 0.7rem 100% no-repeat scroll,
-        linear-gradient(to left, color-mix(in srgb, var(--fg) 28%, transparent), transparent) right / 0.7rem 100% no-repeat scroll;
+      width: 100%;
     }
-    nav::-webkit-scrollbar {
+    nav ul {
+      flex-wrap: wrap;
+    }
+    /* with the script running, the list and the theme control wait behind the button */
+    .site-header[data-js] nav,
+    .site-header[data-js] .theme {
+      display: none;
+    }
+    .site-header[data-js][data-open] nav {
+      display: block;
+      border-top: 1px solid var(--border);
+    }
+    .site-header[data-js] nav ul {
+      display: block;
+    }
+    .site-header[data-js] nav a {
+      display: flex;
+      align-items: center;
+      min-height: 3rem;
+      padding: 0;
+      font-size: 0.86rem;
+      color: var(--fg);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+    }
+    .site-header[data-js] nav a[aria-current='page'] {
+      box-shadow: inset 3px 0 0 var(--accent);
+      padding-left: 0.8rem;
+    }
+    .site-header[data-js][data-open] .theme {
+      order: 4;
+      display: flex;
+      justify-content: flex-start;
+      gap: 0.7rem;
+      width: 100%;
+      height: auto;
+      min-height: 3rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      font: inherit;
+      font-size: 0.92rem;
+    }
+    .site-header[data-js][data-open] .theme-text {
+      position: static;
+      width: auto;
+      height: auto;
+      clip-path: none;
+    }
+    /* without the script the whole list is shown, so the shortcut would only repeat it */
+    .site-header:not([data-js]) .quick {
+      display: none;
+    }
+  }
+  /* on a phone the name drops its suffix and steps down a size to leave room */
+  @media (max-width: 30rem) {
+    .tld {
+      display: none;
+    }
+    .site-header .wordmark {
+      font-size: 0.9rem;
+    }
+    .site-header .brand :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
+    .site-header[data-js] .bar {
+      column-gap: 0.6rem;
+    }
+    .quick {
+      font-size: 0.84rem;
+    }
+    .menu-toggle:not([hidden]) {
+      min-width: 3.7rem;
+      padding: 0 0.6rem;
+    }
+  }
+  /* below this width the three no longer fit on one row: the shortcut gives way,
+     and remains the first item in the menu */
+  @media (max-width: 23.4rem) {
+    .quick {
       display: none;
     }
   }

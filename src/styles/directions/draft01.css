@@ -271,3 +271,9 @@
 :root[data-direction='draft01'] .site-footer {
   border-top-color: var(--fg);
 }
+
+@media (max-width: 30rem) {
+  :root[data-direction='draft01'] .site-header .wordmark {
+    font-size: 0.9rem;
+  }
+}

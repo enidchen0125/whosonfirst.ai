@@ -169,3 +169,9 @@
 :root[data-direction='draft'] .flow-controls .btn {
   font-size: 0.8rem;
 }
+
+@media (max-width: 30rem) {
+  :root[data-direction='draft'] .site-header .wordmark {
+    font-size: 0.9rem;
+  }
+}
