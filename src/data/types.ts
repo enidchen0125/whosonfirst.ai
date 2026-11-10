@@ -121,16 +121,20 @@ export interface Flow {
   /** Optional closing notes rendered after the diagram, md-lite blocks. */
   notes?: { title: string; body: string }[];
   /**
-   * How the flow appears in different settings, as a table. For a flow that is a
-   * pattern more than a protocol, where the steps have to stay general. Cells are
-   * md-lite; the first column is the row heading.
+   * How the flow appears in different settings. For a flow that is a pattern more than a
+   * protocol, where the steps have to stay general. Shown as a table where there is room, and as
+   * one block of labeled fields per row where there is not; both come from this data, so nothing
+   * here may refer to rows or columns. Values are md-lite.
    */
   comparison?: {
     title: string;
     intro?: string;
-    columns: string[];
-    rows: string[][];
-    /** Qualifications that apply to the whole table. */
+    /** What each row is: the heading of the table's first column. */
+    rowHeading: string;
+    /** One per value in a row: its column heading in the table, and its short label in a block. */
+    fields: { heading: string; label: string }[];
+    rows: { name: string; values: string[] }[];
+    /** Qualifications that apply to the whole comparison. */
     after?: string;
   };
   /** One setting worked through concretely, kept apart from the general steps. */

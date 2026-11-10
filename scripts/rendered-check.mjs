@@ -856,6 +856,75 @@ await ctx.close();
   );
   await ctx.close();
 }
+// comparison on a flow page: a table where there is room, blocks of labeled fields where there
+// is not. One of the two is shown, and only that one reaches assistive technology.
+{
+  const url = "/flows/workload-identity-federation/";
+  for (const [width, shown, hidden] of [
+    [320, ".compare-narrow", ".compare-wide"],
+    [375, ".compare-narrow", ".compare-wide"],
+    [1280, ".compare-wide", ".compare-narrow"],
+  ]) {
+    const ctx = await browser.newContext({ viewport: { width, height: 800 } });
+    const page = await ctx.newPage();
+    await page.goto(`${origin}${url}`, { waitUntil: "networkidle" });
+    const seen = await page.evaluate(
+      ([shown, hidden]) => {
+        const box = (sel) => {
+          const el = document.querySelector(sel);
+          return {
+            display: getComputedStyle(el).display,
+            sideways: el.scrollWidth - el.clientWidth,
+          };
+        };
+        const blocks = [...document.querySelectorAll(".compare-narrow .env")];
+        return {
+          shown: box(shown),
+          hidden: box(hidden),
+          rows: document.querySelectorAll(".compare tbody tr").length,
+          blocks: blocks.length,
+          // every value in a block sits under a label of its own
+          unlabeled: blocks.filter((b) =>
+            [...b.querySelectorAll("dl > div")].some(
+              (d) =>
+                d.querySelectorAll("dt").length !== 1 ||
+                d.querySelectorAll("dd").length !== 1 ||
+                !d.querySelector("dt").textContent.trim(),
+            ),
+          ).length,
+        };
+      },
+      [shown, hidden],
+    );
+    const tree = await page
+      .locator('section[aria-labelledby="comparison"]')
+      .ariaSnapshot();
+    const tables = tree.split("- table").length - 1;
+    const terms = tree.split("- term").length - 1;
+    const narrow = shown === ".compare-narrow";
+    const problems = [
+      seen.shown.display === "none" && `${shown} is not shown`,
+      seen.hidden.display !== "none" && `${hidden} is also shown`,
+      seen.shown.sideways > 1 &&
+        `${shown} scrolls sideways by ${seen.shown.sideways}px`,
+      seen.rows !== seen.blocks &&
+        `${seen.rows} table rows but ${seen.blocks} blocks`,
+      seen.unlabeled > 0 &&
+        `${seen.unlabeled} blocks have a value without one label`,
+      narrow && tables > 0 && "the hidden table is exposed",
+      narrow && terms === 0 && "the blocks expose no labels",
+      !narrow && terms > 0 && "the hidden blocks are exposed",
+      !narrow && tables !== 1 && `${tables} tables exposed`,
+    ].filter(Boolean);
+    record(
+      `${width}px ${url}`,
+      "comparison: one presentation shown and exposed, each value under its label",
+      problems.length === 0,
+      problems.join("; "),
+    );
+    await ctx.close();
+  }
+}
 await browser.close();
 server.close();
 

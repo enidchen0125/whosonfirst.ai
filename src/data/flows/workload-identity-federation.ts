@@ -234,50 +234,69 @@ Short lifetimes on both credentials keep the gaps small. Deleting a pod, a servi
   ],
   comparison: {
     title: "The same pattern by environment",
-    intro: `Each row is a place a workload runs. The first two columns describe platform-provided identity. The third shows where federation comes in, and where it does not.`,
-    columns: [
-      "Environment",
-      "Where the workload runs",
-      "How it gets its initial identity",
-      "Which system trusts that identity",
-      "What it receives, and how it is used",
+    intro: `Each environment is a place a workload runs. Where it runs and how it gets its initial identity describe platform-provided identity. The receiving system shows where federation comes in, and where it does not.`,
+    rowHeading: "Environment",
+    fields: [
+      { heading: "Where the workload runs", label: "Runs on" },
+      {
+        heading: "How it gets its initial identity",
+        label: "Initial identity",
+      },
+      {
+        heading: "Which system trusts that identity",
+        label: "Receiving system",
+      },
+      {
+        heading: "What it receives, and how it is used",
+        label: "Resulting credential",
+      },
     ],
     rows: [
-      [
-        "AWS",
-        "A Lambda function, an EC2 instance, an ECS task.",
-        "An IAM role attached to the function, instance or task. AWS supplies the role’s temporary credentials to the code.",
-        "AWS itself: this is native identity, with nothing to federate. A system outside AWS can trust the workload through outbound federation, where the account has enabled it.",
-        "Temporary AWS credentials that sign API requests. For outbound federation, a short-lived JWT from `GetWebIdentityToken`, exchanged at the outside system.",
-      ],
-      [
-        "Google Cloud",
-        "A Cloud Run service or function, a Compute Engine VM.",
-        "A service account attached to the resource. Client libraries get its credentials from the metadata server.",
-        "Google Cloud itself, natively. An outside system can be configured to trust a Google-signed ID token for the service account.",
-        "OAuth access tokens for Google APIs, sent as bearer tokens. For an outside system, an ID token with the audience the workload asks for.",
-      ],
-      [
-        "Azure",
-        "A function app, a virtual machine, a container app.",
-        "A managed identity assigned to the resource. Code asks a local endpoint on the platform for tokens.",
-        "Microsoft Entra itself, natively. An app registration can also be configured to trust a managed identity, which is federation without leaving Azure.",
-        "Microsoft Entra access tokens for the resource the workload names, sent as bearer tokens.",
-      ],
-      [
-        "CI/CD",
-        "A GitHub Actions job. GitLab CI has an equivalent.",
-        "The CI system’s OIDC provider issues the job a JWT that describes it: repository, branch or environment, workflow. The job has to be permitted to request it.",
-        "A cloud or service configured in advance with the CI issuer and a rule on the token’s claims: an IAM role’s trust policy, a workload identity pool provider, a federated identity credential.",
-        "Whatever that receiver issues: temporary AWS credentials, a Google federated access token, a Microsoft Entra access token.",
-      ],
-      [
-        "Kubernetes and on-premises",
-        "A pod in any cluster, or a service on hosts you run.",
-        "In a cluster, a service account token signed by the cluster and projected into the pod. Elsewhere, an identity provider you operate, such as a SPIFFE implementation or an existing OIDC or SAML provider.",
-        "Any receiver that can be given the issuer and reach its keys. Managed Kubernetes services offer this for their own cloud’s identity system.",
-        "The receiver’s short-lived credential, as in the rows above. The worked example below follows this row.",
-      ],
+      {
+        name: "AWS",
+        values: [
+          "A Lambda function, an EC2 instance, an ECS task.",
+          "An IAM role attached to the function, instance or task. AWS supplies the role’s temporary credentials to the code.",
+          "AWS itself: this is native identity, with nothing to federate. A system outside AWS can trust the workload through outbound federation, where the account has enabled it.",
+          "Temporary AWS credentials that sign API requests. For outbound federation, a short-lived JWT from `GetWebIdentityToken`, exchanged at the outside system.",
+        ],
+      },
+      {
+        name: "Google Cloud",
+        values: [
+          "A Cloud Run service or function, a Compute Engine VM.",
+          "A service account attached to the resource. Client libraries get its credentials from the metadata server.",
+          "Google Cloud itself, natively. An outside system can be configured to trust a Google-signed ID token for the service account.",
+          "OAuth access tokens for Google APIs, sent as bearer tokens. For an outside system, an ID token with the audience the workload asks for.",
+        ],
+      },
+      {
+        name: "Azure",
+        values: [
+          "A function app, a virtual machine, a container app.",
+          "A managed identity assigned to the resource. Code asks a local endpoint on the platform for tokens.",
+          "Microsoft Entra itself, natively. An app registration can also be configured to trust a managed identity, which is federation without leaving Azure.",
+          "Microsoft Entra access tokens for the resource the workload names, sent as bearer tokens.",
+        ],
+      },
+      {
+        name: "CI/CD",
+        values: [
+          "A GitHub Actions job. GitLab CI has an equivalent.",
+          "The CI system’s OIDC provider issues the job a JWT that describes it: repository, branch or environment, workflow. The job has to be permitted to request it.",
+          "A cloud or service configured in advance with the CI issuer and a rule on the token’s claims: an IAM role’s trust policy, a workload identity pool provider, a federated identity credential.",
+          "Whatever that receiver issues: temporary AWS credentials, a Google federated access token, a Microsoft Entra access token.",
+        ],
+      },
+      {
+        name: "Kubernetes and on-premises",
+        values: [
+          "A pod in any cluster, or a service on hosts you run.",
+          "In a cluster, a service account token signed by the cluster and projected into the pod. Elsewhere, an identity provider you operate, such as a SPIFFE implementation or an existing OIDC or SAML provider.",
+          "Any receiver that can be given the issuer and reach its keys. Managed Kubernetes services offer this for their own cloud’s identity system.",
+          "The receiver’s short-lived credential, as in the other environments. The worked example below is this one.",
+        ],
+      },
     ],
     after: `These are recognizable examples, not a catalog. Not every service offers every path. Audience values, lifetimes and the claims a rule can match on differ by provider, so check the documentation for the combination you need. Managed agent platforms apply the same model to the agents they host: see [agent platforms](/deployments/agent-platforms/) and the other [deployment guides](/deployments/).`,
   },

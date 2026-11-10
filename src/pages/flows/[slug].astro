@@ -217,8 +217,10 @@ const details = [
             <h2 id="comparison">{flow.comparison.title}</h2>
           </div>
           {flow.comparison.intro && <div class="prose" set:html={block(flow.comparison.intro)} />}
+          {/* Two presentations of the same rows. CSS shows one and removes the other with
+              display: none, which also takes it out of the accessibility tree and the tab order. */}
           <div
-            class="table-scroll"
+            class="table-scroll compare-wide"
             tabindex="0"
             role="region"
             aria-label={`Table: ${flow.comparison.title}`}
@@ -226,22 +228,38 @@ const details = [
             <table class="compare">
               <thead>
                 <tr>
-                  {flow.comparison.columns.map((c) => (
-                    <th scope="col">{c}</th>
+                  <th scope="col">{flow.comparison.rowHeading}</th>
+                  {flow.comparison.fields.map((f) => (
+                    <th scope="col">{f.heading}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {flow.comparison.rows.map(([head, ...cells]) => (
+                {flow.comparison.rows.map((row) => (
                   <tr>
-                    <th scope="row" set:html={inline(head)} />
-                    {cells.map((c) => (
-                      <td set:html={inline(c)} />
+                    <th scope="row" set:html={inline(row.name)} />
+                    {row.values.map((v) => (
+                      <td set:html={inline(v)} />
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div class="compare-narrow">
+            {flow.comparison.rows.map((row) => (
+              <div class="env">
+                <h3 set:html={inline(row.name)} />
+                <dl>
+                  {row.values.map((v, n) => (
+                    <div>
+                      <dt>{must(flow.comparison?.fields[n], `comparison field ${n + 1}`).label}</dt>
+                      <dd set:html={inline(v)} />
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
           </div>
           {flow.comparison.after && <div class="prose after" set:html={block(flow.comparison.after)} />}
         </section>
@@ -434,10 +452,10 @@ const details = [
     background: var(--bg-raised);
   }
 
-  /* comparison table: column headings are phrases here, so they wrap; the row heading is a
-     label like them, set in the body face so that it reads with its row */
+  /* comparison, where there is room: a table. Column headings are phrases here, so they wrap;
+     the row heading is a label like them, set in the body face so that it reads with its row */
   .compare {
-    min-width: 54rem;
+    min-width: 46rem;
   }
   .compare thead th {
     white-space: normal;
@@ -456,6 +474,65 @@ const details = [
   }
   .compare tr:last-child th[scope='row'] {
     border-bottom: 0;
+  }
+
+  /* comparison, where there is not: one block per row, each value under its own label, so that
+     nothing has to be scrolled sideways to be read. Same frame as the table; labels as its
+     column headings are set; fields ruled off as on the standards tracker. */
+  .compare-narrow {
+    display: none;
+    margin: 0 0 1.5em;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-raised);
+  }
+  .env {
+    padding: 0.9rem 0.8rem 0.3rem;
+  }
+  .env + .env {
+    border-top: 1px solid var(--border);
+  }
+  .env h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+  }
+  .env dl {
+    margin: 0;
+  }
+  .env dl > div {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: 0.1rem 0.8rem;
+    padding: 0.5rem 0;
+    border-top: 1px dashed var(--border-strong);
+  }
+  .env dt {
+    padding-top: 0.28rem;
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .env dd {
+    margin: 0;
+  }
+  @media (max-width: 59.99rem) {
+    .compare-wide {
+      display: none;
+    }
+    .compare-narrow {
+      display: block;
+    }
+  }
+  @media (max-width: 34rem) {
+    .env dl > div {
+      grid-template-columns: 1fr;
+    }
+    .env dt {
+      padding-top: 0;
+    }
   }
   .after {
     font-size: 0.96rem;
