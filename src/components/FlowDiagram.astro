@@ -1110,4 +1110,21 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     font-size: 0.82rem;
     color: var(--fg-muted);
   }
+  /* Below 360px the column beside a holder's name leaves a credential about ten
+     characters to a line, and a chip that cannot get narrower than its longest
+     word pushes the page sideways. So the name goes above what it holds, and a
+     chip is never wider than the card: a word too long for one line breaks. */
+  @media (max-width: 22.49rem) {
+    .held dl {
+      gap: 0.7rem;
+    }
+    .held dl > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.3rem;
+    }
+    .held-chip {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
 </style>
