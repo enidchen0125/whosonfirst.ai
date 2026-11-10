@@ -193,3 +193,11 @@
     font-size: 0.9rem;
   }
 }
+
+/* a reference held whole, with its label and status attached, is wider in this
+   face than a 320px window: below 360px it may break like any other text */
+@media (max-width: 22.49rem) {
+  :root[data-direction="draft"] .doc-line .nowrap {
+    white-space: normal;
+  }
+}
