@@ -109,7 +109,7 @@ export const standards: Standard[] = [
     detail: "January 2025. BCP 240. An update draft is in progress.",
     topics: ["core", "guidance"],
     summary:
-      "The consolidated list of OAuth attacks and required defences. Deprecates the implicit and password grants.",
+      "The consolidated list of OAuth attacks and required defenses. Deprecates the implicit and password grants.",
     agents: "The minimum bar for any agent acting as an OAuth client.",
     url: rfc(9700),
   },
@@ -138,7 +138,7 @@ export const standards: Standard[] = [
     summary:
       "Adds an `iss` parameter to the authorization response so a client can tell which server answered.",
     agents:
-      "The defence against mix-up attacks for clients that use many authorization servers. Clients must validate it under MCP 2026-07-28.",
+      "The defense against mix-up attacks for clients that use many authorization servers. Clients must validate it under MCP 2026-07-28.",
     url: rfc(9207),
   },
   {
@@ -276,7 +276,7 @@ export const standards: Standard[] = [
     status: "final",
     // The published page titles itself "Final: OpenID Connect Discovery 1.0 incorporating errata set 2".
     detail:
-      "Final specification, incorporating errata set 2, 15 December 2023.",
+      "Final specification, incorporating errata set 2, December 15, 2023.",
     topics: ["discovery"],
     summary:
       "The `/.well-known/openid-configuration` document and its JWKS pointer.",
@@ -454,8 +454,7 @@ export const standards: Standard[] = [
     ref: "draft-mcguinness-oauth-actor-profile · draft-mw-oauth-actor-chain",
     body: "IETF",
     status: "draft",
-    detail:
-      "Individual drafts, both revised in autumn 2026. Neither is adopted.",
+    detail: "Individual drafts, both revised in fall 2026. Neither is adopted.",
     topics: ["delegation"],
     summary:
       "Two proposals to make the `act` claim interoperable: one classifies actor types, the other defines a cryptographically verifiable ordered chain.",
@@ -563,7 +562,7 @@ export const standards: Standard[] = [
     summary:
       "`authorization_details`: a structured JSON description of exactly what is being authorized, in place of coarse scope strings.",
     agents:
-      "Consent for one payment or one file, not “payments” or “files”. The base of several agent proposals.",
+      "Consent for one payment or one file, not “payments” or “files.” The base of several agent proposals.",
     url: rfc(9396),
   },
   {
@@ -1051,7 +1050,7 @@ export const standards: Standard[] = [
     body: "OpenID Foundation",
     status: "wg-draft",
     detail:
-      "Draft 1, announced June 2026 with the protocol-neutral COAZ framework. Supersedes the earlier “AuthZEN profile for MCP”.",
+      "Draft 1, announced June 2026 with the protocol-neutral COAZ framework. Supersedes the earlier “AuthZEN profile for MCP.”",
     topics: ["authorization", "agent-protocol"],
     summary:
       "Maps MCP requests to AuthZEN authorization requests for parameter-level decisions, with mappings declared per tool.",

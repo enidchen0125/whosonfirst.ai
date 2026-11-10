@@ -42,7 +42,7 @@ npm test
 npm run check:rendered
 ```
 
-`npm run check` runs [Biome](https://biomejs.dev/) over the repository: formatting, lint rules and import order. `npm run fmt` does the same and writes the fixes. `npm test` runs the site's own checks: types (`astro check`), the rating rule and the colour contrast audit. `npm run check:rendered` opens the built site in a browser.
+`npm run check` runs [Biome](https://biomejs.dev/) over the repository: formatting, lint rules and import order. `npm run fmt` does the same and writes the fixes. `npm test` runs the site's own checks: types (`astro check`), the rating rule and the color contrast audit. `npm run check:rendered` opens the built site in a browser.
 
 `npm run build` writes a fully static site to `dist/`. There is no server component and no client-side framework: interactive pieces are small custom elements that enhance HTML rendered at build time, so every page reads correctly with JavaScript off.
 
@@ -94,11 +94,11 @@ A reference marked `unresolved` is not counted and is not assumed to be optional
 
 The site takes the structure of an Internet-Draft, not its typewriter: fine rules, link blue, compact metadata and numbered sections. Titles, metadata and anything literal are in IBM Plex Mono; reading text is in IBM Plex Sans at 17px.
 
-| File                            | What                                                                                |
-| ------------------------------- | ----------------------------------------------------------------------------------- |
-| `src/styles/tokens.css`         | The values: every colour as a light and dark pair, the type stacks, sizes and radii |
-| `src/styles/global.css`         | The rules that are not specific to one component                                    |
-| `<style>` in each `.astro` file | That component's own rules                                                          |
+| File                            | What                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/styles/tokens.css`         | The values: every color as a light and dark pair, the type stacks, sizes and radii |
+| `src/styles/global.css`         | The rules that are not specific to one component                                   |
+| `<style>` in each `.astro` file | That component's own rules                                                         |
 
 `/styleguide/` shows the tokens, type, components and diagrams as rendered, with live contrast ratios.
 
@@ -106,12 +106,12 @@ The site takes the structure of an Internet-Draft, not its typewriter: fine rule
 
 **Fonts.** The four font files every first screen needs (Plex Sans 400 and 600, Plex Mono 500 and 600) are preloaded from `src/layouts/Base.astro`, so they download alongside the stylesheet and the text does not paint in a fallback font and then change. If one is still late, `IBM Plex Sans Fallback` in `src/styles/global.css` stands in: Arial scaled to Plex Sans's measurements, so the swap does not move the text. If you change which weights the first screen uses, change the preload list to match; a preloaded file that is not used is a wasted download.
 
-Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labelled disclosure, and history follows the lookup it belongs to.
+Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labeled disclosure, and history follows the lookup it belongs to.
 
 Three rules hold throughout:
 
-- **Colour in a diagram means role.** User, agent, authorization server, resource server and infrastructure each keep one colour. The kind of message (direct call, response, through the browser, out of band) is carried by the line style.
-- **Nothing is dimmed with opacity.** Steps before and after the current one use the muted text colour, which the audit holds to 4.5:1.
+- **Color in a diagram means role.** User, agent, authorization server, resource server and infrastructure each keep one color. The kind of message (direct call, response, through the browser, out of band) is carried by the line style.
+- **Nothing is dimmed with opacity.** Steps before and after the current one use the muted text color, which the audit holds to 4.5:1.
 - **Buttons are boxes, links are underlined, metadata is neither.**
 
 Two checks cover this:

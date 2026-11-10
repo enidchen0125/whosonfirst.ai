@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * WCAG contrast audit of the site's colours, in both themes.
+ * WCAG contrast audit of the site's colors, in both themes.
  *
- * Reads the colour tokens straight from src/styles/tokens.css and checks each
+ * Reads the color tokens straight from src/styles/tokens.css and checks each
  * text-on-surface pair the site actually uses. Exits 1 if any text pair falls
  * below 4.5:1, so it can gate a build.
  *
@@ -70,7 +70,7 @@ const missing = pairs()
   .flat()
   .filter((k) => !t[k]);
 if (missing.length) {
-  console.error(`missing colour tokens: ${[...new Set(missing)].join(", ")}`);
+  console.error(`missing color tokens: ${[...new Set(missing)].join(", ")}`);
   process.exit(1);
 }
 for (const theme of ["light", "dark"]) {

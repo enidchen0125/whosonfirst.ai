@@ -88,7 +88,7 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== "meta") as ClaimCat[];
     ))
   }
 
-  <ul class="ti-legend" aria-label="Colour key">
+  <ul class="ti-legend" aria-label="Color key">
     {
       cats.map((c) => (
         <li class={`tone-${CAT_TONE[c]}`}>

@@ -20,7 +20,7 @@ The specification is through IETF approval and waiting in the RFC Editor’s que
     "Federations where the two authorization servers have an agreed trust relationship.",
   ],
   watchOut: [
-    "Trust between the two authorization servers is set up in advance: keys, issuer names, and which claims are honoured. The specification does not create that trust for you.",
+    "Trust between the two authorization servers is set up in advance: keys, issuer names, and which claims are honored. The specification does not create that trust for you.",
     "Identifiers rarely match across domains. Decide how subjects are mapped, and what happens when a mapping does not exist.",
     "Each hop can add or drop claims. Make sure the receiving side does not treat a claim as verified merely because it arrived.",
     "Keep the grant short-lived and single-audience. It is a bearer credential for obtaining tokens.",
@@ -138,7 +138,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
       kind: "resp",
       label: "200 OK",
       title: "The remote API responds",
-      body: `Either domain can end the arrangement independently: A by refusing to issue grants, B by refusing to honour them.`,
+      body: `Either domain can end the arrangement independently: A by refusing to issue grants, B by refusing to honor them.`,
     },
   ],
   standards: [

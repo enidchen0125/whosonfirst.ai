@@ -7,7 +7,7 @@
  * bottom upgrades it to a stepper: one step at a time, with the matching arrow
  * highlighted and a snapshot of who holds which credential.
  *
- * Colour means one thing here: the role of a participant. The kind of message
+ * Color means one thing here: the role of a participant. The kind of message
  * (direct call, response, through the browser, out of band) is carried by the
  * line style and named in the step. On a phone the steps read as a narrative
  * and the diagram opens on demand at full size.
@@ -479,7 +479,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
       });
       const prev = this.querySelector<HTMLButtonElement>('[data-act="prev"]')!;
       const next = this.querySelector<HTMLButtonElement>('[data-act="next"]')!;
-      // a button that is about to be disabled hands its focus to its neighbour, so the keyboard is never stranded
+      // a button that is about to be disabled hands its focus to its neighbor, so the keyboard is never stranded
       const held = document.activeElement;
       prev.disabled = all || i === 0;
       next.disabled = all || i === this.count - 1;
@@ -741,7 +741,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     }
   }
 
-  /* actors: the role colour runs from the box down the lifeline */
+  /* actors: the role color runs from the box down the lifeline */
   .lifeline {
     stroke: color-mix(in srgb, var(--role) 50%, var(--bg-raised));
     stroke-width: 1.5;
@@ -805,7 +805,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
   .head {
     fill: var(--fg);
   }
-  /* the number sits on the sender's lifeline and wears the sender's colour */
+  /* the number sits on the sender's lifeline and wears the sender's color */
   .badge {
     fill: var(--bg-raised);
     stroke: var(--role);
@@ -997,7 +997,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     font-weight: 600;
     flex: none;
   }
-  /* who is talking to whom, in the colours the diagram uses */
+  /* who is talking to whom, in the colors the diagram uses */
   .step-route {
     display: inline-flex;
     flex-wrap: wrap;

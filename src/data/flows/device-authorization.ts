@@ -173,7 +173,7 @@ grant_type=urn:ietf:params:oauth:grant-type:device_code
   roles: {
     rfc8628: "required", // the grant: steps 1 to 6 and 8
     rfc6749: "required", // the token endpoint and its responses
-    "cross-device-bcp": "required", // RFC 10027: its practices apply to this grant, and the page teaches its defences against code phishing
+    "cross-device-bcp": "required", // RFC 10027: its practices apply to this grant, and the page teaches its defenses against code phishing
     rfc8707: "required", // `resource` on the token request, step 5
     rfc6750: "required", // the Bearer header on the API call
     "oauth-2-1": "background", // a related draft; not named or used on this page

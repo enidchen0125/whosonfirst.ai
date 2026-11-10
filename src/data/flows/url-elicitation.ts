@@ -11,7 +11,7 @@ export const urlElicitation: Flow = {
     "A tool needs the user to sign in somewhere else. It hands back a link, the user completes the flow in a browser, and the secret never touches the agent.",
   summary: `An MCP server often sits in front of someone else’s API. The user has authorized their client to use the MCP server, but the server still needs the user’s permission at the third party: their code host, their CRM, their bank.
 
-The wrong ways to get it are familiar. Ask the user to paste an API key into the chat, where the model and every log will see it. Or have the client forward its own token, which is token passthrough. URL-mode elicitation is the protocol’s answer: in the middle of a tool call the server replies “I need the user to visit this URL”. The client shows the link, the user opens it in a real browser, and the server completes an ordinary OAuth flow with the third party on its own. The credential is stored by the server and is never seen by the client or the model.
+The wrong ways to get it are familiar. Ask the user to paste an API key into the chat, where the model and every log will see it. Or have the client forward its own token, which is token passthrough. URL-mode elicitation is the protocol’s answer: in the middle of a tool call the server replies “I need the user to visit this URL.” The client shows the link, the user opens it in a real browser, and the server completes an ordinary OAuth flow with the third party on its own. The credential is stored by the server and is never seen by the client or the model.
 
 The same mechanism covers anything sensitive that should bypass the agent: entering a key, confirming a payment, approving a specific action on a page the server controls.`,
   fits: [

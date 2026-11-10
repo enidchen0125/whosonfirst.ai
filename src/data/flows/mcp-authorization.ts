@@ -274,7 +274,7 @@ Content-Type: application/json
   notes: [
     {
       title: "Why this flow is rated emerging",
-      body: `The 2026-07-28 revision is published and current, but two things this page draws rest on IETF working-group drafts. The revision requires authorization servers to implement OAuth 2.1 and cites draft -13; the current draft is -17. It recommends Client ID Metadata Documents, which steps 4 to 8 use, and cites draft -00; the current draft is -03. Either draft can still change. The rating describes those dependencies. It is not a judgement on how safe the flow is.`,
+      body: `The 2026-07-28 revision is published and current, but two things this page draws rest on IETF working-group drafts. The revision requires authorization servers to implement OAuth 2.1 and cites draft -13; the current draft is -17. It recommends Client ID Metadata Documents, which steps 4 to 8 use, and cites draft -00; the current draft is -03. Either draft can still change. The rating describes those dependencies. It is not a judgment on how safe the flow is.`,
     },
     {
       title: "How the specification got here",

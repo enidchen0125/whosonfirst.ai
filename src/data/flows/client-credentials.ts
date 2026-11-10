@@ -18,7 +18,7 @@ The grant is trivial. The hard part is the credential the agent uses to authenti
     "Both sides belong to the same organization, or have a pre-arranged trust relationship.",
   ],
   watchOut: [
-    "An agent that serves many users with one service identity is a confused deputy waiting to happen. If user A can talk the agent into fetching user B’s data, the API cannot stop it: the token says “agent”, not “user A”.",
+    "An agent that serves many users with one service identity is a confused deputy waiting to happen. If user A can talk the agent into fetching user B’s data, the API cannot stop it: the token says “agent,” not “user A.”",
     "Client secrets are the most common credential found in agent prompts, traces and repositories. Prefer `private_key_jwt` or [workload identity federation](/flows/workload-identity-federation/).",
     "There is no consent step, so scopes are whatever an admin configured. Review them as you would a service account’s IAM role.",
     "No refresh token is issued; the agent just asks again. Keep access tokens short-lived so revoking the client takes effect quickly.",

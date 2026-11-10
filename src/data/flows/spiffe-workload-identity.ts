@@ -51,7 +51,7 @@ For agent systems this gives you a per-workload identity that works the same acr
       kind: "resp",
       label: "Registration entries",
       title: "The server tells the node which identities it may issue",
-      body: `Registration entries map selectors to SPIFFE IDs: “a pod in namespace \`agents\` with service account \`research-agent\` is \`spiffe://example.org/ns/agents/sa/research-agent\`”.`,
+      body: `Registration entries map selectors to SPIFFE IDs: “a pod in namespace \`agents\` with service account \`research-agent\` is \`spiffe://example.org/ns/agents/sa/research-agent\`.”`,
       gain: [["node", "node SVID"]],
     },
     {

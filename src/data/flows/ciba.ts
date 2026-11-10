@@ -13,14 +13,14 @@ export const ciba: Flow = {
 
 Client-Initiated Backchannel Authentication turns the flow around. The agent calls the authorization server directly and says which user it needs and why. The server contacts that user on a device it already knows, typically a phone, and shows them a message describing the request. When the user approves, the agent receives a token. Nothing is typed, nothing is redirected, and the user can be anywhere.
 
-CIBA came out of banking, where a call-centre agent or a point-of-sale terminal needs a customer’s approval on the customer’s own phone. That is the same shape as an AI agent asking its principal for permission.`,
+CIBA came out of banking, where a call-center agent or a point-of-sale terminal needs a customer’s approval on the customer’s own phone. That is the same shape as an AI agent asking its principal for permission.`,
   fits: [
     "Long-running or background agents that need occasional human approval.",
     "The user is known in advance and has an enrolled device.",
     "High-stakes actions where approval should be bound to the details of one transaction.",
   ],
   watchOut: [
-    "**Approval fatigue.** An agent that can trigger a push whenever it likes will train its user to tap “approve”. Rate-limit requests and make each one specific.",
+    "**Approval fatigue.** An agent that can trigger a push whenever it likes will train its user to tap “approve.” Rate-limit requests and make each one specific.",
     "The `binding_message` is what the human actually reads. “Agent requests access” is useless. “Pay invoice 1042, $1,250.00, to Acme Ltd” is a decision.",
     "The agent chooses whom to ask via `login_hint`. If an attacker can influence that value, they choose who gets prompted. Derive it from the authenticated session, never from model output.",
     "CIBA support is uneven. It is common in financial-grade identity providers and less so elsewhere.",

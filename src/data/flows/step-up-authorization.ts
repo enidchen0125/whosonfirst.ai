@@ -11,7 +11,7 @@ export const stepUpAuthorization: Flow = {
     "Start with a weak token. When the agent reaches something sensitive, the API says so and the user is asked for exactly that.",
   summary: `Asking for every permission up front is how agents end up holding tokens that can do far more than the task needs. The alternative is to begin with the minimum and let the resource server say when more is required.
 
-Two standards make this workable. The step-up challenge lets an API answer “this token is fine, but not for this: come back with a stronger authentication or a broader scope”. Rich Authorization Requests let the follow-up request describe one specific action in structured detail instead of a coarse scope string. Together they give a pattern where routine work flows without interruption and a human is pulled in only for the moments that matter, to approve something concrete.`,
+Two standards make this workable. The step-up challenge lets an API answer “this token is fine, but not for this: come back with a stronger authentication or a broader scope.” Rich Authorization Requests let the follow-up request describe one specific action in structured detail instead of a coarse scope string. Together they give a pattern where routine work flows without interruption and a human is pulled in only for the moments that matter, to approve something concrete.`,
   fits: [
     "Agents whose work is mostly low-risk with occasional sensitive actions.",
     "The user is available in the session when the sensitive moment arrives.",
@@ -19,7 +19,7 @@ Two standards make this workable. The step-up challenge lets an API answer “th
   ],
   watchOut: [
     "Step-up only works if the API enforces it. An API that accepts the weak token for the sensitive call has no step-up.",
-    "An agent can be steered by injected instructions into triggering a step-up. The consent screen is the defence, so it must show what will actually happen, sourced from the authorization request rather than from the agent’s description of it.",
+    "An agent can be steered by injected instructions into triggering a step-up. The consent screen is the defense, so it must show what will actually happen, sourced from the authorization request rather than from the agent’s description of it.",
     "Scope accumulation: after several step-ups the token may hold everything. Prefer transaction-bound authorization details that expire with the action.",
     "If the user is not in the session, a redirect goes nowhere. Use [CIBA](/flows/ciba/) for that case.",
   ],
@@ -108,7 +108,7 @@ WWW-Authenticate: Bearer error="insufficient_user_authentication",
       kind: "front",
       label: "Approve this transfer",
       title: "The user approves one specific thing",
-      body: `Not “allow the agent to make transfers”. This transfer.`,
+      body: `Not “allow the agent to make transfers.” This transfer.`,
     },
     {
       from: "as",

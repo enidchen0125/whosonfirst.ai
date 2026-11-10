@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------
    whosonfirst.ai — base styles
-   Every colour, font and shape decision here reads a token. The values
+   Every color, font and shape decision here reads a token. The values
    are in tokens.css.
 ------------------------------------------------------------------- */
 
@@ -157,7 +157,7 @@ samp {
 pre {
   margin: 0 0 1.3em;
   padding: 0.95rem 1.1rem;
-  /* biome-ignore lint/complexity/noImportantStyles: keeps the page's surface colour if the syntax highlighter sets a background inline */
+  /* biome-ignore lint/complexity/noImportantStyles: keeps the page's surface color if the syntax highlighter sets a background inline */
   background: var(--bg-sunken) !important;
   border-left: 2px solid var(--fg);
   overflow-x: auto;
@@ -453,7 +453,7 @@ blockquote p:last-child {
 
 /* ---------- small parts ---------- */
 
-/* metadata is text, never a box: a chip is a label with a square in its tone's colour */
+/* metadata is text, never a box: a chip is a label with a square in its tone's color */
 .chip {
   display: inline-flex;
   align-items: center;

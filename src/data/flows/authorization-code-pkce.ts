@@ -211,7 +211,7 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
   notes: [
     {
       title: "How OAuth 2.1 relates",
-      body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated 30 October 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behaviour as it does.
+      body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated October 30, 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behavior as it does.
 
 Two of its changes touch this page. A token request no longer carries \`redirect_uri\`, and the PKCE \`plain\` method is removed. This page shows the published RFCs, so step 7 still sends \`redirect_uri\`. A flow built on the draft, such as [MCP authorization](/flows/mcp-authorization/), leaves it out.`,
     },

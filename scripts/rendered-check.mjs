@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 /**
  * Rendered checks: what the token audit cannot see.
  *
- * contrast-check.mjs proves that declared colour pairs pass. This script opens
+ * contrast-check.mjs proves that declared color pairs pass. This script opens
  * the built site in a browser and measures what is actually drawn: the diagram
  * in each of its states, the size labels end up at, how long lines of prose
  * run, whether anything overflows, and whether the pieces a reader depends on
@@ -765,7 +765,7 @@ for (const path of NARROW_PAGES) {
   );
 }
 await ctx.close();
-// colour theme: the page follows the system setting, live, and a theme picked
+// color theme: the page follows the system setting, live, and a theme picked
 // with the header button lasts only until the system setting next changes
 {
   const ctx = await browser.newContext({

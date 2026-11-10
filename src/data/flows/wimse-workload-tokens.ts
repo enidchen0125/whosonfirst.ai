@@ -80,7 +80,7 @@ The working group’s agent architecture document says plainly that agents are w
       kind: "self",
       label: "Sign a proof for this request",
       title: "The agent signs a Workload Proof Token",
-      body: `A very short-lived JWT of type \`wpt+jwt\`, signed with the private key. \`aud\` is the URL being called, \`wth\` is a hash of the WIT, and \`jti\` makes it single-use. Optional claims bind it to an access token or a transaction token travelling in the same request.`,
+      body: `A very short-lived JWT of type \`wpt+jwt\`, signed with the private key. \`aud\` is the URL being called, \`wth\` is a hash of the WIT, and \`jti\` makes it single-use. Optional claims bind it to an access token or a transaction token traveling in the same request.`,
       code: {
         lang: "json",
         text: `// header: { "alg": "EdDSA", "typ": "wpt+jwt" }

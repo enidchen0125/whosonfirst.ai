@@ -44,7 +44,7 @@ export const glossary: Term[] = [
   {
     term: "Audience",
     aka: ["aud"],
-    def: "The recipient a token is intended for. A resource must reject tokens whose audience is someone else; this is the main defence against a token being replayed at a different service.",
+    def: "The recipient a token is intended for. A resource must reject tokens whose audience is someone else; this is the main defense against a token being replayed at a different service.",
   },
   {
     term: "Authorization code",
@@ -132,7 +132,7 @@ export const glossary: Term[] = [
   {
     term: "Dynamic Client Registration",
     aka: ["DCR"],
-    def: "A protocol by which a client registers itself with an authorization server at runtime. Deprecated in MCP in favour of Client ID Metadata Documents.",
+    def: "A protocol by which a client registers itself with an authorization server at runtime. Deprecated in MCP in favor of Client ID Metadata Documents.",
   },
   {
     term: "Elicitation",

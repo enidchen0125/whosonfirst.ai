@@ -19,9 +19,9 @@ Token exchange is the standard alternative. The middle service presents the toke
   ],
   watchOut: [
     "**Impersonation versus delegation.** If the new token has the user as `sub` and no `act` claim, the downstream API believes the user is calling directly. That is impersonation. Sometimes it is what you want; you should know which one you are getting.",
-    "RFC 8693 defines the mechanism and leaves policy open. Which clients may exchange which tokens for which audiences is yours to configure, and the default in many products is “anything”.",
+    "RFC 8693 defines the mechanism and leaves policy open. Which clients may exchange which tokens for which audiences is yours to configure, and the default in many products is “anything.”",
     "Each exchange should narrow scope, never widen it.",
-    "Support differs between vendors in which parameters are honoured and whether `act` is emitted. Test with the tokens you will really get.",
+    "Support differs between vendors in which parameters are honored and whether `act` is emitted. Test with the tokens you will really get.",
   ],
   participants: [
     { id: "agent", label: "Agent", sub: "Has user’s token", role: "agent" },
@@ -120,7 +120,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "self",
       label: "Check aud; read sub and act",
       title: "The API sees both parties",
-      body: `The warehouse can apply Alice’s row-level permissions **and** a rule such as “the reporting tool may read sales data but not payroll”, and can log both identities.`,
+      body: `The warehouse can apply Alice’s row-level permissions **and** a rule such as “the reporting tool may read sales data but not payroll,” and can log both identities.`,
     },
     {
       from: "api",

@@ -13,7 +13,7 @@ export const webBotAuth: Flow = {
 
 Web Bot Auth replaces both with cryptography. The agent’s operator publishes its public keys at a well-known URL. The agent signs each request using HTTP Message Signatures and names the operator in a header. The website, or more usually the CDN in front of it, fetches the keys, verifies the signature, and then applies whatever policy it likes to a caller it can now name.
 
-This is identification, not authorization. A valid signature says “this request came from operator X’s agent”. It does not say a user asked for it or that the site must serve it.`,
+This is identification, not authorization. A valid signature says “this request came from operator X’s agent.” It does not say a user asked for it or that the site must serve it.`,
   fits: [
     "Agents that fetch or interact with public websites: browsing, research, shopping.",
     "Operators who want their traffic recognized and not blocked as an unknown bot.",
@@ -111,7 +111,7 @@ Signature: sig1=:jdq0SqOwHdyHr9+r5jw3iYZH6aNGKijYp/EstF4RQTQdi5N5YYKrD+mCT1HA1nZ
       to: "site",
       kind: "back",
       label: "Forward with verified identity",
-      title: "The origin receives a labelled request",
+      title: "The origin receives a labeled request",
       body: `Typically the CDN passes the verified operator identity to the origin so the site can make its own decisions.`,
     },
     {

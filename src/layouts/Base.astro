@@ -105,12 +105,12 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
             }
           </ul>
         </nav>
-        <button class="theme" type="button" title="Switch colour theme">
+        <button class="theme" type="button" title="Switch color theme">
           <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
             <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
             <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor"></path>
           </svg>
-          <span class="theme-text">Switch colour theme</span>
+          <span class="theme-text">Switch color theme</span>
         </button>
       </div>
     </header>
@@ -169,7 +169,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       });
       window.matchMedia('(min-width: 62.01rem)').addEventListener('change', () => setOpen(false));
 
-      // Colour theme. With no choice made, CSS follows the system setting, and
+      // Color theme. With no choice made, CSS follows the system setting, and
       // keeps following it when it changes. The button picks the other theme;
       // that choice lasts until the system setting next changes.
       const root = document.documentElement;

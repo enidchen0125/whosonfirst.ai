@@ -45,18 +45,18 @@ const accent = [
   ["--on-accent", "Text on an accent fill."],
 ];
 const hues: { id: string; role: Role; also: string }[] = [
-  { id: "red", role: "human", also: "Also: danger, “no”, cautions." },
+  { id: "red", role: "human", also: "Also: danger, “no,” cautions." },
   { id: "blue", role: "agent", also: "Also: working group drafts." },
   { id: "violet", role: "authz", also: "Also: projects and platforms." },
   {
     id: "green",
     role: "resource",
-    also: "Also: success, “yes”, published standards.",
+    also: "Also: success, “yes,” published standards.",
   },
   {
     id: "amber",
     role: "infra",
-    also: "Also: “partly”, individual drafts, out-of-band messages.",
+    also: "Also: “partly,” individual drafts, out-of-band messages.",
   },
 ];
 
@@ -93,7 +93,7 @@ const cards = ["mcp-authorization", "ciba", "spiffe-workload-identity"].map(
 );
 
 const toc = [
-  ["colour", "Colour"],
+  ["color", "Color"],
   ["contrast", "Contrast"],
   ["type", "Type"],
   ["shape", "Shape"],
@@ -105,7 +105,7 @@ const toc = [
 
 <Base
   title="Style guide"
-  description="The living style guide for Who's on First: colour and type tokens with live contrast ratios, and every component rendered with the real code."
+  description="The living style guide for Who's on First: color and type tokens with live contrast ratios, and every component rendered with the real code."
 >
   <div class="page-head">
     <div class="wrap">
@@ -122,10 +122,10 @@ const toc = [
   </div>
 
   <style-guide>
-    <section class="section" id="colour">
+    <section class="section" id="color">
       <div class="wrap">
         <div class="section-head">
-          <h2>Colour</h2>
+          <h2>Color</h2>
           <p>Values shown are read from this page as rendered, in the current theme.</p>
         </div>
 
@@ -358,7 +358,7 @@ const toc = [
             <h3>Buttons</h3>
             <p>
               One primary action per view. Everything else is a plain button, and tertiary actions are ghosts. Labels
-              say what happens: “Explore the flows”, never “Click here”.
+              say what happens: “Explore the flows,” never “Click here.”
             </p>
           </div>
           <div class="spec-demo row">
@@ -375,7 +375,7 @@ const toc = [
             <h3>Chips</h3>
             <p>
               Short facts about the thing they sit on. A neutral chip states a property. A toned chip states a
-              category, and takes its hue from the table above, so the same colour always means the same thing.
+              category, and takes its hue from the table above, so the same color always means the same thing.
             </p>
           </div>
           <div class="spec-demo">
@@ -507,8 +507,8 @@ grant_type=client_credentials
           <div class="spec-text">
             <h3>Comparison</h3>
             <p>
-              Yes, no and partly are stated in words as well as colour, so the answer survives a greyscale print and a
-              colour-blind reader.
+              Yes, no and partly are stated in words as well as color, so the answer survives a grayscale print and a
+              color-blind reader.
             </p>
           </div>
           <div class="spec-demo">
@@ -525,7 +525,7 @@ grant_type=client_credentials
           <p>Sequence diagrams are drawn at build time from data, so they take the tokens like everything else.</p>
         </div>
         <div class="sg-rules">
-          <p><strong>One column per participant</strong>, coloured by role.</p>
+          <p><strong>One column per participant</strong>, colored by role.</p>
           <p><strong>Line style is meaning.</strong> Solid for a direct call, dashed for a response, dotted for out of band, and the human hue for anything that passes through a person’s browser.</p>
           <p><strong>Labels stay short.</strong> Two lines at most; the panel carries the explanation.</p>
         </div>
@@ -545,7 +545,7 @@ grant_type=client_credentials
         <div class="voice">
           <div>
             <h3>Say who does what</h3>
-            <p>“The agent redeems the code.” Not “the code is redeemed”. Auth is about who acts; passive sentences hide exactly that.</p>
+            <p>“The agent redeems the code.” Not “the code is redeemed.” Auth is about who acts; passive sentences hide exactly that.</p>
           </div>
           <div>
             <h3>State it, then stop</h3>
@@ -561,7 +561,7 @@ grant_type=client_credentials
           </div>
           <div>
             <h3>The joke is the frame, not the filling</h3>
-            <p>Who, What and I Don’t Know organise the ideas. They do not appear in every heading. A reference page earns trust by being plain.</p>
+            <p>Who, What and I Don’t Know organize the ideas. They do not appear in every heading. A reference page earns trust by being plain.</p>
           </div>
           <div>
             <h3>Cautions come with a way out</h3>

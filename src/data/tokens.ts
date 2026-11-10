@@ -292,7 +292,7 @@ export const tokens: TokenSpec[] = [
         text: '"pod": { "name": "research-agent-7c9f-x2x8k", "uid": "…" },',
         indent: 2,
         cat: "what",
-        note: "The specific pod. This is the nearest thing Kubernetes offers to “this running instance of the agent”.",
+        note: "The specific pod. This is the nearest thing Kubernetes offers to “this running instance of the agent.”",
       },
       {
         text: '"node": { "name": "node-3", "uid": "…" }',
