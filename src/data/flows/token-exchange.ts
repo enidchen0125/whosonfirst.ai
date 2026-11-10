@@ -155,7 +155,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       title: "A documented implementation",
       body: `AWS describes an on-behalf-of exchange for agents in a reference implementation on Amazon Bedrock AgentCore: [Propagate user authorization context in AI agents](https://aws.amazon.com/blogs/security/propagate-user-authorization-context-in-ai-agents-with-amazon-bedrock-agentcore/), published in August 2026. AgentCore Identity exchanges the signed-in user’s identity at Salesforce’s token endpoint for a user-scoped token, and Salesforce’s sharing rules decide what comes back. It is a documented path, described from the article and not tested here.
 
-The same article protects two other data sources without token exchange, and not equally. DynamoDB access is limited by IAM, through \`AssumeRoleWithWebIdentity\` with session tags. A knowledge base is filtered in the agent’s own code, which AWS calls application-layer enforcement.
+The same article protects two other data sources using mechanisms other than RFC 8693 token exchange, with different enforcement boundaries. DynamoDB access is limited by IAM, through \`AssumeRoleWithWebIdentity\` with session tags. A knowledge base is filtered in the agent’s own code, which AWS calls application-layer enforcement.
 
 **This is not workload identity.** In [workload identity federation](/flows/workload-identity-federation/) the agent proves what it is and receives access of its own. Here a user’s authority travels with the request, and the downstream system applies that user’s permissions. An agent often needs both: its own identity to authenticate the exchange, and the user’s token as the subject.`,
     },
