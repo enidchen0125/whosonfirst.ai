@@ -156,7 +156,7 @@ key=__PLACEHOLDER_REPORTS_KEY__`,
 
 **Sealed secrets.** The agent holds the secret encrypted to the proxy’s key. Only the proxy can open it, and the sealed value carries its own list of permitted hosts.
 
-**No secret at all.** Where the destination supports it, [workload identity federation](/flows/workload-identity-federation/) removes the stored credential entirely.`,
+**No long-lived secret.** Where the destination supports it, [workload identity federation](/flows/workload-identity-federation/) removes the need to provision one. The short-lived credentials it issues still need protecting.`,
     },
   ],
 };

@@ -26,7 +26,7 @@ Six capabilities separate an agent identity product from a renamed service accou
 | Capability | Why it matters |
 | --- | --- |
 | An identity per agent | So two agents are distinguishable in policy and in logs, and one can be shut off without the other |
-| A credential the agent does not store | The platform attests to the agent; there is no secret to leak |
+| A credential the agent does not store | The platform attests to the agent, so no long-lived secret has to be issued to it |
 | Delegation that records the actor | Tokens for user-delegated work name both the user and the agent, not the user alone |
 | A vault for downstream tokens | Refresh tokens for third-party services stay with the platform; the agent gets short-lived access |
 | Central policy and consent | An administrator, not each end user, decides which agents reach which systems |

@@ -817,7 +817,7 @@ export const standards: Standard[] = [
     summary:
       "Short-lived, audience-scoped JWTs bound to a specific pod and delivered by the kubelet through a projected volume. The cluster publishes OIDC discovery metadata so outsiders can verify them.",
     agents:
-      "Every pod already has a signed identity document. Workload identity federation turns it into access elsewhere with no stored secret.",
+      "Every pod already has a signed identity document. Workload identity federation turns it into access elsewhere, with no long-lived secret to provision for the pod.",
     url: "https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/",
   },
   {

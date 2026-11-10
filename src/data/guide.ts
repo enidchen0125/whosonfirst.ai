@@ -273,7 +273,7 @@ export const rules: Rule[] = [
     role: "start",
     weight: 10,
     when: { principal: ["self"], runtime: ["k8s", "managed", "headless"] },
-    why: "The platform can vouch for the agent. Exchange its platform-issued token for access and store no secret at all.",
+    why: "The platform can vouch for the agent. Use the identity it establishes to get short-lived access, with no long-lived secret to provision.",
   },
   {
     flow: "client-credentials",

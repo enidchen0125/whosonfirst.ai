@@ -58,7 +58,7 @@ Hosted coding agents increasingly solve this differently: the credential stays w
 
 ## In CI
 
-A pipeline job has no user, and it does have a platform that knows exactly what is running. Most CI systems will issue the job a signed OIDC token saying so. That token is the job's identity, and [workload identity federation](/flows/workload-identity-federation/) turns it into cloud or API access without a stored secret.
+A pipeline job has no user, and it does have a platform that knows exactly what is running. Most CI systems will issue the job a signed OIDC token saying so. That token is the job's identity, and [workload identity federation](/flows/workload-identity-federation/) turns it into cloud or API access without a long-lived secret stored for the job.
 
 ```yaml
 # GitHub Actions: ask for an identity token, then trade it for cloud access

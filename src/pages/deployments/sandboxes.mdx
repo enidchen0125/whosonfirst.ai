@@ -67,7 +67,7 @@ Hosted sandbox products and several newer open-source proxies offer the same ide
 
 ## When there is nothing to inject
 
-The best case is a destination that accepts identity instead of a secret. If the sandbox's host platform issues it a signed, short-lived identity token, and the destination trusts that issuer, [workload identity federation](/flows/workload-identity-federation/) gets the agent access with no stored credential anywhere. Injection is for everything that still wants an API key.
+The best case is a destination that accepts identity instead of a secret. If the sandbox's host platform issues it a signed, short-lived identity token, and the destination trusts that issuer, [workload identity federation](/flows/workload-identity-federation/) gets the agent access with no long-lived secret to provision. What it issues is short-lived, and still a credential the sandbox holds. Injection is for everything that still wants an API key.
 
 ## Checklist
 

@@ -37,7 +37,7 @@ const rows = [
     where: "Kubernetes",
     identity: "ServiceAccount token, pod certificate or SPIFFE ID",
     user: "Token exchange at a gateway or in the agent",
-    secrets: "Nowhere, with federation; otherwise a Secret",
+    secrets: "With federation, none long-lived; otherwise a Secret",
     risk: "Shared service accounts; loose federation trust rules",
   },
   {
@@ -58,7 +58,7 @@ const rows = [
     where: "CI pipeline",
     identity: "The CI system’s OIDC token for the job",
     user: "Usually none: the job acts as itself",
-    secrets: "Nowhere, with federation",
+    secrets: "With federation, none long-lived",
     risk: "Trust rules that match more repositories or branches than intended",
   },
   {
