@@ -9,21 +9,24 @@
  *     to be optional or stable either. If requiring it would lower the level,
  *     the rating is provisional until the reference is classified.
  */
-import type { Maturity, RefRole, StdStatus } from './types';
+import type { Maturity, RefRole, StdStatus } from "./types";
 
 /** Least mature first. */
-const ORDER: Maturity[] = ['experimental', 'emerging', 'stable'];
+const ORDER: Maturity[] = ["experimental", "emerging", "stable"];
 
 /**
  * The level a reference's status shows by itself. A project, a platform or a
  * guidance document shows none: its tracker entry states a level, from what its
  * maintainers publish, or it stays unknown.
  */
-export function levelOf(ref: { status: StdStatus; level?: Maturity }): Maturity | undefined {
+export function levelOf(ref: {
+  status: StdStatus;
+  level?: Maturity;
+}): Maturity | undefined {
   if (ref.level) return ref.level;
-  if (ref.status === 'rfc' || ref.status === 'final') return 'stable';
-  if (ref.status === 'wg-draft') return 'emerging';
-  if (ref.status === 'draft') return 'experimental';
+  if (ref.status === "rfc" || ref.status === "final") return "stable";
+  if (ref.status === "wg-draft") return "emerging";
+  if (ref.status === "draft") return "experimental";
   return undefined;
 }
 
@@ -43,17 +46,22 @@ export interface Rating {
 }
 
 export function rate(refs: RatedRef[]): Rating {
-  const required = refs.filter((r) => r.role === 'required');
-  if (required.length === 0) throw new Error('no required reference to rate from');
+  const required = refs.filter((r) => r.role === "required");
+  if (required.length === 0)
+    throw new Error("no required reference to rate from");
   const unknown = required.filter((r) => r.level === undefined);
   if (unknown.length > 0) {
     throw new Error(
-      `required ${unknown.map((r) => `"${r.id}"`).join(', ')} has no recorded maturity level; state one on its tracker entry, with its evidence`,
+      `required ${unknown.map((r) => `"${r.id}"`).join(", ")} has no recorded maturity level; state one on its tracker entry, with its evidence`,
     );
   }
   const rank = Math.min(...required.map((r) => ORDER.indexOf(r.level!)));
   const pending = refs
-    .filter((r) => r.role === 'unresolved' && (r.level === undefined || ORDER.indexOf(r.level) < rank))
+    .filter(
+      (r) =>
+        r.role === "unresolved" &&
+        (r.level === undefined || ORDER.indexOf(r.level) < rank),
+    )
     .map((r) => r.id);
   return { level: ORDER[rank], provisional: pending.length > 0, pending };
 }

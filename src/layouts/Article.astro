@@ -3,9 +3,9 @@
  * Layout for long-form MDX pages. Set it with `layout:` in frontmatter.
  * Frontmatter: title, description, lede, section ({ label, href }).
  */
-import Base from './Base.astro';
-import DocMeta from '../components/DocMeta.astro';
-import { REVIEWED } from '../data/site';
+import Base from "./Base.astro";
+import DocMeta from "../components/DocMeta.astro";
+import { REVIEWED } from "../data/site";
 
 interface Heading {
   depth: number;
@@ -24,12 +24,21 @@ interface Props {
 
 const { frontmatter: fm, headings = [] } = Astro.props;
 const toc = headings.filter((h) => h.depth === 2);
-const KIND: Record<string, string> = { '/deployments/': 'Deployment guide' };
+const KIND: Record<string, string> = { "/deployments/": "Deployment guide" };
 const kind = fm.section && KIND[fm.section.href];
 const details = kind
   ? [
-      { label: 'This page', value: kind, note: 'An explanation, not a specification' },
-      { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+      {
+        label: "This page",
+        value: kind,
+        note: "An explanation, not a specification",
+      },
+      {
+        label: "Review",
+        value: `Checked against sources in ${REVIEWED}`,
+        note: "How it was checked",
+        noteHref: "/about/#how-facts-were-checked",
+      },
     ]
   : [];
 ---

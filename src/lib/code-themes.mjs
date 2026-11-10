@@ -3,4 +3,7 @@
  * and the <Code> component. Chosen for WCAG AA contrast on the site's code
  * block backgrounds in both colour schemes.
  */
-export const codeThemes = { light: 'github-light-high-contrast', dark: 'github-dark-high-contrast' };
+export const codeThemes = {
+  light: "github-light-high-contrast",
+  dark: "github-dark-high-contrast",
+};

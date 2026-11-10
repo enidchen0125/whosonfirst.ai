@@ -1,66 +1,66 @@
-import type { Flow } from '../types';
+import type { Flow } from "../types";
 
 export const authorizationCodePkce: Flow = {
-  slug: 'authorization-code-pkce',
-  title: 'Authorization code with PKCE',
-  short: 'Authorization code + PKCE',
-  group: 'human-present',
-  human: 'present',
-  maturity: 'stable',
+  slug: "authorization-code-pkce",
+  title: "Authorization code with PKCE",
+  short: "Authorization code + PKCE",
+  group: "human-present",
+  human: "present",
+  maturity: "stable",
   tagline:
-    'The baseline. A person signs in, approves specific scopes, and the agent receives a token that says so.',
+    "The baseline. A person signs in, approves specific scopes, and the agent receives a token that says so.",
   summary: `This is the flow almost everything else on this site builds on or stands in for. The user is sent to an authorization server they already trust, signs in there, and approves what the agent may do. The agent never sees a password; it gets a short-lived access token scoped to one resource.
 
 This page shows the flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching; a token restricted to one audience; and no implicit or password grant. If an agent acts for a person and that person is at the keyboard, start here.`,
   fits: [
-    'A user is present and can complete a browser sign-in.',
-    'The agent needs access to **that user’s** data, with that user’s permissions.',
-    'You want consent recorded by the authorization server, not inferred by the agent.',
+    "A user is present and can complete a browser sign-in.",
+    "The agent needs access to **that user’s** data, with that user’s permissions.",
+    "You want consent recorded by the authorization server, not inferred by the agent.",
   ],
   watchOut: [
-    'Consent fatigue. An agent that connects to twenty tools produces twenty consent screens, and people stop reading them. Ask for narrow scopes, late.',
-    'The token is the user’s authority minus nothing unless scopes are narrow. An agent with `mail.readwrite` can do anything the user can do to mail.',
-    'Refresh tokens outlive the conversation. Decide where they are stored and who can revoke them before you ship.',
-    'Desktop and CLI agents are public clients. Use a loopback redirect and PKCE; do not embed a client secret in a binary.',
+    "Consent fatigue. An agent that connects to twenty tools produces twenty consent screens, and people stop reading them. Ask for narrow scopes, late.",
+    "The token is the user’s authority minus nothing unless scopes are narrow. An agent with `mail.readwrite` can do anything the user can do to mail.",
+    "Refresh tokens outlive the conversation. Decide where they are stored and who can revoke them before you ship.",
+    "Desktop and CLI agents are public clients. Use a loopback redirect and PKCE; do not embed a client secret in a binary.",
   ],
   participants: [
-    { id: 'user', label: 'User', sub: 'Resource owner', role: 'human' },
-    { id: 'agent', label: 'Agent', sub: 'OAuth client', role: 'agent' },
-    { id: 'as', label: 'Authorization server', sub: 'Issuer', role: 'authz' },
-    { id: 'api', label: 'API', sub: 'Resource server', role: 'resource' },
+    { id: "user", label: "User", sub: "Resource owner", role: "human" },
+    { id: "agent", label: "Agent", sub: "OAuth client", role: "agent" },
+    { id: "as", label: "Authorization server", sub: "Issuer", role: "authz" },
+    { id: "api", label: "API", sub: "Resource server", role: "resource" },
   ],
   steps: [
     {
-      from: 'user',
-      to: 'agent',
-      kind: 'back',
-      label: '“Check my calendar”',
-      title: 'The user asks for something the agent cannot do yet',
+      from: "user",
+      to: "agent",
+      kind: "back",
+      label: "“Check my calendar”",
+      title: "The user asks for something the agent cannot do yet",
       body: `The agent has no credential for the calendar API. It could ask for one up front, but the better habit is to wait until a task actually needs it: the consent screen then matches something the user just asked for.`,
     },
     {
-      from: 'agent',
-      kind: 'self',
-      label: 'Create PKCE pair + state',
-      title: 'The agent prepares a one-time secret',
+      from: "agent",
+      kind: "self",
+      label: "Create PKCE pair + state",
+      title: "The agent prepares a one-time secret",
       body: `The agent generates a random \`code_verifier\`, hashes it into a \`code_challenge\`, and creates a \`state\` value. The verifier stays with the agent. Only the hash travels through the browser, so an authorization code stolen in transit is useless without it.`,
       code: {
-        lang: 'text',
+        lang: "text",
         text: `code_verifier  = random(43–128 chars)
 code_challenge = BASE64URL(SHA256(code_verifier))
 state          = random()`,
       },
-      gain: [['agent', 'code_verifier']],
+      gain: [["agent", "code_verifier"]],
     },
     {
-      from: 'agent',
-      to: 'as',
-      kind: 'front',
-      label: 'Authorization request',
-      title: 'The agent sends the user’s browser to the authorization server',
+      from: "agent",
+      to: "as",
+      kind: "front",
+      label: "Authorization request",
+      title: "The agent sends the user’s browser to the authorization server",
       body: `Everything in this request is visible to the browser, so it carries no secrets: who the client is, where to send the user back, what is being asked for, and which resource the token is for. \`client_id\` is the identifier the authorization server gave this client when it was registered. The \`resource\` parameter matters more for agents than for classic apps, because one agent talks to many servers and a token must be good for exactly one.`,
       code: {
-        lang: 'http',
+        lang: "http",
         text: `GET /authorize?response_type=code
   &client_id=s6BhdRkqt3
   &redirect_uri=http://127.0.0.1:52100/callback
@@ -73,46 +73,46 @@ Host: auth.example`,
       },
     },
     {
-      from: 'as',
-      to: 'user',
-      kind: 'front',
-      label: 'Sign-in and consent screen',
-      title: 'The authorization server authenticates the user',
+      from: "as",
+      to: "user",
+      kind: "front",
+      label: "Sign-in and consent screen",
+      title: "The authorization server authenticates the user",
       body: `The user signs in with whatever the authorization server requires: a passkey, SSO, a second factor. The agent is not part of this conversation. Then the server shows what is being requested and by whom. This screen is the only place a human sees the scopes in plain language, which is why its wording deserves more care than it usually gets.`,
     },
     {
-      from: 'user',
-      to: 'as',
-      kind: 'front',
-      label: 'Approve calendar.read',
-      title: 'The user consents',
+      from: "user",
+      to: "as",
+      kind: "front",
+      label: "Approve calendar.read",
+      title: "The user consents",
       body: `Consent is recorded at the authorization server, tied to this user, this client and these scopes. That record is what lets the user (or an admin) see and revoke the grant later without involving the agent.`,
     },
     {
-      from: 'as',
-      to: 'agent',
-      kind: 'front',
-      label: 'Redirect with code',
-      title: 'The browser returns to the agent with an authorization code',
+      from: "as",
+      to: "agent",
+      kind: "front",
+      label: "Redirect with code",
+      title: "The browser returns to the agent with an authorization code",
       body: `The code is single-use and expires in about a minute. The agent checks that \`state\` matches what it sent and, where the server provides it, that \`iss\` matches the authorization server it meant to talk to. That second check defeats mix-up attacks, which are a real risk for agents that deal with many authorization servers.`,
       code: {
-        lang: 'http',
+        lang: "http",
         text: `GET /callback?code=SplxlOBeZQQYbYS6WxSbIA
   &state=af0ifjsldkj
   &iss=https://auth.example HTTP/1.1
 Host: 127.0.0.1:52100`,
       },
-      gain: [['agent', 'authorization code']],
+      gain: [["agent", "authorization code"]],
     },
     {
-      from: 'agent',
-      to: 'as',
-      kind: 'back',
-      label: 'Token request + verifier',
-      title: 'The agent redeems the code directly',
+      from: "agent",
+      to: "as",
+      kind: "back",
+      label: "Token request + verifier",
+      title: "The agent redeems the code directly",
       body: `This call goes straight from the agent to the token endpoint, not through the browser. The agent presents the code and the original \`code_verifier\`. The server hashes the verifier and compares it with the challenge from step 3; only the party that started the flow can finish it. \`redirect_uri\` is sent again because RFC 6749 requires it here whenever the authorization request carried one.`,
       code: {
-        lang: 'http',
+        lang: "http",
         text: `POST /token HTTP/1.1
 Host: auth.example
 Content-Type: application/x-www-form-urlencoded
@@ -124,17 +124,17 @@ grant_type=authorization_code
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 &resource=https://calendar.example/api`,
       },
-      lose: [['agent', 'authorization code']],
+      lose: [["agent", "authorization code"]],
     },
     {
-      from: 'as',
-      to: 'agent',
-      kind: 'resp',
-      label: 'Access token (+ refresh)',
-      title: 'The authorization server issues tokens',
+      from: "as",
+      to: "agent",
+      kind: "resp",
+      label: "Access token (+ refresh)",
+      title: "The authorization server issues tokens",
       body: `The access token is short-lived and bound to one audience. The refresh token, if issued, lets the agent get new access tokens without the user. For public clients the security best current practice (RFC 9700) requires refresh tokens to be either sender-constrained or rotated on use.`,
       code: {
-        lang: 'json',
+        lang: "json",
         text: `{
   "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…",
   "token_type": "Bearer",
@@ -144,58 +144,73 @@ grant_type=authorization_code
 }`,
       },
       gain: [
-        ['agent', 'access token'],
-        ['agent', 'refresh token'],
+        ["agent", "access token"],
+        ["agent", "refresh token"],
       ],
-      lose: [['agent', 'code_verifier']],
+      lose: [["agent", "code_verifier"]],
     },
     {
-      from: 'agent',
-      to: 'api',
-      kind: 'back',
-      label: 'API call with Bearer token',
-      title: 'The agent calls the API',
+      from: "agent",
+      to: "api",
+      kind: "back",
+      label: "API call with Bearer token",
+      title: "The agent calls the API",
       body: `The token goes in the \`Authorization\` header and nowhere else. Never in a URL, and never into the model’s context window: a token the model can read is a token a prompt injection can exfiltrate.`,
       code: {
-        lang: 'http',
+        lang: "http",
         text: `GET /api/events?from=today HTTP/1.1
 Host: calendar.example
 Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
       },
     },
     {
-      from: 'api',
-      kind: 'self',
-      label: 'Validate iss, aud, exp, scope',
-      title: 'The API validates the token',
+      from: "api",
+      kind: "self",
+      label: "Validate iss, aud, exp, scope",
+      title: "The API validates the token",
       body: `Signature, issuer, expiry, scope, and above all **audience**. An API that accepts tokens minted for some other service becomes a confused deputy. If the token is for \`https://calendar.example/api\` and this is not that, reject it.`,
     },
     {
-      from: 'api',
-      to: 'agent',
-      kind: 'resp',
-      label: '200 OK',
-      title: 'The API responds',
+      from: "api",
+      to: "agent",
+      kind: "resp",
+      label: "200 OK",
+      title: "The API responds",
       body: `The token in this example is a JWT access token (RFC 9068), so the API can read which user it is for (\`sub\`) and which client it was issued to (\`client_id\`). What it does not know from a plain access token is that an *AI agent* was in the middle, or which model run decided to make the call. Flows further down this site add that information.`,
     },
   ],
-  standards: ['rfc6749', 'rfc7636', 'rfc9700', 'rfc8707', 'rfc9207', 'rfc8252', 'rfc6750', 'rfc9068', 'oauth-2-1'],
-  basis: ['rfc6749', 'rfc7636'],
+  standards: [
+    "rfc6749",
+    "rfc7636",
+    "rfc9700",
+    "rfc8707",
+    "rfc9207",
+    "rfc8252",
+    "rfc6750",
+    "rfc9068",
+    "oauth-2-1",
+  ],
+  basis: ["rfc6749", "rfc7636"],
   roles: {
-    rfc6749: 'required', // the grant itself: every step
-    rfc7636: 'required', // steps 2, 3, 7
-    rfc9700: 'required', // the security rules the page teaches: PKCE for public clients, exact redirect matching, audience restriction, refresh token protection
-    rfc8707: 'required', // `resource`, steps 3 and 7
-    rfc9207: 'required', // `iss`, step 6
-    rfc8252: 'required', // the loopback redirect, steps 3, 6, 7
-    rfc6750: 'required', // the Bearer header, step 9
-    rfc9068: 'required', // the example token and the claims validated in steps 10 and 11
-    'oauth-2-1': 'background', // a related draft; this page does not implement it
+    rfc6749: "required", // the grant itself: every step
+    rfc7636: "required", // steps 2, 3, 7
+    rfc9700: "required", // the security rules the page teaches: PKCE for public clients, exact redirect matching, audience restriction, refresh token protection
+    rfc8707: "required", // `resource`, steps 3 and 7
+    rfc9207: "required", // `iss`, step 6
+    rfc8252: "required", // the loopback redirect, steps 3, 6, 7
+    rfc6750: "required", // the Bearer header, step 9
+    rfc9068: "required", // the example token and the claims validated in steps 10 and 11
+    "oauth-2-1": "background", // a related draft; this page does not implement it
   },
-  related: ['mcp-authorization', 'device-authorization', 'dpop', 'step-up-authorization'],
+  related: [
+    "mcp-authorization",
+    "device-authorization",
+    "dpop",
+    "step-up-authorization",
+  ],
   notes: [
     {
-      title: 'How OAuth 2.1 relates',
+      title: "How OAuth 2.1 relates",
       body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated 30 October 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behaviour as it does.
 
 Two of its changes touch this page. A token request no longer carries \`redirect_uri\`, and the PKCE \`plain\` method is removed. This page shows the published RFCs, so step 7 still sends \`redirect_uri\`. A flow built on the draft, such as [MCP authorization](/flows/mcp-authorization/), leaves it out.`,

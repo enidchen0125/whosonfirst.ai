@@ -12,10 +12,10 @@
  * line style and named in the step. On a phone the steps read as a narrative
  * and the diagram opens on demand at full size.
  */
-import { Code } from 'astro:components';
-import type { Flow, StepKind } from '../data/types';
-import { block, inline } from '../lib/md';
-import { codeThemes } from '../lib/code-themes.mjs';
+import { Code } from "astro:components";
+import type { Flow, StepKind } from "../data/types";
+import { block, inline } from "../lib/md";
+import { codeThemes } from "../lib/code-themes.mjs";
 
 interface Props {
   flow: Flow;
@@ -53,11 +53,11 @@ const name = (id: string) => P[idx(id)].label;
 const who = (id: string) => P[idx(id)];
 
 const KIND_LABEL: Record<StepKind, string> = {
-  back: 'Direct call',
-  front: 'Via the user’s browser or device',
-  resp: 'Response',
-  oob: 'Out of band',
-  self: 'Local action',
+  back: "Direct call",
+  front: "Via the user’s browser or device",
+  resp: "Response",
+  oob: "Out of band",
+  self: "Local action",
 };
 
 // ---- per-step drawing data + credential snapshots ----
@@ -87,7 +87,10 @@ const rows = steps.map((s, i) => {
   }
   const snapshot = P.map((p) => ({
     ...p,
-    items: (held.get(p.id) ?? []).map((text) => ({ text, fresh: fresh.has(`${p.id}\u0000${text}`) })),
+    items: (held.get(p.id) ?? []).map((text) => ({
+      text,
+      fresh: fresh.has(`${p.id}\u0000${text}`),
+    })),
     spent: spent.get(p.id) ?? [],
   })).filter((p) => p.items.length > 0 || p.spent.length > 0);
   const from = who(s.from);
@@ -95,7 +98,19 @@ const rows = steps.map((s, i) => {
   if (self) {
     const w = Math.min(Math.max(118, s.label.length * CHAR + 54), W - 8);
     const nx = Math.min(Math.max(x1 - w / 2, 4), W - w - 4);
-    return { s, i, y, self: true as const, x1, nx, w, snapshot, from, to: undefined, route: name(s.from) };
+    return {
+      s,
+      i,
+      y,
+      self: true as const,
+      x1,
+      nx,
+      w,
+      snapshot,
+      from,
+      to: undefined,
+      route: name(s.from),
+    };
   }
 
   const x2 = xOf(s.to!);
@@ -105,12 +120,12 @@ const rows = steps.map((s, i) => {
   const room = span - 26;
   let lines = [s.label];
   if (s.label.length * CHAR > room) {
-    const words = s.label.split(' ');
+    const words = s.label.split(" ");
     let best = lines;
     let bestLen = Infinity;
     for (let k = 1; k < words.length; k++) {
-      const a = words.slice(0, k).join(' ');
-      const b = words.slice(k).join(' ');
+      const a = words.slice(0, k).join(" ");
+      const b = words.slice(k).join(" ");
       const len = Math.max(a.length, b.length);
       if (len < bestLen) {
         bestLen = len;
@@ -120,14 +135,19 @@ const rows = steps.map((s, i) => {
     lines = best;
     // a label may run past its arrow (it is clamped to the canvas below), but not by much
     if (Math.max(...lines.map((l) => l.length)) * CHAR > room + 70) {
-      console.warn(`[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`);
+      console.warn(
+        `[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`,
+      );
     }
   }
   const tip = x2 - dir * 3;
   const head = `${tip},${y} ${tip - dir * 9},${y - 4.6} ${tip - dir * 9},${y + 4.6}`;
   // a label may run a little past its arrow, but never off the canvas
   const half = (Math.max(...lines.map((l) => l.length)) * CHAR) / 2;
-  const labelX = Math.min(Math.max((x1 + x2) / 2 + dir * 4, half + 6), W - half - 6);
+  const labelX = Math.min(
+    Math.max((x1 + x2) / 2 + dir * 4, half + 6),
+    W - half - 6,
+  );
   return {
     s,
     i,

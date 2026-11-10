@@ -4,75 +4,104 @@
  * tokens and components, so it shows whichever design direction is active.
  * Values and contrast ratios are read from the browser, not written by hand.
  */
-import { Code } from 'astro:components';
-import Base from '../../layouts/Base.astro';
-import FlowDiagram from '../../components/FlowDiagram.astro';
-import FlowCard from '../../components/FlowCard.astro';
-import TokenInspector from '../../components/TokenInspector.astro';
-import LastHop from '../../components/LastHop.astro';
-import { directions } from '../../data/directions';
-import { flow } from '../../data/flows';
-import { ROLE_LABEL, STATUS_LABEL, STATUS_TONE } from '../../data/types';
-import type { Role, StdStatus } from '../../data/types';
-import { codeThemes } from '../../lib/code-themes.mjs';
+import { Code } from "astro:components";
+import Base from "../../layouts/Base.astro";
+import FlowDiagram from "../../components/FlowDiagram.astro";
+import FlowCard from "../../components/FlowCard.astro";
+import TokenInspector from "../../components/TokenInspector.astro";
+import LastHop from "../../components/LastHop.astro";
+import { directions } from "../../data/directions";
+import { flow } from "../../data/flows";
+import { ROLE_LABEL, STATUS_LABEL, STATUS_TONE } from "../../data/types";
+import type { Role, StdStatus } from "../../data/types";
+import { codeThemes } from "../../lib/code-themes.mjs";
 
 const surfaces = [
-  ['--bg', 'The page.'],
-  ['--bg-raised', 'Cards, panels and code blocks: anything that sits on the page.'],
-  ['--bg-sunken', 'Wells, hovered rows, the footer: anything set into the page.'],
-  ['--bg-inset', 'The deepest step. Rare.'],
+  ["--bg", "The page."],
+  [
+    "--bg-raised",
+    "Cards, panels and code blocks: anything that sits on the page.",
+  ],
+  [
+    "--bg-sunken",
+    "Wells, hovered rows, the footer: anything set into the page.",
+  ],
+  ["--bg-inset", "The deepest step. Rare."],
 ];
 const text = [
-  ['--fg', 'Body text and headings.'],
-  ['--fg-muted', 'Ledes, captions, secondary text.'],
-  ['--fg-subtle', 'The lightest text allowed. Counts, placeholders, fine print.'],
+  ["--fg", "Body text and headings."],
+  ["--fg-muted", "Ledes, captions, secondary text."],
+  [
+    "--fg-subtle",
+    "The lightest text allowed. Counts, placeholders, fine print.",
+  ],
 ];
 const lines = [
-  ['--border', 'Hairlines between rows and around cards.'],
-  ['--border-strong', 'Control outlines and rules that need to be seen.'],
+  ["--border", "Hairlines between rows and around cards."],
+  ["--border-strong", "Control outlines and rules that need to be seen."],
 ];
 const accent = [
-  ['--accent', 'Links, focus rings, the primary button, the current item.'],
-  ['--accent-soft', 'The highlight behind a targeted entry.'],
-  ['--on-accent', 'Text on an accent fill.'],
+  ["--accent", "Links, focus rings, the primary button, the current item."],
+  ["--accent-soft", "The highlight behind a targeted entry."],
+  ["--on-accent", "Text on an accent fill."],
 ];
 const hues: { id: string; role: Role; also: string }[] = [
-  { id: 'red', role: 'human', also: 'Also: danger, “no”, cautions.' },
-  { id: 'blue', role: 'agent', also: 'Also: working group drafts.' },
-  { id: 'violet', role: 'authz', also: 'Also: projects and platforms.' },
-  { id: 'green', role: 'resource', also: 'Also: success, “yes”, published standards.' },
-  { id: 'amber', role: 'infra', also: 'Also: “partly”, individual drafts, out-of-band messages.' },
+  { id: "red", role: "human", also: "Also: danger, “no”, cautions." },
+  { id: "blue", role: "agent", also: "Also: working group drafts." },
+  { id: "violet", role: "authz", also: "Also: projects and platforms." },
+  {
+    id: "green",
+    role: "resource",
+    also: "Also: success, “yes”, published standards.",
+  },
+  {
+    id: "amber",
+    role: "infra",
+    also: "Also: “partly”, individual drafts, out-of-band messages.",
+  },
 ];
 
-const textTokens = ['--fg', '--fg-muted', '--fg-subtle', '--accent', '--red', '--blue', '--violet', '--green', '--amber'];
-const grounds = ['--bg', '--bg-raised', '--bg-sunken'];
+const textTokens = [
+  "--fg",
+  "--fg-muted",
+  "--fg-subtle",
+  "--accent",
+  "--red",
+  "--blue",
+  "--violet",
+  "--green",
+  "--amber",
+];
+const grounds = ["--bg", "--bg-raised", "--bg-sunken"];
 
 const families = [
-  ['--font-display', 'Display', 'Who’s on first?'],
-  ['--font-body', 'Body', 'Exchange, never forward.'],
-  ['--font-label', 'Label', 'HUMAN PRESENT · 14 STEPS'],
-  ['--font-mono', 'Mono', 'grant_type=client_credentials'],
+  ["--font-display", "Display", "Who’s on first?"],
+  ["--font-body", "Body", "Exchange, never forward."],
+  ["--font-label", "Label", "HUMAN PRESENT · 14 STEPS"],
+  ["--font-mono", "Mono", "grant_type=client_credentials"],
 ];
 
 const shape = [
-  ['--radius', 'Cards, buttons, code blocks.'],
-  ['--radius-pill', 'Chips and segmented choices.'],
-  ['--radius-round', 'Step numbers and markers.'],
+  ["--radius", "Cards, buttons, code blocks."],
+  ["--radius-pill", "Chips and segmented choices."],
+  ["--radius-round", "Step numbers and markers."],
 ];
 
 const statuses = Object.keys(STATUS_LABEL) as StdStatus[];
-const sample = flow('client-credentials');
-const cards = ['mcp-authorization', 'ciba', 'spiffe-workload-identity'].map(flow);
+const sample = flow("client-credentials");
+const cards = ["mcp-authorization", "ciba", "spiffe-workload-identity"].map(
+  flow,
+);
 
 const toc = [
-  ['directions', 'Directions'],
-  ['colour', 'Colour'],
-  ['contrast', 'Contrast'],
-  ['type', 'Type'],
-  ['shape', 'Shape'],
-  ['components', 'Components'],
-  ['diagrams', 'Diagrams'],
-  ['voice', 'Voice'],
+  ["directions", "Directions"],
+  ["colour", "Colour"],
+  ["contrast", "Contrast"],
+  ["type", "Type"],
+  ["shape", "Shape"],
+  ["components", "Components"],
+  ["diagrams", "Diagrams"],
+  ["voice", "Voice"],
 ];
 ---
 

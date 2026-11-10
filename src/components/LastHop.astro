@@ -3,16 +3,16 @@
  * "What does the last hop know?" — compares five ways of carrying authority
  * down a call chain. Radio inputs + :has(), so it needs no JavaScript.
  */
-import { inline } from '../lib/md';
+import { inline } from "../lib/md";
 
-type Mark = 'yes' | 'no' | 'partial';
+type Mark = "yes" | "no" | "partial";
 
 const questions = [
-  'Who is the user?',
-  'What software is calling?',
-  'Was this credential meant for me?',
-  'Is a stolen copy useless elsewhere?',
-  'Can one user or one agent be cut off?',
+  "Who is the user?",
+  "What software is calling?",
+  "Was this credential meant for me?",
+  "Is a stolen copy useless elsewhere?",
+  "Can one user or one agent be cut off?",
 ];
 
 interface Mode {
@@ -27,59 +27,67 @@ interface Mode {
 
 const modes: Mode[] = [
   {
-    id: 'key',
-    name: 'Shared API key',
-    hops: ['Session cookie', 'Tool’s API key', 'Tool’s API key'],
-    marks: ['no', 'partial', 'yes', 'no', 'no'],
+    id: "key",
+    name: "Shared API key",
+    hops: ["Session cookie", "Tool’s API key", "Tool’s API key"],
+    marks: ["no", "partial", "yes", "no", "no"],
     verdict:
-      'The API sees one caller: whoever holds the key. Every user and every agent run looks the same, the key works from anywhere, and revoking it cuts off everyone at once. Still the most common setup in the wild.',
+      "The API sees one caller: whoever holds the key. Every user and every agent run looks the same, the key works from anywhere, and revoking it cuts off everyone at once. Still the most common setup in the wild.",
   },
   {
-    id: 'passthrough',
-    name: 'Token passthrough',
-    hops: ['User’s token', 'Same token', 'Same token'],
-    marks: ['yes', 'no', 'no', 'no', 'partial'],
+    id: "passthrough",
+    name: "Token passthrough",
+    hops: ["User’s token", "Same token", "Same token"],
+    marks: ["yes", "no", "no", "no", "partial"],
     verdict:
-      'The user is visible, but the API is accepting a token that was issued for a different service. Every hop that touched the token can replay it wherever it is accepted. This is the confused-deputy setup, and the MCP specification prohibits it.',
+      "The user is visible, but the API is accepting a token that was issued for a different service. Every hop that touched the token can replay it wherever it is accepted. This is the confused-deputy setup, and the MCP specification prohibits it.",
   },
   {
-    id: 'impersonation',
-    name: 'Impersonation',
-    hops: ['User’s token', 'Exchanged: sub=user', 'Exchanged: sub=user'],
-    marks: ['yes', 'no', 'yes', 'partial', 'partial'],
+    id: "impersonation",
+    name: "Impersonation",
+    hops: ["User’s token", "Exchanged: sub=user", "Exchanged: sub=user"],
+    marks: ["yes", "no", "yes", "partial", "partial"],
     verdict:
-      'Each hop gets a fresh token for the right audience. But the API believes the user is calling directly. Logs show Alice doing things at 3 a.m. that Alice never did, and policy cannot treat software differently from a person.',
-    link: { href: '/flows/token-exchange/', text: 'Token exchange' },
+      "Each hop gets a fresh token for the right audience. But the API believes the user is calling directly. Logs show Alice doing things at 3 a.m. that Alice never did, and policy cannot treat software differently from a person.",
+    link: { href: "/flows/token-exchange/", text: "Token exchange" },
   },
   {
-    id: 'delegation',
-    name: 'Delegation',
-    hops: ['User’s token', 'sub=user, act=agent', 'sub=user, act=tool→agent'],
-    marks: ['yes', 'yes', 'yes', 'partial', 'yes'],
+    id: "delegation",
+    name: "Delegation",
+    hops: ["User’s token", "sub=user, act=agent", "sub=user, act=tool→agent"],
+    marks: ["yes", "yes", "yes", "partial", "yes"],
     verdict:
-      'The token names both the user and the chain of software acting for them. The API can apply the user’s permissions and the agent’s limits together, and either can be revoked on its own. A stolen token is still usable until it expires, but only at this one API.',
-    link: { href: '/flows/token-exchange/', text: 'Token exchange' },
+      "The token names both the user and the chain of software acting for them. The API can apply the user’s permissions and the agent’s limits together, and either can be revoked on its own. A stolen token is still usable until it expires, but only at this one API.",
+    link: { href: "/flows/token-exchange/", text: "Token exchange" },
   },
   {
-    id: 'bound',
-    name: 'Delegation + proof of possession',
-    hops: ['User’s token + key proof', 'Delegated + key proof', 'Delegated + key proof'],
-    marks: ['yes', 'yes', 'yes', 'yes', 'yes'],
+    id: "bound",
+    name: "Delegation + proof of possession",
+    hops: [
+      "User’s token + key proof",
+      "Delegated + key proof",
+      "Delegated + key proof",
+    ],
+    marks: ["yes", "yes", "yes", "yes", "yes"],
     verdict:
-      'As above, and each token is bound to a key held by the caller. Copying a token out of a log or a model’s context gets an attacker nothing. This is where the standards are heading; few deployments are here yet.',
-    link: { href: '/flows/dpop/', text: 'Sender-constrained tokens' },
+      "As above, and each token is bound to a key held by the caller. Copying a token out of a log or a model’s context gets an attacker nothing. This is where the standards are heading; few deployments are here yet.",
+    link: { href: "/flows/dpop/", text: "Sender-constrained tokens" },
   },
 ];
 
 const nodes = [
-  { label: 'User', sub: 'Alice', role: 'human' },
-  { label: 'Agent', sub: 'Orchestrator', role: 'agent' },
-  { label: 'Tool server', sub: 'Middle tier', role: 'agent' },
-  { label: 'Downstream API', sub: 'The last hop', role: 'resource' },
+  { label: "User", sub: "Alice", role: "human" },
+  { label: "Agent", sub: "Orchestrator", role: "agent" },
+  { label: "Tool server", sub: "Middle tier", role: "agent" },
+  { label: "Downstream API", sub: "The last hop", role: "resource" },
 ];
 
-const MARK_TEXT: Record<Mark, string> = { yes: 'Yes', no: 'No', partial: 'Partly' };
-const uid = 'lh';
+const MARK_TEXT: Record<Mark, string> = {
+  yes: "Yes",
+  no: "No",
+  partial: "Partly",
+};
+const uid = "lh";
 ---
 
 <div class="lh">

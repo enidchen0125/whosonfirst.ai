@@ -3,10 +3,10 @@
  * Annotated token examples. Each claim line is a native <details> element, so
  * the explanations work without JavaScript. The script only adds tabs.
  */
-import { tokens, CAT_LABEL, CAT_TONE } from '../data/tokens';
-import type { ClaimCat } from '../data/tokens';
-import { hasStd, std } from '../data/standards';
-import { inline } from '../lib/md';
+import { tokens, CAT_LABEL, CAT_TONE } from "../data/tokens";
+import type { ClaimCat } from "../data/tokens";
+import { hasStd, std } from "../data/standards";
+import { inline } from "../lib/md";
 
 interface Props {
   /** Limit to these token ids, in this order. */
@@ -14,7 +14,7 @@ interface Props {
 }
 const { only } = Astro.props;
 const list = only ? only.map((id) => tokens.find((t) => t.id === id)!) : tokens;
-const cats = Object.keys(CAT_LABEL).filter((c) => c !== 'meta') as ClaimCat[];
+const cats = Object.keys(CAT_LABEL).filter((c) => c !== "meta") as ClaimCat[];
 ---
 
 <token-inspector class="ti">

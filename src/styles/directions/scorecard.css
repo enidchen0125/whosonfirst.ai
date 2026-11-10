@@ -32,11 +32,14 @@
   --amber-soft: light-dark(#f0e5c6, #2c2410);
 
   /* type */
-  --font-display: 'Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-display:
+    "Fraunces Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   /* card, step and list headings; the same face as titles unless a direction says otherwise */
   --font-heading: var(--font-display);
-  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body:
+    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-label: var(--font-mono);
   --display-weight: 560;
   --display-tracking: -0.012em;
@@ -56,8 +59,16 @@
   /* the band behind page titles: faint scorebook columns */
   --page-head-bg:
     linear-gradient(var(--bg), transparent 70%),
-    repeating-linear-gradient(to right, transparent 0 calc(4rem - 1px), var(--border) calc(4rem - 1px) 4rem);
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(4rem - 1px),
+      var(--border) calc(4rem - 1px) 4rem
+    );
   --hero-bg:
     linear-gradient(var(--bg), transparent 75%),
-    repeating-linear-gradient(to right, transparent 0 calc(4rem - 1px), var(--border) calc(4rem - 1px) 4rem);
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(4rem - 1px),
+      var(--border) calc(4rem - 1px) 4rem
+    );
 }

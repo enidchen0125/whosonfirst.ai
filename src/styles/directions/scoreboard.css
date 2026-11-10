@@ -4,7 +4,7 @@
    Page titles always sit on the board; the page below follows the
    reader's theme (day game or night game).
 ------------------------------------------------------------------- */
-:root[data-direction='scoreboard'] {
+:root[data-direction="scoreboard"] {
   --bg: light-dark(#f1f4ec, #0d261c);
   --bg-raised: light-dark(#fbfcf7, #133226);
   --bg-sunken: light-dark(#e4eadc, #091d15);
@@ -29,11 +29,14 @@
   --amber: light-dark(#745400, #f5c542);
   --amber-soft: light-dark(#f3e7b8, #3a3210);
 
-  --font-display: 'Big Shoulders Display Variable', 'Arial Narrow', 'Helvetica Neue Condensed', Impact, sans-serif;
+  --font-display:
+    "Big Shoulders Display Variable", "Arial Narrow",
+    "Helvetica Neue Condensed", Impact, sans-serif;
   /* card, step and list headings; the same face as titles unless a direction says otherwise */
   --font-heading: var(--font-display);
-  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-label: var(--font-body);
   --display-weight: 800;
   --display-tracking: 0.012em;
@@ -51,49 +54,57 @@
 
   /* inning columns and rows, painted on */
   --page-head-bg:
-    repeating-linear-gradient(to right, transparent 0 calc(5rem - 2px), rgb(255 255 255 / 0.06) calc(5rem - 2px) 5rem),
-    repeating-linear-gradient(to bottom, transparent 0 calc(5rem - 2px), rgb(255 255 255 / 0.06) calc(5rem - 2px) 5rem),
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(5rem - 2px),
+      rgb(255 255 255 / 0.06) calc(5rem - 2px) 5rem
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(5rem - 2px),
+      rgb(255 255 255 / 0.06) calc(5rem - 2px) 5rem
+    ),
     var(--bg-sunken);
   --hero-bg: var(--page-head-bg);
 }
 
 /* Title bands are always the board, whatever the page theme. */
-:root[data-direction='scoreboard'] :is(.page-head, .hero) {
+:root[data-direction="scoreboard"] :is(.page-head, .hero) {
   color-scheme: dark;
   color: var(--fg);
   border-bottom: 4px solid var(--accent);
 }
-:root[data-direction='scoreboard'] h3,
-:root[data-direction='scoreboard'] h4 {
+:root[data-direction="scoreboard"] h3,
+:root[data-direction="scoreboard"] h4 {
   font-weight: 700;
   letter-spacing: 0.01em;
 }
-:root[data-direction='scoreboard'] .eyebrow {
+:root[data-direction="scoreboard"] .eyebrow {
   color: var(--accent);
   font-weight: 600;
   letter-spacing: 0.12em;
 }
-:root[data-direction='scoreboard'] .eyebrow::before {
+:root[data-direction="scoreboard"] .eyebrow::before {
   transform: none;
   width: 0.6rem;
   height: 0.6rem;
 }
-:root[data-direction='scoreboard'] :is(.chip, .btn) {
+:root[data-direction="scoreboard"] :is(.chip, .btn) {
   font-weight: 600;
   letter-spacing: 0.08em;
 }
-:root[data-direction='scoreboard'] .card {
+:root[data-direction="scoreboard"] .card {
   border-color: var(--border-strong);
 }
-:root[data-direction='scoreboard'] a.card:hover {
+:root[data-direction="scoreboard"] a.card:hover {
   transform: none;
   border-color: var(--accent);
 }
-:root[data-direction='scoreboard'] .section-head h2 {
+:root[data-direction="scoreboard"] .section-head h2 {
   padding-left: 0.7rem;
   border-left: 0.5rem solid var(--accent);
 }
-:root[data-direction='scoreboard'] .wordmark {
+:root[data-direction="scoreboard"] .wordmark {
   font-weight: 800;
   font-size: 1.35rem;
   letter-spacing: 0.03em;

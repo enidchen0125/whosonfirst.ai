@@ -1,14 +1,14 @@
 /** Shared types for the site's structured content. */
 
 /** The five kinds of principal that appear in every diagram. */
-export type Role = 'human' | 'agent' | 'authz' | 'resource' | 'infra';
+export type Role = "human" | "agent" | "authz" | "resource" | "infra";
 
 export const ROLE_LABEL: Record<Role, string> = {
-  human: 'Human',
-  agent: 'Agent / client',
-  authz: 'Authorization',
-  resource: 'Resource',
-  infra: 'Infrastructure',
+  human: "Human",
+  agent: "Agent / client",
+  authz: "Authorization",
+  resource: "Resource",
+  infra: "Infrastructure",
 };
 
 export interface Participant {
@@ -27,7 +27,7 @@ export interface Participant {
  * - oob: out of band (push notification, email, chat message)
  * - self: something a participant does locally
  */
-export type StepKind = 'back' | 'front' | 'resp' | 'oob' | 'self';
+export type StepKind = "back" | "front" | "resp" | "oob" | "self";
 
 export interface Step {
   from: string;
@@ -48,16 +48,16 @@ export interface Step {
 }
 
 export type FlowGroup =
-  | 'human-present'
-  | 'human-in-the-loop'
-  | 'delegation'
-  | 'autonomous'
-  | 'agent-to-agent'
-  | 'cross-cutting';
+  | "human-present"
+  | "human-in-the-loop"
+  | "delegation"
+  | "autonomous"
+  | "agent-to-agent"
+  | "cross-cutting";
 
-export type HumanPresence = 'present' | 'reachable' | 'absent' | 'any';
+export type HumanPresence = "present" | "reachable" | "absent" | "any";
 
-export type Maturity = 'stable' | 'emerging' | 'experimental';
+export type Maturity = "stable" | "emerging" | "experimental";
 
 /**
  * What a flow page needs from a reference it lists.
@@ -72,20 +72,24 @@ export type Maturity = 'stable' | 'emerging' | 'experimental';
  * reference is not counted, and is not assumed to be optional: if requiring it would
  * lower the rating, the rating is provisional. See data/rating.ts and /about/.
  */
-export type RefRole = 'required' | 'optional' | 'background' | 'unresolved';
+export type RefRole = "required" | "optional" | "background" | "unresolved";
 
 export const REF_ROLE_TITLE: Record<RefRole, string> = {
-  required: 'Required',
-  optional: 'Optional extensions',
-  background: 'Background',
-  unresolved: 'Role not settled',
+  required: "Required",
+  optional: "Optional extensions",
+  background: "Background",
+  unresolved: "Role not settled",
 };
 
 export const REF_ROLE_BLURB: Record<RefRole, string> = {
-  required: 'What the flow implements, shows in a step, or must support. These decide its maturity rating.',
-  optional: 'Variants and additions the page mentions. No step depends on them, and the flow does not require them.',
-  background: 'Related reading. Not what the flow implements, and not used in a step.',
-  unresolved: 'Listed, but the sources read so far do not settle what the flow needs from them.',
+  required:
+    "What the flow implements, shows in a step, or must support. These decide its maturity rating.",
+  optional:
+    "Variants and additions the page mentions. No step depends on them, and the flow does not require them.",
+  background:
+    "Related reading. Not what the flow implements, and not used in a step.",
+  unresolved:
+    "Listed, but the sources read so far do not settle what the flow needs from them.",
 };
 
 export interface Flow {
@@ -120,116 +124,118 @@ export interface Flow {
 
 export const GROUPS: { id: FlowGroup; title: string; blurb: string }[] = [
   {
-    id: 'human-present',
-    title: 'Human present',
-    blurb: 'Someone is at the keyboard and can sign in and consent right now.',
+    id: "human-present",
+    title: "Human present",
+    blurb: "Someone is at the keyboard and can sign in and consent right now.",
   },
   {
-    id: 'human-in-the-loop',
-    title: 'Human in the loop',
-    blurb: 'The agent works on its own, but pauses for a person to approve specific actions.',
+    id: "human-in-the-loop",
+    title: "Human in the loop",
+    blurb:
+      "The agent works on its own, but pauses for a person to approve specific actions.",
   },
   {
-    id: 'delegation',
-    title: 'Delegation chains',
-    blurb: 'Carrying “who asked for this” across agents, tools and trust domains.',
+    id: "delegation",
+    title: "Delegation chains",
+    blurb:
+      "Carrying “who asked for this” across agents, tools and trust domains.",
   },
   {
-    id: 'autonomous',
-    title: 'No human',
-    blurb: 'The agent acts as itself: workload identity, not user identity.',
+    id: "autonomous",
+    title: "No human",
+    blurb: "The agent acts as itself: workload identity, not user identity.",
   },
   {
-    id: 'agent-to-agent',
-    title: 'Agent to agent, agent to web',
-    blurb: 'Agents authenticating to each other, to websites and to merchants.',
+    id: "agent-to-agent",
+    title: "Agent to agent, agent to web",
+    blurb: "Agents authenticating to each other, to websites and to merchants.",
   },
   {
-    id: 'cross-cutting',
-    title: 'Cross-cutting',
-    blurb: 'Techniques that harden any of the above.',
+    id: "cross-cutting",
+    title: "Cross-cutting",
+    blurb: "Techniques that harden any of the above.",
   },
 ];
 
 export const HUMAN_LABEL: Record<HumanPresence, string> = {
-  present: 'Human present',
-  reachable: 'Human reachable',
-  absent: 'No human',
-  any: 'With or without a human',
+  present: "Human present",
+  reachable: "Human reachable",
+  absent: "No human",
+  any: "With or without a human",
 };
 
 export const HUMAN_TONE: Record<HumanPresence, string> = {
-  present: 'red',
-  reachable: 'amber',
-  absent: 'blue',
-  any: '',
+  present: "red",
+  reachable: "amber",
+  absent: "blue",
+  any: "",
 };
 
 export const MATURITY_LABEL: Record<Maturity, string> = {
-  stable: 'Stable standards',
-  emerging: 'Emerging',
-  experimental: 'Experimental',
+  stable: "Stable standards",
+  emerging: "Emerging",
+  experimental: "Experimental",
 };
 
 /* ---------- standards tracker ---------- */
 
 export type StdStatus =
-  | 'rfc' // published IETF RFC
-  | 'final' // final specification from another body
-  | 'wg-draft' // adopted working group draft / implementers draft
-  | 'draft' // individual submission or early proposal
-  | 'project' // open source project or de facto platform API
-  | 'guidance'; // report, framework or best-practice document
+  | "rfc" // published IETF RFC
+  | "final" // final specification from another body
+  | "wg-draft" // adopted working group draft / implementers draft
+  | "draft" // individual submission or early proposal
+  | "project" // open source project or de facto platform API
+  | "guidance"; // report, framework or best-practice document
 
 export const STATUS_LABEL: Record<StdStatus, string> = {
-  rfc: 'RFC',
-  final: 'Final spec',
-  'wg-draft': 'WG draft',
-  draft: 'Individual draft',
-  project: 'Project / platform',
-  guidance: 'Guidance',
+  rfc: "RFC",
+  final: "Final spec",
+  "wg-draft": "WG draft",
+  draft: "Individual draft",
+  project: "Project / platform",
+  guidance: "Guidance",
 };
 
 export const STATUS_TONE: Record<StdStatus, string> = {
-  rfc: 'green',
-  final: 'green',
-  'wg-draft': 'blue',
-  draft: 'amber',
-  project: 'violet',
-  guidance: '',
+  rfc: "green",
+  final: "green",
+  "wg-draft": "blue",
+  draft: "amber",
+  project: "violet",
+  guidance: "",
 };
 
 export type StdTopic =
-  | 'core'
-  | 'discovery'
-  | 'registration'
-  | 'delegation'
-  | 'human-in-the-loop'
-  | 'workload'
-  | 'proof-of-possession'
-  | 'authorization'
-  | 'agent-protocol'
-  | 'commerce'
-  | 'credentials'
-  | 'kubernetes'
-  | 'signals'
-  | 'guidance';
+  | "core"
+  | "discovery"
+  | "registration"
+  | "delegation"
+  | "human-in-the-loop"
+  | "workload"
+  | "proof-of-possession"
+  | "authorization"
+  | "agent-protocol"
+  | "commerce"
+  | "credentials"
+  | "kubernetes"
+  | "signals"
+  | "guidance";
 
 export const TOPIC_LABEL: Record<StdTopic, string> = {
-  core: 'Core OAuth',
-  discovery: 'Discovery',
-  registration: 'Client identity',
-  delegation: 'Delegation',
-  'human-in-the-loop': 'Human in the loop',
-  workload: 'Workload identity',
-  'proof-of-possession': 'Proof of possession',
-  authorization: 'Fine-grained authz',
-  'agent-protocol': 'Agent protocols',
-  commerce: 'Commerce',
-  credentials: 'Verifiable credentials',
-  kubernetes: 'Kubernetes',
-  signals: 'Signals & revocation',
-  guidance: 'Guidance',
+  core: "Core OAuth",
+  discovery: "Discovery",
+  registration: "Client identity",
+  delegation: "Delegation",
+  "human-in-the-loop": "Human in the loop",
+  workload: "Workload identity",
+  "proof-of-possession": "Proof of possession",
+  authorization: "Fine-grained authz",
+  "agent-protocol": "Agent protocols",
+  commerce: "Commerce",
+  credentials: "Verifiable credentials",
+  kubernetes: "Kubernetes",
+  signals: "Signals & revocation",
+  guidance: "Guidance",
 };
 
 export interface Standard {

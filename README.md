@@ -38,22 +38,22 @@ npm run check:rendered
 
 ## Where things are
 
-| Path | What |
-| --- | --- |
-| `src/data/flows/*.ts` | One file per flow: participants, steps, example messages, cautions |
-| `src/data/standards.ts` | The standards tracker |
-| `src/data/tokens.ts` | Annotated example tokens for the token inspector |
-| `src/data/guide.ts` | Questions and rules for the decision guide |
-| `src/data/glossary.ts` | Glossary terms |
-| `src/data/site.ts` | The "last reviewed" date shown across the site |
-| `src/components/FlowDiagram.astro` | Sequence diagram and step-through panel; a step narrative on a phone |
-| `src/data/verify.ts` | “What can the API verify?”: two credentials, four checks, and the wording of each verdict |
-| `src/components/VerifyBrief.astro` | The compact demonstration of that on the home page |
-| `src/components/VerifyDetail.astro` | The full comparison, on the Concepts page |
-| `src/components/LastHop.astro` | The same question across a longer chain, on the Concepts page |
-| `src/components/DocMeta.astro` | Page facts: one line for the specification followed and the review date, the rest in a disclosure |
-| `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram |
-| `src/pages/deployments/*.mdx` | Long-form deployment guides |
+| Path                                  | What                                                                                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `src/data/flows/*.ts`                 | One file per flow: participants, steps, example messages, cautions                                |
+| `src/data/standards.ts`               | The standards tracker                                                                             |
+| `src/data/tokens.ts`                  | Annotated example tokens for the token inspector                                                  |
+| `src/data/guide.ts`                   | Questions and rules for the decision guide                                                        |
+| `src/data/glossary.ts`                | Glossary terms                                                                                    |
+| `src/data/site.ts`                    | The "last reviewed" date shown across the site                                                    |
+| `src/components/FlowDiagram.astro`    | Sequence diagram and step-through panel; a step narrative on a phone                              |
+| `src/data/verify.ts`                  | “What can the API verify?”: two credentials, four checks, and the wording of each verdict         |
+| `src/components/VerifyBrief.astro`    | The compact demonstration of that on the home page                                                |
+| `src/components/VerifyDetail.astro`   | The full comparison, on the Concepts page                                                         |
+| `src/components/LastHop.astro`        | The same question across a longer chain, on the Concepts page                                     |
+| `src/components/DocMeta.astro`        | Page facts: one line for the specification followed and the review date, the rest in a disclosure |
+| `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram                                                                |
+| `src/pages/deployments/*.mdx`         | Long-form deployment guides                                                                       |
 
 ## Editing content
 
@@ -75,13 +75,13 @@ A reference marked `unresolved` is not counted and is not assumed to be optional
 
 The look is under exploration. Five directions share one set of token names and differ only in values. Internet-Draft -01 is the one being developed; the others are kept for comparison until it has been reviewed.
 
-| Direction | File | Idea |
-| --- | --- | --- |
-| Internet-Draft -01 | `src/styles/directions/draft01.css` | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
-| Internet-Draft -00 | `src/styles/directions/draft.css` | The first pass: monospace throughout |
-| Scorecard (default) | `src/styles/directions/scorecard.css` | A paper scorecard: warm stock, serif titles |
-| Scoreboard | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals |
-| Line Map | `src/styles/directions/linemap.css` | Transit signage: black, white and five line colours |
+| Direction           | File                                   | Idea                                                                                                                                    |
+| ------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Internet-Draft -01  | `src/styles/directions/draft01.css`    | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
+| Internet-Draft -00  | `src/styles/directions/draft.css`      | The first pass: monospace throughout                                                                                                    |
+| Scorecard (default) | `src/styles/directions/scorecard.css`  | A paper scorecard: warm stock, serif titles                                                                                             |
+| Scoreboard          | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals                                                                           |
+| Line Map            | `src/styles/directions/linemap.css`    | Transit signage: black, white and five line colours                                                                                     |
 
 Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
 

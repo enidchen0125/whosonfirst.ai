@@ -3,7 +3,7 @@
    Plain-text RFC conventions: one monospaced face, black on white,
    numbered sections, boxes drawn with rules, hyperlinks in link blue.
 ------------------------------------------------------------------- */
-:root[data-direction='draft'] {
+:root[data-direction="draft"] {
   --bg: light-dark(#ffffff, #0b0b0c);
   --bg-raised: light-dark(#ffffff, #131315);
   --bg-sunken: light-dark(#f4f4f4, #050506);
@@ -28,11 +28,14 @@
   --amber: light-dark(#7a5200, #e8c063);
   --amber-soft: light-dark(#f8ecc8, #3a2c08);
 
-  --font-display: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-display:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   /* card, step and list headings; the same face as titles unless a direction says otherwise */
   --font-heading: var(--font-display);
-  --font-body: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-label: var(--font-mono);
   --display-weight: 600;
   --display-tracking: -0.01em;
@@ -52,16 +55,16 @@
   --hero-bg: var(--bg);
 }
 
-:root[data-direction='draft'] :is(.page-head, .hero) {
+:root[data-direction="draft"] :is(.page-head, .hero) {
   border-bottom: 1px solid var(--fg);
 }
 /* the front matter block every RFC opens with */
-:root[data-direction='draft'] :is(.page-head, .hero) > .wrap {
+:root[data-direction="draft"] :is(.page-head, .hero) > .wrap {
   position: relative;
   padding-top: 4.2rem;
 }
-:root[data-direction='draft'] :is(.page-head, .hero) > .wrap::before,
-:root[data-direction='draft'] :is(.page-head, .hero) > .wrap::after {
+:root[data-direction="draft"] :is(.page-head, .hero) > .wrap::before,
+:root[data-direction="draft"] :is(.page-head, .hero) > .wrap::after {
   position: absolute;
   top: 0;
   font-size: 0.82rem;
@@ -69,26 +72,29 @@
   color: var(--fg-muted);
   white-space: pre;
 }
-:root[data-direction='draft'] :is(.page-head, .hero) > .wrap::before {
-  content: 'Who\2019s on First\A Category: Informational';
+:root[data-direction="draft"] :is(.page-head, .hero) > .wrap::before {
+  content: "Who\2019s on First\A Category: Informational";
   left: var(--gutter);
 }
-:root[data-direction='draft'] :is(.page-head, .hero) > .wrap::after {
-  content: 'whosonfirst.ai\A November 2026';
+:root[data-direction="draft"] :is(.page-head, .hero) > .wrap::after {
+  content: "whosonfirst.ai\A November 2026";
   right: var(--gutter);
   text-align: right;
 }
 /* hyperlinks look like hyperlinks */
-:root[data-direction='draft'] main :is(p, li, dd, td, figcaption) a:not(.btn, .chip, .card) {
+:root[data-direction="draft"]
+  main
+  :is(p, li, dd, td, figcaption)
+  a:not(.btn, .chip, .card) {
   color: var(--accent);
   text-decoration-thickness: 1px;
 }
-:root[data-direction='draft'] h1,
-:root[data-direction='draft'] h2 {
+:root[data-direction="draft"] h1,
+:root[data-direction="draft"] h2 {
   line-height: 1.2;
 }
 /* buttons and tags are drawn in text: [ Label ] */
-:root[data-direction='draft'] .btn {
+:root[data-direction="draft"] .btn {
   border: 0;
   padding-inline: 0.2em;
   letter-spacing: 0.02em;
@@ -97,81 +103,93 @@
   background: none;
   color: var(--fg);
 }
-:root[data-direction='draft'] .btn::before { content: '[\00a0'; }
-:root[data-direction='draft'] .btn::after { content: '\00a0]'; }
-:root[data-direction='draft'] .btn:hover:not(:disabled),
-:root[data-direction='draft'] .btn.primary {
+:root[data-direction="draft"] .btn::before {
+  content: "[\00a0";
+}
+:root[data-direction="draft"] .btn::after {
+  content: "\00a0]";
+}
+:root[data-direction="draft"] .btn:hover:not(:disabled),
+:root[data-direction="draft"] .btn.primary {
   background: var(--fg);
   color: var(--bg);
 }
-:root[data-direction='draft'] .btn.primary:hover:not(:disabled) {
+:root[data-direction="draft"] .btn.primary:hover:not(:disabled) {
   background: var(--accent);
   color: var(--on-accent);
 }
-:root[data-direction='draft'] .chip {
+:root[data-direction="draft"] .chip {
   border: 0;
   background: none;
   padding: 0;
   letter-spacing: 0.02em;
   font-size: 0.74rem;
 }
-:root[data-direction='draft'] .chip::before { content: '['; }
-:root[data-direction='draft'] .chip::after { content: ']'; }
-:root[data-direction='draft'] .chip[data-tone]:not([data-tone='']) {
+:root[data-direction="draft"] .chip::before {
+  content: "[";
+}
+:root[data-direction="draft"] .chip::after {
+  content: "]";
+}
+:root[data-direction="draft"] .chip[data-tone]:not([data-tone=""]) {
   background: none;
   font-weight: 600;
 }
-:root[data-direction='draft'] .eyebrow::before {
+:root[data-direction="draft"] .eyebrow::before {
   display: none;
 }
-:root[data-direction='draft'] .card {
+:root[data-direction="draft"] .card {
   border-color: var(--fg);
 }
-:root[data-direction='draft'] a.card:hover {
+:root[data-direction="draft"] a.card:hover {
   transform: none;
   background: var(--bg-sunken);
 }
-:root[data-direction='draft'] .wordmark {
+:root[data-direction="draft"] .wordmark {
   font-weight: 600;
   font-size: 1rem;
 }
 /* numbered sections, as in a specification */
-:root[data-direction='draft'] main {
+:root[data-direction="draft"] main {
   counter-reset: sec;
 }
-:root[data-direction='draft'] :is(.section-head, .article, .section > .wrap) > h2 {
+:root[data-direction="draft"]
+  :is(.section-head, .article, .section > .wrap)
+  > h2 {
   counter-increment: sec;
 }
-:root[data-direction='draft'] :is(.section-head, .article, .section > .wrap) > h2::before {
-  content: counter(sec) '.\00a0\00a0';
+:root[data-direction="draft"]
+  :is(.section-head, .article, .section > .wrap)
+  > h2::before {
+  content: counter(sec) ".\00a0\00a0";
   color: var(--fg-subtle);
 }
 /* diagrams are laid out at build time for a proportional face; a monospaced
    one is wider, so labels step down a size to keep the same measure */
-:root[data-direction='draft'] .flow :is(.arrow-label, .note-label) {
+:root[data-direction="draft"] .flow :is(.arrow-label, .note-label) {
   font-size: 11px;
 }
-:root[data-direction='draft'] .flow .actor-label {
+:root[data-direction="draft"] .flow .actor-label {
   font-size: 10.5px;
 }
-:root[data-direction='draft'] .flow .actor-sub {
+:root[data-direction="draft"] .flow .actor-sub {
   font-size: 10px;
 }
-:root[data-direction='draft'] .flow .badge-num {
+:root[data-direction="draft"] .flow .badge-num {
   font-size: 11px;
 }
-:root[data-direction='draft'] .km .km-label {
+:root[data-direction="draft"] .km .km-label {
   font-size: 12px;
 }
-:root[data-direction='draft'] .km .km-edge-label {
+:root[data-direction="draft"] .km .km-edge-label {
   font-size: 10.5px;
 }
-:root[data-direction='draft'] .flow-controls .btn {
+:root[data-direction="draft"] .flow-controls .btn {
   font-size: 0.8rem;
 }
 
 @media (max-width: 30rem) {
-  :root[data-direction='draft'] .site-header .wordmark {
+  :root[data-direction="draft"] .site-header .wordmark {
     font-size: 0.9rem;
   }
 }

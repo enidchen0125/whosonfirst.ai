@@ -1,101 +1,144 @@
 ---
-import Base from '../../layouts/Base.astro';
-import LastHop from '../../components/LastHop.astro';
-import VerifyDetail from '../../components/VerifyDetail.astro';
-import TokenInspector from '../../components/TokenInspector.astro';
-import DocMeta from '../../components/DocMeta.astro';
-import { REVIEWED } from '../../data/site';
-import type { Role } from '../../data/types';
-import { inline } from '../../lib/md';
+import Base from "../../layouts/Base.astro";
+import LastHop from "../../components/LastHop.astro";
+import VerifyDetail from "../../components/VerifyDetail.astro";
+import TokenInspector from "../../components/TokenInspector.astro";
+import DocMeta from "../../components/DocMeta.astro";
+import { REVIEWED } from "../../data/site";
+import type { Role } from "../../data/types";
+import { inline } from "../../lib/md";
 
 /** The parties in every flow, under the names the specifications use. */
-const roles: { role: Role; name: string; term: string; holds: string; verifies: string; examples: string }[] = [
+const roles: {
+  role: Role;
+  name: string;
+  term: string;
+  holds: string;
+  verifies: string;
+  examples: string;
+}[] = [
   {
-    role: 'human',
-    name: 'User',
-    term: 'Resource owner',
-    holds: 'The authority to grant: their own data and permissions.',
-    verifies: 'Proves who they are to the authorization server, never to the agent.',
-    examples: 'End user, employee, approver',
+    role: "human",
+    name: "User",
+    term: "Resource owner",
+    holds: "The authority to grant: their own data and permissions.",
+    verifies:
+      "Proves who they are to the authorization server, never to the agent.",
+    examples: "End user, employee, approver",
   },
   {
-    role: 'agent',
-    name: 'Agent',
-    term: 'Client',
-    holds: 'A client identity of its own, and whatever tokens are issued to it.',
-    verifies: 'Which authorization server it is talking to, and that responses come from it.',
-    examples: 'Agent, MCP client, tool server in the middle',
+    role: "agent",
+    name: "Agent",
+    term: "Client",
+    holds:
+      "A client identity of its own, and whatever tokens are issued to it.",
+    verifies:
+      "Which authorization server it is talking to, and that responses come from it.",
+    examples: "Agent, MCP client, tool server in the middle",
   },
   {
-    role: 'authz',
-    name: 'Authorization server',
-    term: 'Issuer',
-    holds: 'Signing keys, and the record of who approved what.',
-    verifies: 'The user, the client, and whether policy allows the request. Then issues a token.',
-    examples: 'Authorization server, identity provider, SPIRE server',
+    role: "authz",
+    name: "Authorization server",
+    term: "Issuer",
+    holds: "Signing keys, and the record of who approved what.",
+    verifies:
+      "The user, the client, and whether policy allows the request. Then issues a token.",
+    examples: "Authorization server, identity provider, SPIRE server",
   },
   {
-    role: 'resource',
-    name: 'Resource server',
-    term: 'The API being called',
-    holds: 'Nothing of the user’s or the agent’s. It only receives tokens.',
-    verifies: 'Each token’s issuer, audience, scope and expiry, and proof of possession where required.',
-    examples: 'API, MCP server, remote agent, website',
+    role: "resource",
+    name: "Resource server",
+    term: "The API being called",
+    holds: "Nothing of the user’s or the agent’s. It only receives tokens.",
+    verifies:
+      "Each token’s issuer, audience, scope and expiry, and proof of possession where required.",
+    examples: "API, MCP server, remote agent, website",
   },
   {
-    role: 'infra',
-    name: 'Infrastructure',
-    term: 'The platform underneath',
-    holds: 'Knowledge of which workload is actually running, and where.',
-    verifies: 'A workload’s identity, which it can attest to an authorization server.',
-    examples: 'Kubernetes, gateway, egress proxy',
+    role: "infra",
+    name: "Infrastructure",
+    term: "The platform underneath",
+    holds: "Knowledge of which workload is actually running, and where.",
+    verifies:
+      "A workload’s identity, which it can attest to an authorization server.",
+    examples: "Kubernetes, gateway, egress proxy",
   },
 ];
 
 /** What a request should be able to answer, grouped by the three clauses of the site’s question. */
 const asks: { group: string; rows: [string, string][] }[] = [
   {
-    group: 'Who is acting',
+    group: "Who is acting",
     rows: [
-      ['What software is acting?', '`client_id`, the `act` claim, and the workload identity of the process making the call.'],
       [
-        'Which agent, exactly?',
-        'Often nothing. Most tokens name the application that hosts an agent, not the agent. Several current drafts are trying to fix that.',
+        "What software is acting?",
+        "`client_id`, the `act` claim, and the workload identity of the process making the call.",
       ],
-      ['Does it matter who holds the token?', 'A bearer token can be used by anyone holding a copy. A token with a `cnf` claim additionally requires proof of the key it names.'],
+      [
+        "Which agent, exactly?",
+        "Often nothing. Most tokens name the application that hosts an agent, not the agent. Several current drafts are trying to fix that.",
+      ],
+      [
+        "Does it matter who holds the token?",
+        "A bearer token can be used by anyone holding a copy. A token with a `cnf` claim additionally requires proof of the key it names.",
+      ],
     ],
   },
   {
-    group: 'For whom',
+    group: "For whom",
     rows: [
-      ['Whose authority is this?', 'The subject of the token: `sub`. A person, or the agent itself.'],
-      ['Was it meant for this resource?', 'The audience, `aud`, and whether the first two answers survive all the way to the last hop.'],
+      [
+        "Whose authority is this?",
+        "The subject of the token: `sub`. A person, or the agent itself.",
+      ],
+      [
+        "Was it meant for this resource?",
+        "The audience, `aud`, and whether the first two answers survive all the way to the last hop.",
+      ],
     ],
   },
   {
-    group: 'Who said they could',
+    group: "Who said they could",
     rows: [
-      ['On what grounds?', 'A user’s consent, an administrator’s policy, or a signed mandate. Something outside the agent said yes.'],
-      ['What is it for?', '`scope`, `authorization_details`, and transaction context.'],
-      ['When does it stop?', '`exp`, and whether anyone can revoke it sooner.'],
-      ['How fresh is it?', '`iat`, `auth_time` and `acr`: when and how strongly the person last proved who they are.'],
+      [
+        "On what grounds?",
+        "A user’s consent, an administrator’s policy, or a signed mandate. Something outside the agent said yes.",
+      ],
+      [
+        "What is it for?",
+        "`scope`, `authorization_details`, and transaction context.",
+      ],
+      ["When does it stop?", "`exp`, and whether anyone can revoke it sooner."],
+      [
+        "How fresh is it?",
+        "`iat`, `auth_time` and `acr`: when and how strongly the person last proved who they are.",
+      ],
     ],
   },
 ];
 
 const details = [
-  { label: 'This page', value: 'Explainer', note: 'Background for the flow guides' },
-  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+  {
+    label: "This page",
+    value: "Explainer",
+    note: "Background for the flow guides",
+  },
+  {
+    label: "Review",
+    value: `Checked against sources in ${REVIEWED}`,
+    note: "How it was checked",
+    noteHref: "/about/#how-facts-were-checked",
+  },
 ];
 
 const toc = [
-  ['roles', 'The roles'],
-  ['different', 'Why agents are different'],
-  ['verify', 'What the API can verify'],
-  ['delegation', 'Delegation or impersonation'],
-  ['human', 'With and without a human'],
-  ['tokens', 'What is in a token'],
-  ['rules', 'Rules of thumb'],
+  ["roles", "The roles"],
+  ["different", "Why agents are different"],
+  ["verify", "What the API can verify"],
+  ["delegation", "Delegation or impersonation"],
+  ["human", "With and without a human"],
+  ["tokens", "What is in a token"],
+  ["rules", "Rules of thumb"],
 ];
 ---
 

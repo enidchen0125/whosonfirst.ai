@@ -3,7 +3,7 @@
    A delegation chain is a line with stops. White ground, signage black,
    one grotesque family, and the five principals as five coloured lines.
 ------------------------------------------------------------------- */
-:root[data-direction='linemap'] {
+:root[data-direction="linemap"] {
   --bg: light-dark(#ffffff, #0f0f10);
   --bg-raised: light-dark(#ffffff, #19191b);
   --bg-sunken: light-dark(#f2f2f0, #070708);
@@ -27,11 +27,15 @@
   --amber: light-dark(#8a5a00, #ffc940);
   --amber-soft: light-dark(#fdefc2, #3b2d00);
 
-  --font-display: 'Archivo Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display:
+    "Archivo Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* card, step and list headings; the same face as titles unless a direction says otherwise */
   --font-heading: var(--font-display);
-  --font-body: 'Archivo Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body:
+    "Archivo Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
   --font-label: var(--font-body);
   --display-weight: 760;
   --display-tracking: -0.022em;
@@ -49,59 +53,74 @@
 
   /* a station sign: black plate, one thin white rule near the top edge */
   --page-head-bg:
-    linear-gradient(to bottom, transparent 0 0.85rem, var(--fg) 0.85rem calc(0.85rem + 2px), transparent calc(0.85rem + 2px)),
+    linear-gradient(
+      to bottom,
+      transparent 0 0.85rem,
+      var(--fg) 0.85rem calc(0.85rem + 2px),
+      transparent calc(0.85rem + 2px)
+    ),
     var(--bg-sunken);
   --hero-bg: var(--page-head-bg);
 }
 
-:root[data-direction='linemap'] :is(.page-head, .hero) {
+:root[data-direction="linemap"] :is(.page-head, .hero) {
   color-scheme: dark;
   color: var(--fg);
   border-bottom: 0;
 }
-:root[data-direction='linemap'] :is(.chip, .btn, .eyebrow, thead th) {
+:root[data-direction="linemap"] :is(.chip, .btn, .eyebrow, thead th) {
   font-weight: 650;
   font-stretch: 88%;
   letter-spacing: 0.05em;
 }
 /* tone chips become route bullets: solid line colour, reversed text */
-:root[data-direction='linemap'] .chip[data-tone]:not([data-tone='']) {
+:root[data-direction="linemap"] .chip[data-tone]:not([data-tone=""]) {
   background: var(--chip-tone, var(--fg));
   border-color: var(--chip-tone, var(--fg));
   color: var(--bg);
 }
-:root[data-direction='linemap'] .chip[data-tone='red'] { --chip-tone: var(--red); }
-:root[data-direction='linemap'] .chip[data-tone='blue'] { --chip-tone: var(--blue); }
-:root[data-direction='linemap'] .chip[data-tone='violet'] { --chip-tone: var(--violet); }
-:root[data-direction='linemap'] .chip[data-tone='green'] { --chip-tone: var(--green); }
-:root[data-direction='linemap'] .chip[data-tone='amber'] { --chip-tone: var(--amber); }
-:root[data-direction='linemap'] .card {
+:root[data-direction="linemap"] .chip[data-tone="red"] {
+  --chip-tone: var(--red);
+}
+:root[data-direction="linemap"] .chip[data-tone="blue"] {
+  --chip-tone: var(--blue);
+}
+:root[data-direction="linemap"] .chip[data-tone="violet"] {
+  --chip-tone: var(--violet);
+}
+:root[data-direction="linemap"] .chip[data-tone="green"] {
+  --chip-tone: var(--green);
+}
+:root[data-direction="linemap"] .chip[data-tone="amber"] {
+  --chip-tone: var(--amber);
+}
+:root[data-direction="linemap"] .card {
   border: 1.5px solid var(--fg);
 }
-:root[data-direction='linemap'] .section + .section {
+:root[data-direction="linemap"] .section + .section {
   border-top: 6px solid var(--fg);
 }
-:root[data-direction='linemap'] .eyebrow::before {
+:root[data-direction="linemap"] .eyebrow::before {
   transform: none;
   border-radius: 50%;
   width: 0.7rem;
   height: 0.7rem;
 }
-:root[data-direction='linemap'] .wordmark {
+:root[data-direction="linemap"] .wordmark {
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 /* sequence diagrams read as a line map: thick lines, station dots */
-:root[data-direction='linemap'] .flow .lifeline {
+:root[data-direction="linemap"] .flow .lifeline {
   stroke: var(--role);
   stroke-width: 3;
   stroke-dasharray: none;
   opacity: 0.55;
 }
-:root[data-direction='linemap'] .flow .actor.is-active .lifeline {
+:root[data-direction="linemap"] .flow .actor.is-active .lifeline {
   stroke-width: 5;
   opacity: 1;
 }
-:root[data-direction='linemap'] .flow .badge {
+:root[data-direction="linemap"] .flow .badge {
   stroke-width: 2.6;
 }

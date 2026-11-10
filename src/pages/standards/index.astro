@@ -1,65 +1,88 @@
 ---
-import Base from '../../layouts/Base.astro';
-import DocMeta from '../../components/DocMeta.astro';
-import { standards } from '../../data/standards';
-import { flows } from '../../data/flows';
-import { REVIEWED } from '../../data/site';
-import { STATUS_LABEL, STATUS_TONE, TOPIC_LABEL } from '../../data/types';
-import type { StdStatus, StdTopic } from '../../data/types';
-import { inline } from '../../lib/md';
+import Base from "../../layouts/Base.astro";
+import DocMeta from "../../components/DocMeta.astro";
+import { standards } from "../../data/standards";
+import { flows } from "../../data/flows";
+import { REVIEWED } from "../../data/site";
+import { STATUS_LABEL, STATUS_TONE, TOPIC_LABEL } from "../../data/types";
+import type { StdStatus, StdTopic } from "../../data/types";
+import { inline } from "../../lib/md";
 
-const statuses = (Object.keys(STATUS_LABEL) as StdStatus[]).filter((s) => standards.some((x) => x.status === s));
-const topics = (Object.keys(TOPIC_LABEL) as StdTopic[]).filter((t) => standards.some((x) => x.topics.includes(t)));
-const bodies = [...new Set(standards.map((s) => s.body))].sort(
-  (a, b) => standards.filter((s) => s.body === b).length - standards.filter((s) => s.body === a).length,
+const statuses = (Object.keys(STATUS_LABEL) as StdStatus[]).filter((s) =>
+  standards.some((x) => x.status === s),
 );
-const count = (fn: (s: (typeof standards)[number]) => boolean) => standards.filter(fn).length;
+const topics = (Object.keys(TOPIC_LABEL) as StdTopic[]).filter((t) =>
+  standards.some((x) => x.topics.includes(t)),
+);
+const bodies = [...new Set(standards.map((s) => s.body))].sort(
+  (a, b) =>
+    standards.filter((s) => s.body === b).length -
+    standards.filter((s) => s.body === a).length,
+);
+const count = (fn: (s: (typeof standards)[number]) => boolean) =>
+  standards.filter(fn).length;
 const usedIn = (id: string) => flows.filter((f) => f.standards.includes(id));
-const published = count((x) => x.status === 'rfc' || x.status === 'final');
-const draftCount = count((x) => x.status === 'wg-draft' || x.status === 'draft');
+const published = count((x) => x.status === "rfc" || x.status === "final");
+const draftCount = count(
+  (x) => x.status === "wg-draft" || x.status === "draft",
+);
 const details = [
-  { label: 'This page', value: 'Reference', note: 'Every entry links to its source' },
+  {
+    label: "This page",
+    value: "Reference",
+    note: "Every entry links to its source",
+  },
   {
     label: `${standards.length} entries`,
     value: `${published} published, ${draftCount} drafts`,
     note: `${standards.length - published - draftCount} projects and guidance`,
   },
-  { label: 'Process states', value: 'As reported', note: 'How to read status', noteHref: '#reading-status' },
-  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+  {
+    label: "Process states",
+    value: "As reported",
+    note: "How to read status",
+    noteHref: "#reading-status",
+  },
+  {
+    label: "Review",
+    value: `Checked against sources in ${REVIEWED}`,
+    note: "How it was checked",
+    noteHref: "/about/#how-facts-were-checked",
+  },
 ];
 
 const moved = [
   {
-    when: 'January',
-    what: 'The OpenID Foundation approves the **AuthZEN Authorization API 1.0** as a final specification: a standard interface to policy engines.',
+    when: "January",
+    what: "The OpenID Foundation approves the **AuthZEN Authorization API 1.0** as a final specification: a standard interface to policy engines.",
   },
   {
-    when: 'March',
-    what: '**A2A 1.0** is released, with signed Agent Cards and a defined task state for in-task authorization.',
+    when: "March",
+    what: "**A2A 1.0** is released, with signed Agent Cards and a defined task state for in-task authorization.",
   },
   {
-    when: 'April',
-    what: '**AP2 v0.2** redesigns payment mandates and is donated to the **FIDO Alliance**, which forms working groups on agentic authentication and payments.',
+    when: "April",
+    what: "**AP2 v0.2** redesigns payment mandates and is donated to the **FIDO Alliance**, which forms working groups on agentic authentication and payments.",
   },
   {
-    when: 'July',
-    what: '**MCP 2026-07-28**: the protocol becomes stateless, Dynamic Client Registration is deprecated, issuer validation is required, and the enterprise-managed and client-credentials extensions become stable.',
+    when: "July",
+    what: "**MCP 2026-07-28**: the protocol becomes stateless, Dynamic Client Registration is deprecated, issuer validation is required, and the enterprise-managed and client-credentials extensions become stable.",
   },
   {
-    when: 'August',
-    what: 'Two OAuth best-practice documents are published: **RFC 10017** (browser-based apps) and **RFC 10027** (cross-device flows). **Kubernetes 1.37** ships Pod Certificates and ClusterTrustBundle as GA.',
+    when: "August",
+    what: "Two OAuth best-practice documents are published: **RFC 10017** (browser-based apps) and **RFC 10027** (cross-device flows). **Kubernetes 1.37** ships Pod Certificates and ClusterTrustBundle as GA.",
   },
   {
-    when: 'September',
-    what: 'The WIMSE working group adopts **AIMS**, the agent identity architecture. The OAuth working group adopts **Deferred Token Response**. The Web Bot Auth working group adopts its first document.',
+    when: "September",
+    what: "The WIMSE working group adopts **AIMS**, the agent identity architecture. The OAuth working group adopts **Deferred Token Response**. The Web Bot Auth working group adopts its first document.",
   },
   {
-    when: 'October',
-    what: 'The IETF is reported to have formed two agent-related working groups, **agentproto** (agent communication) and **DAWN** (agent discovery). Neither is chartered to work on authentication or authorization. **ID-JAG** reaches revision -06.',
+    when: "October",
+    what: "The IETF is reported to have formed two agent-related working groups, **agentproto** (agent communication) and **DAWN** (agent discovery). Neither is chartered to work on authentication or authorization. **ID-JAG** reaches revision -06.",
   },
   {
-    when: 'November',
-    what: '**RFC 10070** updates JWT client authentication. **CIMD** reaches -03. **SPIRE 1.16** adds experimental WIT-SVID support. IETF 127 meets mid-month.',
+    when: "November",
+    what: "**RFC 10070** updates JWT client authentication. **CIMD** reaches -03. **SPIRE 1.16** adds experimental WIT-SVID support. IETF 127 meets mid-month.",
   },
 ];
 ---

@@ -1,73 +1,94 @@
 ---
-import Base from '../layouts/Base.astro';
-import VerifyBrief from '../components/VerifyBrief.astro';
-import DocMeta from '../components/DocMeta.astro';
-import { byGroup, flows } from '../data/flows';
-import { standards } from '../data/standards';
-import { REVIEWED } from '../data/site';
-import { questions } from '../data/guide';
+import Base from "../layouts/Base.astro";
+import VerifyBrief from "../components/VerifyBrief.astro";
+import DocMeta from "../components/DocMeta.astro";
+import { byGroup, flows } from "../data/flows";
+import { standards } from "../data/standards";
+import { REVIEWED } from "../data/site";
+import { questions } from "../data/guide";
 
 const groups = byGroup();
-const drafts = standards.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
+const drafts = standards.filter(
+  (s) => s.status === "wg-draft" || s.status === "draft",
+).length;
 const short = (slug: string) => flows.find((f) => f.slug === slug)!.short;
 
 // The decision guide's first two questions, in its own words.
-const principal = questions.find((q) => q.id === 'principal')!;
-const human = questions.find((q) => q.id === 'human')!;
-const label = (q: typeof principal, value: string) => q.options.find((o) => o.value === value)!.label;
+const principal = questions.find((q) => q.id === "principal")!;
+const human = questions.find((q) => q.id === "human")!;
+const label = (q: typeof principal, value: string) =>
+  q.options.find((o) => o.value === value)!.label;
 
 // Two answers, shown together. Each then has its own next question, and that
 // question is not the same thing: software can run unattended on authority a
 // person delegated earlier.
 const authority = [
   {
-    id: 'person',
-    choice: 'Acting for a person',
-    token: 'The token names that person. Their permissions set the limit.',
+    id: "person",
+    choice: "Acting for a person",
+    token: "The token names that person. Their permissions set the limit.",
     then: human.title,
     branches: [
       {
-        when: label(human, 'present'),
+        when: label(human, "present"),
         links: [
-          ['mcp-authorization', 'calling an MCP server'],
-          ['authorization-code-pkce', 'calling an HTTP API, with a browser to hand'],
-          ['device-authorization', 'no browser where the agent runs'],
+          ["mcp-authorization", "calling an MCP server"],
+          [
+            "authorization-code-pkce",
+            "calling an HTTP API, with a browser to hand",
+          ],
+          ["device-authorization", "no browser where the agent runs"],
         ],
       },
       {
-        when: label(human, 'reachable'),
+        when: label(human, "reachable"),
         links: [
-          ['ciba', 'ask them on a device they already use'],
-          ['step-up-authorization', 'a fresh approval for one sensitive action'],
-          ['url-elicitation', 'an MCP server needs a grant from a third party'],
+          ["ciba", "ask them on a device they already use"],
+          [
+            "step-up-authorization",
+            "a fresh approval for one sensitive action",
+          ],
+          ["url-elicitation", "an MCP server needs a grant from a third party"],
         ],
       },
       {
-        when: label(human, 'absent'),
-        note: 'The agent runs unattended on authority the person delegated earlier. The arrangement to be most careful with.',
+        when: label(human, "absent"),
+        note: "The agent runs unattended on authority the person delegated earlier. The arrangement to be most careful with.",
         links: [
-          ['authorization-code-pkce', 'consent once, then run on a refresh token'],
-          ['cross-app-access', 'the company identity provider decides'],
+          [
+            "authorization-code-pkce",
+            "consent once, then run on a refresh token",
+          ],
+          ["cross-app-access", "the company identity provider decides"],
         ],
       },
     ],
   },
   {
-    id: 'agent',
-    choice: 'Acting under its own service identity',
-    token: 'The token names the agent. Policy an administrator sets is the only control.',
-    then: 'Where does its identity come from?',
+    id: "agent",
+    choice: "Acting under its own service identity",
+    token:
+      "The token names the agent. Policy an administrator sets is the only control.",
+    then: "Where does its identity come from?",
     branches: [
       {
-        when: 'The platform it runs on',
+        when: "The platform it runs on",
         links: [
-          ['workload-identity-federation', 'Kubernetes or a cloud workload calling an outside API'],
-          ['spiffe-workload-identity', 'service to service inside your own platform'],
+          [
+            "workload-identity-federation",
+            "Kubernetes or a cloud workload calling an outside API",
+          ],
+          [
+            "spiffe-workload-identity",
+            "service to service inside your own platform",
+          ],
         ],
       },
       {
-        when: 'A registered client credential',
-        links: [['client-credentials', 'a client with a key or secret of its own']],
+        when: "A registered client credential",
+        links: [
+          ["client-credentials", "a client with a key or secret of its own"],
+        ],
       },
     ],
   },
@@ -75,32 +96,48 @@ const authority = [
 
 const sections = [
   {
-    href: '/concepts/',
-    title: 'Concepts',
-    text: 'Principals, delegation versus impersonation, audience, proof of possession, and an annotated tour of nine tokens.',
+    href: "/concepts/",
+    title: "Concepts",
+    text: "Principals, delegation versus impersonation, audience, proof of possession, and an annotated tour of nine tokens.",
   },
   {
-    href: '/flows/',
+    href: "/flows/",
     title: `${flows.length} flows`,
-    text: 'Every flow as a sequence diagram you can step through, with the HTTP on the wire and who holds what at each step.',
+    text: "Every flow as a sequence diagram you can step through, with the HTTP on the wire and who holds what at each step.",
   },
   {
-    href: '/deployments/',
-    title: 'Deployments',
-    text: 'Kubernetes, managed agent platforms, desktops and CLIs, CI pipelines and sandboxes: where identity comes from in each.',
+    href: "/deployments/",
+    title: "Deployments",
+    text: "Kubernetes, managed agent platforms, desktops and CLIs, CI pipelines and sandboxes: where identity comes from in each.",
   },
   {
-    href: '/standards/',
-    title: 'Standards tracker',
+    href: "/standards/",
+    title: "Standards tracker",
     text: `${standards.length} RFCs, drafts and specifications with current status. ${drafts} of them are still drafts.`,
   },
 ];
 
 const news = [
-  ['MCP 2026-07-28', 'The protocol went stateless, deprecated Dynamic Client Registration, and made issuer validation mandatory for clients.', '/flows/mcp-authorization/'],
-  ['Agents are workloads', 'The IETF WIMSE working group adopted an architecture for agent identity that composes existing standards and defines no new protocol.', '/standards/#wimse-aims'],
-  ['Pod Certificates are GA', 'Kubernetes 1.37 gives every pod a native, auto-rotated X.509 identity. You bring the signer.', '/deployments/kubernetes/'],
-  ['Approval can wait', 'The OAuth working group adopted Deferred Token Response: any grant may answer “not yet” while a human decides.', '/standards/#deferred-token-response'],
+  [
+    "MCP 2026-07-28",
+    "The protocol went stateless, deprecated Dynamic Client Registration, and made issuer validation mandatory for clients.",
+    "/flows/mcp-authorization/",
+  ],
+  [
+    "Agents are workloads",
+    "The IETF WIMSE working group adopted an architecture for agent identity that composes existing standards and defines no new protocol.",
+    "/standards/#wimse-aims",
+  ],
+  [
+    "Pod Certificates are GA",
+    "Kubernetes 1.37 gives every pod a native, auto-rotated X.509 identity. You bring the signer.",
+    "/deployments/kubernetes/",
+  ],
+  [
+    "Approval can wait",
+    "The OAuth working group adopted Deferred Token Response: any grant may answer “not yet” while a human decides.",
+    "/standards/#deferred-token-response",
+  ],
 ];
 ---
 

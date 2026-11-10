@@ -1,8 +1,14 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { questions, rules, cautions, deployLinks, ROLE_TITLE } from '../../data/guide';
-import { flows, flow, maturityLabel } from '../../data/flows';
-import { HUMAN_LABEL } from '../../data/types';
+import Base from "../../layouts/Base.astro";
+import {
+  questions,
+  rules,
+  cautions,
+  deployLinks,
+  ROLE_TITLE,
+} from "../../data/guide";
+import { flows, flow, maturityLabel } from "../../data/flows";
+import { HUMAN_LABEL } from "../../data/types";
 
 // fail the build if a rule points at a flow or answer that does not exist
 for (const r of rules) {
@@ -11,7 +17,8 @@ for (const r of rules) {
     const question = questions.find((x) => x.id === q);
     if (!question) throw new Error(`guide: unknown question "${q}"`);
     for (const v of values) {
-      if (!question.options.some((o) => o.value === v)) throw new Error(`guide: unknown answer "${q}=${v}"`);
+      if (!question.options.some((o) => o.value === v))
+        throw new Error(`guide: unknown answer "${q}=${v}"`);
     }
   }
 }
@@ -24,7 +31,12 @@ const data = {
   flows: Object.fromEntries(
     flows.map((f) => [
       f.slug,
-      { short: f.short, tagline: f.tagline, human: HUMAN_LABEL[f.human], maturity: maturityLabel(f) },
+      {
+        short: f.short,
+        tagline: f.tagline,
+        human: HUMAN_LABEL[f.human],
+        maturity: maturityLabel(f),
+      },
     ]),
   ),
 };

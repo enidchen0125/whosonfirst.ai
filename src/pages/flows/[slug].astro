@@ -1,18 +1,27 @@
 ---
-import Base from '../../layouts/Base.astro';
-import FlowDiagram from '../../components/FlowDiagram.astro';
-import FlowCard from '../../components/FlowCard.astro';
-import StandardCard from '../../components/StandardCard.astro';
-import DocMeta from '../../components/DocMeta.astro';
-import { flows, maturityLabel, rating, related } from '../../data/flows';
-import { std } from '../../data/standards';
-import { REVIEWED } from '../../data/site';
-import { GROUPS, HUMAN_LABEL, REF_ROLE_BLURB, REF_ROLE_TITLE, STATUS_LABEL } from '../../data/types';
-import type { Flow, RefRole } from '../../data/types';
-import { block, inline } from '../../lib/md';
+import Base from "../../layouts/Base.astro";
+import FlowDiagram from "../../components/FlowDiagram.astro";
+import FlowCard from "../../components/FlowCard.astro";
+import StandardCard from "../../components/StandardCard.astro";
+import DocMeta from "../../components/DocMeta.astro";
+import { flows, maturityLabel, rating, related } from "../../data/flows";
+import { std } from "../../data/standards";
+import { REVIEWED } from "../../data/site";
+import {
+  GROUPS,
+  HUMAN_LABEL,
+  REF_ROLE_BLURB,
+  REF_ROLE_TITLE,
+  STATUS_LABEL,
+} from "../../data/types";
+import type { Flow, RefRole } from "../../data/types";
+import { block, inline } from "../../lib/md";
 
 export function getStaticPaths() {
-  return flows.map((flow) => ({ params: { slug: flow.slug }, props: { flow } }));
+  return flows.map((flow) => ({
+    params: { slug: flow.slug },
+    props: { flow },
+  }));
 }
 
 interface Props {
@@ -29,87 +38,135 @@ const next = flows[i + 1];
 // What the page says the flow implements: `basis` if given, otherwise the first standard listed.
 const basis = (flow.basis ?? [flow.standards[0]]).map(std);
 const primary = basis[0];
-const firstSentence = primary.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '').replace(/\.$/, '');
+const firstSentence = primary.detail
+  ?.split(/(?<=\.)\s/)[0]
+  .replaceAll("`", "")
+  .replace(/\.$/, "");
 // On the one-line summary: a revision or version if the entry leads with one, a date for an RFC.
-const numbered = /^(Revision|Version) ([^\s,.;]+)/.exec(firstSentence ?? '');
-const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? '');
+const numbered = /^(Revision|Version) ([^\s,.;]+)/.exec(firstSentence ?? "");
+const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? "");
 const based = {
   refs: basis.map((s) => ({ ref: s.ref, href: `/standards/#${s.id}` })),
   status:
     basis.length > 1
-      ? basis.every((s) => s.status === 'rfc')
-        ? 'published RFCs'
-        : basis.map((s) => STATUS_LABEL[s.status]).join(', ')
-      : primary.status === 'rfc'
+      ? basis.every((s) => s.status === "rfc")
+        ? "published RFCs"
+        : basis.map((s) => STATUS_LABEL[s.status]).join(", ")
+      : primary.status === "rfc"
         ? dated
           ? `published ${dated[1]}`
-          : 'published'
+          : "published"
         : STATUS_LABEL[primary.status],
-  revision: basis.length === 1 && primary.status !== 'rfc' && numbered ? `${numbered[1].toLowerCase()} ${numbered[2]}` : undefined,
+  revision:
+    basis.length === 1 && primary.status !== "rfc" && numbered
+      ? `${numbered[1].toLowerCase()} ${numbered[2]}`
+      : undefined,
 };
 
 // Flows reviewed reference by reference show their standards grouped by role.
-const ROLE_ORDER: RefRole[] = ['required', 'optional', 'background', 'unresolved'];
+const ROLE_ORDER: RefRole[] = [
+  "required",
+  "optional",
+  "background",
+  "unresolved",
+];
 const byRole = flow.roles
-  ? ROLE_ORDER.map((role) => ({ role, items: standards.filter((s) => flow.roles![s.id] === role) })).filter((g) => g.items.length > 0)
+  ? ROLE_ORDER.map((role) => ({
+      role,
+      items: standards.filter((s) => flow.roles![s.id] === role),
+    })).filter((g) => g.items.length > 0)
   : [];
-const counted = flow.roles ? standards.filter((s) => flow.roles![s.id] === 'required') : standards;
+const counted = flow.roles
+  ? standards.filter((s) => flow.roles![s.id] === "required")
+  : standards;
 const others = standards.length - counted.length;
 
 // A reference whose role is not settled is not counted. If requiring it would lower the rating,
 // the rating is provisional, and the page names the references it is waiting on.
 const rated = rating(flow);
 const pending = (rated?.pending ?? []).map(std);
-const pendingNames = new Intl.ListFormat('en', { type: 'conjunction' }).format(pending.map((s) => s.name));
-const unsettled = flow.roles ? standards.filter((s) => flow.roles![s.id] === 'unresolved').length : 0;
+const pendingNames = new Intl.ListFormat("en", { type: "conjunction" }).format(
+  pending.map((s) => s.name),
+);
+const unsettled = flow.roles
+  ? standards.filter((s) => flow.roles![s.id] === "unresolved").length
+  : 0;
 const unsettledNote =
   pending.length > 0
-    ? `Requiring ${pendingNames} would lower this flow’s rating, so the rating is provisional until ${pending.length === 1 ? 'its role is' : 'their roles are'} settled.`
-    : 'None of them is less mature than the flow’s rating, so none could lower it.';
+    ? `Requiring ${pendingNames} would lower this flow’s rating, so the rating is provisional until ${pending.length === 1 ? "its role is" : "their roles are"} settled.`
+    : "None of them is less mature than the flow’s rating, so none could lower it.";
 
-const nDraft = counted.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
-const nPublished = counted.filter((s) => s.status === 'rfc' || s.status === 'final').length;
+const nDraft = counted.filter(
+  (s) => s.status === "wg-draft" || s.status === "draft",
+).length;
+const nPublished = counted.filter(
+  (s) => s.status === "rfc" || s.status === "final",
+).length;
 const nOther = counted.length - nDraft - nPublished;
 const makeup = [
   `${nPublished} published`,
-  nDraft > 0 && `${nDraft} ${nDraft === 1 ? 'draft' : 'drafts'}`,
-  nOther > 0 && `${nOther} ${nOther === 1 ? 'project' : 'projects'}`,
+  nDraft > 0 && `${nDraft} ${nDraft === 1 ? "draft" : "drafts"}`,
+  nOther > 0 && `${nOther} ${nOther === 1 ? "project" : "projects"}`,
 ]
   .filter(Boolean)
-  .join(', ');
+  .join(", ");
 const details = [
-  { label: 'This page', value: 'Implementation guide', note: 'An explanation, not a specification' },
+  {
+    label: "This page",
+    value: "Implementation guide",
+    note: "An explanation, not a specification",
+  },
   ...basis.map((s, n) => ({
-    label: basis.length > 1 ? `Basis ${n + 1} of ${basis.length}` : 'Primary specification',
+    label:
+      basis.length > 1
+        ? `Basis ${n + 1} of ${basis.length}`
+        : "Primary specification",
     value: s.name,
     href: `/standards/#${s.id}`,
-    note: [STATUS_LABEL[s.status], s.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '').replace(/\.$/, '')].filter(Boolean).join(' · '),
+    note: [
+      STATUS_LABEL[s.status],
+      s.detail
+        ?.split(/(?<=\.)\s/)[0]
+        .replaceAll("`", "")
+        .replace(/\.$/, ""),
+    ]
+      .filter(Boolean)
+      .join(" · "),
   })),
   flow.roles
     ? {
         label: `${counted.length} required references`,
         value: makeup,
-        href: '#standards',
+        href: "#standards",
         note:
           others > 0
             ? unsettled > 0
-              ? `${others} more listed: ${unsettled} with ${unsettled === 1 ? 'a role' : 'roles'} not settled, the rest optional or background`
+              ? `${others} more listed: ${unsettled} with ${unsettled === 1 ? "a role" : "roles"} not settled, the rest optional or background`
               : `${others} more listed as optional or background`
             : undefined,
       }
-    : { label: `All ${standards.length} specifications`, value: makeup, href: '#standards' },
+    : {
+        label: `All ${standards.length} specifications`,
+        value: makeup,
+        href: "#standards",
+      },
   {
-    label: 'Flow maturity',
+    label: "Flow maturity",
     value: maturityLabel(flow),
     note: rated?.provisional
       ? `Provisional until the role of ${pendingNames} is settled: what the rating means`
       : flow.roles
-        ? 'From its required references: what the rating means'
-        : 'What the rating means',
-    noteHref: '/about/#how-flows-are-rated',
+        ? "From its required references: what the rating means"
+        : "What the rating means",
+    noteHref: "/about/#how-flows-are-rated",
   },
-  { label: 'Human involvement', value: HUMAN_LABEL[flow.human] },
-  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+  { label: "Human involvement", value: HUMAN_LABEL[flow.human] },
+  {
+    label: "Review",
+    value: `Checked against sources in ${REVIEWED}`,
+    note: "How it was checked",
+    noteHref: "/about/#how-facts-were-checked",
+  },
 ];
 ---
 

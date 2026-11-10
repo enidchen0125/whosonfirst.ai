@@ -1,42 +1,70 @@
 ---
-import Base from '../../layouts/Base.astro';
-import FlowCard from '../../components/FlowCard.astro';
-import { byGroup, flows, maturityLabel } from '../../data/flows';
-import { HUMAN_LABEL } from '../../data/types';
+import Base from "../../layouts/Base.astro";
+import FlowCard from "../../components/FlowCard.astro";
+import { byGroup, flows, maturityLabel } from "../../data/flows";
+import { HUMAN_LABEL } from "../../data/types";
 
 const groups = byGroup();
 
 /** Who the resulting credential is about, and what the agent proves itself with. */
 const COMPARE: Record<string, [subject: string, proof: string]> = {
-  'authorization-code-pkce': ['User', 'PKCE, plus client authentication if confidential'],
-  'mcp-authorization': ['User', 'Client ID metadata URL and PKCE'],
-  'device-authorization': ['User', 'Device code'],
-  'step-up-authorization': ['User, for one action', 'Same as the underlying flow'],
-  ciba: ['User, for one action', 'Signed client assertion'],
-  'url-elicitation': ['User, at the third party', 'Nothing: the server holds the grant'],
-  'token-exchange': ['User, with the actor named', 'Client authentication and the token it received'],
-  'cross-app-access': ['User', 'A grant issued by the identity provider'],
-  'identity-chaining': ['User or agent, mapped per domain', 'A signed grant from the home domain'],
-  'transaction-tokens': ['User and transaction', 'Workload identity'],
-  'client-credentials': ['Agent', 'Signed assertion or client secret'],
-  'workload-identity-federation': ['Agent, as a workload', 'A token issued by the platform'],
-  'spiffe-workload-identity': ['Agent, as a workload', 'Certificate obtained by attestation'],
-  'wimse-workload-tokens': ['Agent, as a workload', 'Key-bound token and per-request proof'],
-  'agent-to-agent': ['Whatever the token says', 'A scheme declared in the Agent Card'],
-  'web-bot-auth': ['Agent operator', 'HTTP message signature'],
-  'agent-payments': ['User’s signed intent', 'A key named in the mandate'],
-  dpop: ['Unchanged', 'A signed proof on every request'],
-  'credential-broker': ['Unchanged', 'Nothing: the proxy holds the secret'],
+  "authorization-code-pkce": [
+    "User",
+    "PKCE, plus client authentication if confidential",
+  ],
+  "mcp-authorization": ["User", "Client ID metadata URL and PKCE"],
+  "device-authorization": ["User", "Device code"],
+  "step-up-authorization": [
+    "User, for one action",
+    "Same as the underlying flow",
+  ],
+  ciba: ["User, for one action", "Signed client assertion"],
+  "url-elicitation": [
+    "User, at the third party",
+    "Nothing: the server holds the grant",
+  ],
+  "token-exchange": [
+    "User, with the actor named",
+    "Client authentication and the token it received",
+  ],
+  "cross-app-access": ["User", "A grant issued by the identity provider"],
+  "identity-chaining": [
+    "User or agent, mapped per domain",
+    "A signed grant from the home domain",
+  ],
+  "transaction-tokens": ["User and transaction", "Workload identity"],
+  "client-credentials": ["Agent", "Signed assertion or client secret"],
+  "workload-identity-federation": [
+    "Agent, as a workload",
+    "A token issued by the platform",
+  ],
+  "spiffe-workload-identity": [
+    "Agent, as a workload",
+    "Certificate obtained by attestation",
+  ],
+  "wimse-workload-tokens": [
+    "Agent, as a workload",
+    "Key-bound token and per-request proof",
+  ],
+  "agent-to-agent": [
+    "Whatever the token says",
+    "A scheme declared in the Agent Card",
+  ],
+  "web-bot-auth": ["Agent operator", "HTTP message signature"],
+  "agent-payments": ["User’s signed intent", "A key named in the mandate"],
+  dpop: ["Unchanged", "A signed proof on every request"],
+  "credential-broker": ["Unchanged", "Nothing: the proxy holds the secret"],
 };
 for (const f of flows) {
-  if (!COMPARE[f.slug]) throw new Error(`flows/index: add "${f.slug}" to COMPARE`);
+  if (!COMPARE[f.slug])
+    throw new Error(`flows/index: add "${f.slug}" to COMPARE`);
 }
 
 const filters = [
-  { id: 'all', label: 'All flows' },
-  { id: 'present', label: 'Human present' },
-  { id: 'reachable', label: 'Human reachable' },
-  { id: 'absent', label: 'No human' },
+  { id: "all", label: "All flows" },
+  { id: "present", label: "Human present" },
+  { id: "reachable", label: "Human reachable" },
+  { id: "absent", label: "No human" },
 ];
 ---
 

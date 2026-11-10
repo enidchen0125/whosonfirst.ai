@@ -1,14 +1,16 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { glossary } from '../../data/glossary';
-import { inline } from '../../lib/md';
+import Base from "../../layouts/Base.astro";
+import { glossary } from "../../data/glossary";
+import { inline } from "../../lib/md";
 
-const terms = [...glossary].sort((a, b) => a.term.localeCompare(b.term, 'en', { sensitivity: 'base' }));
+const terms = [...glossary].sort((a, b) =>
+  a.term.localeCompare(b.term, "en", { sensitivity: "base" }),
+);
 const slug = (t: string) =>
   t
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
 ---
 

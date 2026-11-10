@@ -4,10 +4,10 @@
  * Choose a layer to see which components take part and what flows where.
  * All panels render at build time; the script only switches between them.
  */
-import { inline } from '../lib/md';
-import { flow } from '../data/flows';
+import { inline } from "../lib/md";
+import { flow } from "../data/flows";
 
-type Role = 'agent' | 'authz' | 'resource' | 'infra';
+type Role = "agent" | "authz" | "resource" | "infra";
 interface Node {
   id: string;
   x: number;
@@ -20,17 +20,112 @@ interface Node {
 }
 
 const nodes: Node[] = [
-  { id: 'api', x: 40, y: 50, w: 250, h: 62, label: 'API server', sub: 'TokenRequest · OIDC issuer', role: 'infra' },
-  { id: 'signer', x: 330, y: 50, w: 286, h: 62, label: 'Certificate signer', sub: 'SPIRE server or pod-cert signer', role: 'authz' },
-  { id: 'kubelet', x: 60, y: 180, w: 150, h: 58, label: 'kubelet', role: 'infra' },
-  { id: 'spire', x: 60, y: 268, w: 150, h: 58, label: 'SPIRE agent', sub: 'Workload API', role: 'infra' },
-  { id: 'agent', x: 258, y: 212, w: 150, h: 62, label: 'Agent', sub: 'container', role: 'agent' },
-  { id: 'vol', x: 428, y: 212, w: 150, h: 62, label: 'Projected volume', sub: 'token · cert · bundle', role: 'infra' },
-  { id: 'gw', x: 240, y: 378, w: 356, h: 62, label: 'Agent gateway / mesh proxy', sub: 'waypoint · MCP gateway · egress', role: 'infra' },
-  { id: 'sts', x: 676, y: 50, w: 208, h: 62, label: 'Cloud STS / IAM', role: 'authz' },
-  { id: 'idp', x: 676, y: 164, w: 208, h: 62, label: 'Authorization server', sub: 'your identity provider', role: 'authz' },
-  { id: 'tools', x: 676, y: 302, w: 208, h: 62, label: 'MCP servers and APIs', role: 'resource' },
-  { id: 'model', x: 676, y: 410, w: 208, h: 62, label: 'Model provider', role: 'resource' },
+  {
+    id: "api",
+    x: 40,
+    y: 50,
+    w: 250,
+    h: 62,
+    label: "API server",
+    sub: "TokenRequest · OIDC issuer",
+    role: "infra",
+  },
+  {
+    id: "signer",
+    x: 330,
+    y: 50,
+    w: 286,
+    h: 62,
+    label: "Certificate signer",
+    sub: "SPIRE server or pod-cert signer",
+    role: "authz",
+  },
+  {
+    id: "kubelet",
+    x: 60,
+    y: 180,
+    w: 150,
+    h: 58,
+    label: "kubelet",
+    role: "infra",
+  },
+  {
+    id: "spire",
+    x: 60,
+    y: 268,
+    w: 150,
+    h: 58,
+    label: "SPIRE agent",
+    sub: "Workload API",
+    role: "infra",
+  },
+  {
+    id: "agent",
+    x: 258,
+    y: 212,
+    w: 150,
+    h: 62,
+    label: "Agent",
+    sub: "container",
+    role: "agent",
+  },
+  {
+    id: "vol",
+    x: 428,
+    y: 212,
+    w: 150,
+    h: 62,
+    label: "Projected volume",
+    sub: "token · cert · bundle",
+    role: "infra",
+  },
+  {
+    id: "gw",
+    x: 240,
+    y: 378,
+    w: 356,
+    h: 62,
+    label: "Agent gateway / mesh proxy",
+    sub: "waypoint · MCP gateway · egress",
+    role: "infra",
+  },
+  {
+    id: "sts",
+    x: 676,
+    y: 50,
+    w: 208,
+    h: 62,
+    label: "Cloud STS / IAM",
+    role: "authz",
+  },
+  {
+    id: "idp",
+    x: 676,
+    y: 164,
+    w: 208,
+    h: 62,
+    label: "Authorization server",
+    sub: "your identity provider",
+    role: "authz",
+  },
+  {
+    id: "tools",
+    x: 676,
+    y: 302,
+    w: 208,
+    h: 62,
+    label: "MCP servers and APIs",
+    role: "resource",
+  },
+  {
+    id: "model",
+    x: 676,
+    y: 410,
+    w: 208,
+    h: 62,
+    label: "Model provider",
+    role: "resource",
+  },
 ];
 
 interface Edge {
@@ -40,7 +135,7 @@ interface Edge {
   /** label position */
   lx?: number;
   ly?: number;
-  anchor?: 'start' | 'middle' | 'end';
+  anchor?: "start" | "middle" | "end";
   both?: boolean;
   dashed?: boolean;
 }
@@ -60,93 +155,308 @@ interface Layer {
 
 const layers: Layer[] = [
   {
-    id: 'sa',
-    name: 'ServiceAccount token',
-    tone: 'amber',
-    question: 'Which pod is this?',
-    body: 'The kubelet asks the API server’s TokenRequest API for a token bound to this pod, with an audience and expiry from the pod spec, and writes it into a projected volume. It replaces the file before it expires. The token stops validating when the pod is deleted.',
-    goodFor: 'Calling the Kubernetes API, and as the starting credential for everything else here.',
-    limit: 'It names a ServiceAccount. Two agents that share one are indistinguishable.',
-    nodes: ['api', 'kubelet', 'vol', 'agent'],
+    id: "sa",
+    name: "ServiceAccount token",
+    tone: "amber",
+    question: "Which pod is this?",
+    body: "The kubelet asks the API server’s TokenRequest API for a token bound to this pod, with an audience and expiry from the pod spec, and writes it into a projected volume. It replaces the file before it expires. The token stops validating when the pod is deleted.",
+    goodFor:
+      "Calling the Kubernetes API, and as the starting credential for everything else here.",
+    limit:
+      "It names a ServiceAccount. Two agents that share one are indistinguishable.",
+    nodes: ["api", "kubelet", "vol", "agent"],
     edges: [
-      { pts: [[120, 180], [120, 112]], label: 'TokenRequest', lx: 128, ly: 150, anchor: 'start', both: true },
-      { pts: [[210, 196], [503, 196], [503, 212]], label: 'writes token file', lx: 226, ly: 189, anchor: 'start' },
-      { pts: [[428, 243], [408, 243]] },
+      {
+        pts: [
+          [120, 180],
+          [120, 112],
+        ],
+        label: "TokenRequest",
+        lx: 128,
+        ly: 150,
+        anchor: "start",
+        both: true,
+      },
+      {
+        pts: [
+          [210, 196],
+          [503, 196],
+          [503, 212],
+        ],
+        label: "writes token file",
+        lx: 226,
+        ly: 189,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [428, 243],
+          [408, 243],
+        ],
+      },
     ],
-    flows: ['workload-identity-federation'],
+    flows: ["workload-identity-federation"],
   },
   {
-    id: 'fed',
-    name: 'Federation',
-    tone: 'violet',
-    question: 'How do I reach things outside the cluster without a secret?',
-    body: 'The agent presents its ServiceAccount token to a cloud token service or an authorization server. That service fetches the cluster’s public keys from its OIDC discovery endpoint, verifies the token, and matches issuer, subject and audience against a trust rule. It returns a short-lived credential for the outside world.',
-    goodFor: 'Cloud APIs, model providers, and any authorization server that accepts a platform token as a client assertion.',
-    limit: 'The trust rule is the whole boundary. One that matches any subject from the cluster lets every pod be your agent.',
-    nodes: ['agent', 'vol', 'sts', 'api', 'model', 'tools'],
+    id: "fed",
+    name: "Federation",
+    tone: "violet",
+    question: "How do I reach things outside the cluster without a secret?",
+    body: "The agent presents its ServiceAccount token to a cloud token service or an authorization server. That service fetches the cluster’s public keys from its OIDC discovery endpoint, verifies the token, and matches issuer, subject and audience against a trust rule. It returns a short-lived credential for the outside world.",
+    goodFor:
+      "Cloud APIs, model providers, and any authorization server that accepts a platform token as a client assertion.",
+    limit:
+      "The trust rule is the whole boundary. One that matches any subject from the cluster lets every pod be your agent.",
+    nodes: ["agent", "vol", "sts", "api", "model", "tools"],
     edges: [
-      { pts: [[333, 212], [333, 128], [780, 128], [780, 112]], label: 'exchange ServiceAccount token', lx: 556, ly: 122, anchor: 'middle' },
-      { pts: [[780, 50], [780, 32], [165, 32], [165, 50]], label: 'fetch issuer keys', lx: 472, ly: 27, anchor: 'middle', dashed: true },
-      { pts: [[333, 274], [333, 360], [650, 360], [650, 441], [676, 441]], label: 'call with short-lived token', lx: 492, ly: 354, anchor: 'middle' },
-      { pts: [[650, 360], [650, 333], [676, 333]] },
+      {
+        pts: [
+          [333, 212],
+          [333, 128],
+          [780, 128],
+          [780, 112],
+        ],
+        label: "exchange ServiceAccount token",
+        lx: 556,
+        ly: 122,
+        anchor: "middle",
+      },
+      {
+        pts: [
+          [780, 50],
+          [780, 32],
+          [165, 32],
+          [165, 50],
+        ],
+        label: "fetch issuer keys",
+        lx: 472,
+        ly: 27,
+        anchor: "middle",
+        dashed: true,
+      },
+      {
+        pts: [
+          [333, 274],
+          [333, 360],
+          [650, 360],
+          [650, 441],
+          [676, 441],
+        ],
+        label: "call with short-lived token",
+        lx: 492,
+        ly: 354,
+        anchor: "middle",
+      },
+      {
+        pts: [
+          [650, 360],
+          [650, 333],
+          [676, 333],
+        ],
+      },
     ],
-    flows: ['workload-identity-federation', 'client-credentials'],
+    flows: ["workload-identity-federation", "client-credentials"],
   },
   {
-    id: 'cert',
-    name: 'Certificates and SPIFFE',
-    tone: 'green',
-    question: 'How do two workloads prove themselves to each other?',
-    body: 'Two routes to an X.509 identity. With **Pod Certificates**, the kubelet generates a key, files a PodCertificateRequest with a signer, and mounts the result. With **SPIRE**, a node agent attests the calling process over a local socket and hands it a SPIFFE certificate. Either way the workload gets a short-lived certificate, usually carrying a SPIFFE ID, and a trust bundle to verify peers.',
-    goodFor: 'Mutual TLS between agents, tools and gateways inside your infrastructure, across clusters and clouds.',
-    limit: 'Kubernetes ships the Pod Certificates API but no signer. And a certificate identifies the workload, never the user it is acting for.',
-    nodes: ['kubelet', 'signer', 'vol', 'spire', 'agent', 'gw'],
+    id: "cert",
+    name: "Certificates and SPIFFE",
+    tone: "green",
+    question: "How do two workloads prove themselves to each other?",
+    body: "Two routes to an X.509 identity. With **Pod Certificates**, the kubelet generates a key, files a PodCertificateRequest with a signer, and mounts the result. With **SPIRE**, a node agent attests the calling process over a local socket and hands it a SPIFFE certificate. Either way the workload gets a short-lived certificate, usually carrying a SPIFFE ID, and a trust bundle to verify peers.",
+    goodFor:
+      "Mutual TLS between agents, tools and gateways inside your infrastructure, across clusters and clouds.",
+    limit:
+      "Kubernetes ships the Pod Certificates API but no signer. And a certificate identifies the workload, never the user it is acting for.",
+    nodes: ["kubelet", "signer", "vol", "spire", "agent", "gw"],
     edges: [
-      { pts: [[150, 180], [150, 128], [473, 128], [473, 112]], label: 'PodCertificateRequest', lx: 312, ly: 122, anchor: 'middle', both: true },
-      { pts: [[210, 196], [503, 196], [503, 212]], label: 'writes key + certificate', lx: 226, ly: 189, anchor: 'start' },
-      { pts: [[258, 258], [234, 258], [234, 297], [210, 297]], label: 'or: Workload API', lx: 226, ly: 345, anchor: 'middle', both: true, dashed: true },
-      { pts: [[333, 274], [333, 378]], label: 'mutual TLS', lx: 342, ly: 332, anchor: 'start', both: true },
+      {
+        pts: [
+          [150, 180],
+          [150, 128],
+          [473, 128],
+          [473, 112],
+        ],
+        label: "PodCertificateRequest",
+        lx: 312,
+        ly: 122,
+        anchor: "middle",
+        both: true,
+      },
+      {
+        pts: [
+          [210, 196],
+          [503, 196],
+          [503, 212],
+        ],
+        label: "writes key + certificate",
+        lx: 226,
+        ly: 189,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [258, 258],
+          [234, 258],
+          [234, 297],
+          [210, 297],
+        ],
+        label: "or: Workload API",
+        lx: 226,
+        ly: 345,
+        anchor: "middle",
+        both: true,
+        dashed: true,
+      },
+      {
+        pts: [
+          [333, 274],
+          [333, 378],
+        ],
+        label: "mutual TLS",
+        lx: 342,
+        ly: 332,
+        anchor: "start",
+        both: true,
+      },
     ],
-    flows: ['spiffe-workload-identity', 'wimse-workload-tokens'],
+    flows: ["spiffe-workload-identity", "wimse-workload-tokens"],
   },
   {
-    id: 'gw',
-    name: 'Gateway and mesh',
-    tone: 'blue',
-    question: 'Where is policy enforced?',
-    body: 'Agent traffic leaves through a proxy the agent does not control: a mesh waypoint, an MCP-aware gateway, or an egress proxy. It can authenticate the agent by its workload identity, validate tokens as an MCP resource server, apply per-tool policy, exchange tokens for the next hop, and attach credentials to outbound calls so the agent never holds them.',
-    goodFor: 'Per-tool authorization, token exchange and credential injection without changing agent code.',
-    limit: 'It only governs traffic that goes through it. Pair it with a network policy that leaves no other way out.',
-    nodes: ['agent', 'gw', 'tools', 'model', 'idp'],
+    id: "gw",
+    name: "Gateway and mesh",
+    tone: "blue",
+    question: "Where is policy enforced?",
+    body: "Agent traffic leaves through a proxy the agent does not control: a mesh waypoint, an MCP-aware gateway, or an egress proxy. It can authenticate the agent by its workload identity, validate tokens as an MCP resource server, apply per-tool policy, exchange tokens for the next hop, and attach credentials to outbound calls so the agent never holds them.",
+    goodFor:
+      "Per-tool authorization, token exchange and credential injection without changing agent code.",
+    limit:
+      "It only governs traffic that goes through it. Pair it with a network policy that leaves no other way out.",
+    nodes: ["agent", "gw", "tools", "model", "idp"],
     edges: [
-      { pts: [[333, 274], [333, 378]], label: 'all egress', lx: 342, ly: 332, anchor: 'start' },
-      { pts: [[596, 398], [636, 398], [636, 345], [676, 345]], label: 'policy, then forward', lx: 646, ly: 391, anchor: 'start' },
-      { pts: [[596, 424], [636, 424], [636, 441], [676, 441]] },
-      { pts: [[560, 378], [560, 360], [656, 360], [656, 207], [676, 207]], label: 'validate · exchange', lx: 662, ly: 286, anchor: 'start', both: true, dashed: true },
+      {
+        pts: [
+          [333, 274],
+          [333, 378],
+        ],
+        label: "all egress",
+        lx: 342,
+        ly: 332,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [596, 398],
+          [636, 398],
+          [636, 345],
+          [676, 345],
+        ],
+        label: "policy, then forward",
+        lx: 646,
+        ly: 391,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [596, 424],
+          [636, 424],
+          [636, 441],
+          [676, 441],
+        ],
+      },
+      {
+        pts: [
+          [560, 378],
+          [560, 360],
+          [656, 360],
+          [656, 207],
+          [676, 207],
+        ],
+        label: "validate · exchange",
+        lx: 662,
+        ly: 286,
+        anchor: "start",
+        both: true,
+        dashed: true,
+      },
     ],
-    flows: ['credential-broker', 'token-exchange', 'mcp-authorization'],
+    flows: ["credential-broker", "token-exchange", "mcp-authorization"],
   },
   {
-    id: 'user',
-    name: 'User delegation',
-    tone: 'red',
-    question: 'Whose behalf is this request on?',
-    body: 'None of the layers above says anything about a person. If the agent is doing work for a user, the user’s token arrives with the request and must travel separately from the workload identity. At each hop it is exchanged for a token aimed at the next service, with the user as subject and the agent as actor. Inside the cluster, a transaction token can carry the user and the approved request through every service.',
-    goodFor: 'Applying the user’s own permissions downstream, and audit logs that show both the person and the software.',
-    limit: 'It needs an authorization server that supports token exchange, and services that check audience instead of accepting whatever arrives.',
-    nodes: ['idp', 'gw', 'agent', 'tools'],
+    id: "user",
+    name: "User delegation",
+    tone: "red",
+    question: "Whose behalf is this request on?",
+    body: "None of the layers above says anything about a person. If the agent is doing work for a user, the user’s token arrives with the request and must travel separately from the workload identity. At each hop it is exchanged for a token aimed at the next service, with the user as subject and the agent as actor. Inside the cluster, a transaction token can carry the user and the approved request through every service.",
+    goodFor:
+      "Applying the user’s own permissions downstream, and audit logs that show both the person and the software.",
+    limit:
+      "It needs an authorization server that supports token exchange, and services that check audience instead of accepting whatever arrives.",
+    nodes: ["idp", "gw", "agent", "tools"],
     edges: [
-      { pts: [[450, 532], [450, 440]], label: 'request + user’s token', lx: 460, ly: 524, anchor: 'start' },
-      { pts: [[300, 378], [300, 274]], label: 'validated request', lx: 292, ly: 332, anchor: 'end' },
-      { pts: [[366, 274], [366, 378]], label: 'tool call', lx: 374, ly: 332, anchor: 'start' },
-      { pts: [[560, 378], [560, 360], [656, 360], [656, 207], [676, 207]], label: 'token exchange', lx: 662, ly: 286, anchor: 'start', both: true, dashed: true },
-      { pts: [[596, 410], [636, 410], [636, 345], [676, 345]], label: 'sub = user, act = agent', lx: 646, ly: 391, anchor: 'start' },
+      {
+        pts: [
+          [450, 532],
+          [450, 440],
+        ],
+        label: "request + user’s token",
+        lx: 460,
+        ly: 524,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [300, 378],
+          [300, 274],
+        ],
+        label: "validated request",
+        lx: 292,
+        ly: 332,
+        anchor: "end",
+      },
+      {
+        pts: [
+          [366, 274],
+          [366, 378],
+        ],
+        label: "tool call",
+        lx: 374,
+        ly: 332,
+        anchor: "start",
+      },
+      {
+        pts: [
+          [560, 378],
+          [560, 360],
+          [656, 360],
+          [656, 207],
+          [676, 207],
+        ],
+        label: "token exchange",
+        lx: 662,
+        ly: 286,
+        anchor: "start",
+        both: true,
+        dashed: true,
+      },
+      {
+        pts: [
+          [596, 410],
+          [636, 410],
+          [636, 345],
+          [676, 345],
+        ],
+        label: "sub = user, act = agent",
+        lx: 646,
+        ly: 391,
+        anchor: "start",
+      },
     ],
-    flows: ['token-exchange', 'transaction-tokens', 'cross-app-access'],
+    flows: ["token-exchange", "transaction-tokens", "cross-app-access"],
   },
 ];
 
-const d = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
+const d = (pts: [number, number][]) =>
+  pts.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join(" ");
 function head(a: [number, number], b: [number, number]) {
   // arrowhead at b, pointing along a→b
   const dx = Math.sign(b[0] - a[0]);

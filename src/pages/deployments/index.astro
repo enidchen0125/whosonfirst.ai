@@ -1,72 +1,72 @@
 ---
-import Base from '../../layouts/Base.astro';
+import Base from "../../layouts/Base.astro";
 
 const places = [
   {
-    href: '/deployments/kubernetes/',
-    title: 'Kubernetes',
+    href: "/deployments/kubernetes/",
+    title: "Kubernetes",
     blurb:
-      'Five layers of identity for an agent pod: ServiceAccount tokens, federation, certificates and SPIFFE, gateways, and user delegation. With an interactive map.',
-    chips: ['Workload identity', 'Pod Certificates', 'Gateways'],
+      "Five layers of identity for an agent pod: ServiceAccount tokens, federation, certificates and SPIFFE, gateways, and user delegation. With an interactive map.",
+    chips: ["Workload identity", "Pod Certificates", "Gateways"],
   },
   {
-    href: '/deployments/agent-platforms/',
-    title: 'Managed agent platforms',
+    href: "/deployments/agent-platforms/",
+    title: "Managed agent platforms",
     blurb:
-      'What cloud and identity vendors now offer for agents: per-agent identities, token vaults, on-behalf-of exchange, and administrator-controlled access.',
-    chips: ['Agent identity', 'Token vaults', 'Vendor survey'],
+      "What cloud and identity vendors now offer for agents: per-agent identities, token vaults, on-behalf-of exchange, and administrator-controlled access.",
+    chips: ["Agent identity", "Token vaults", "Vendor survey"],
   },
   {
-    href: '/deployments/local/',
-    title: 'Desktop, IDE, CLI and CI',
+    href: "/deployments/local/",
+    title: "Desktop, IDE, CLI and CI",
     blurb:
-      'Agents on a person’s machine are public clients. Agents in a pipeline have a platform identity. Neither should carry a pasted API key.',
-    chips: ['Public clients', 'stdio servers', 'CI OIDC'],
+      "Agents on a person’s machine are public clients. Agents in a pipeline have a platform identity. Neither should carry a pasted API key.",
+    chips: ["Public clients", "stdio servers", "CI OIDC"],
   },
   {
-    href: '/deployments/sandboxes/',
-    title: 'Sandboxes',
+    href: "/deployments/sandboxes/",
+    title: "Sandboxes",
     blurb:
-      'For agents that run untrusted code: keep credentials outside the sandbox and inject them at the network edge.',
-    chips: ['Egress proxies', 'Credential injection'],
+      "For agents that run untrusted code: keep credentials outside the sandbox and inject them at the network edge.",
+    chips: ["Egress proxies", "Credential injection"],
   },
 ];
 
 const rows = [
   {
-    where: 'Kubernetes',
-    identity: 'ServiceAccount token, pod certificate or SPIFFE ID',
-    user: 'Token exchange at a gateway or in the agent',
-    secrets: 'Nowhere, with federation; otherwise a Secret',
-    risk: 'Shared service accounts; loose federation trust rules',
+    where: "Kubernetes",
+    identity: "ServiceAccount token, pod certificate or SPIFFE ID",
+    user: "Token exchange at a gateway or in the agent",
+    secrets: "Nowhere, with federation; otherwise a Secret",
+    risk: "Shared service accounts; loose federation trust rules",
   },
   {
-    where: 'Managed platform',
-    identity: 'A platform-issued agent identity',
-    user: 'The platform’s token vault and exchange',
-    secrets: 'In the platform’s vault',
-    risk: 'Opaque defaults; knowing what the platform can do as your agent',
+    where: "Managed platform",
+    identity: "A platform-issued agent identity",
+    user: "The platform’s token vault and exchange",
+    secrets: "In the platform’s vault",
+    risk: "Opaque defaults; knowing what the platform can do as your agent",
   },
   {
-    where: 'Desktop, IDE, CLI',
-    identity: 'None of its own: a public OAuth client',
-    user: 'Authorization code with PKCE, as the signed-in user',
-    secrets: 'Operating system keychain',
-    risk: 'Tokens on disk; any local process can claim a localhost redirect',
+    where: "Desktop, IDE, CLI",
+    identity: "None of its own: a public OAuth client",
+    user: "Authorization code with PKCE, as the signed-in user",
+    secrets: "Operating system keychain",
+    risk: "Tokens on disk; any local process can claim a localhost redirect",
   },
   {
-    where: 'CI pipeline',
-    identity: 'The CI system’s OIDC token for the job',
-    user: 'Usually none: the job acts as itself',
-    secrets: 'Nowhere, with federation',
-    risk: 'Trust rules that match more repositories or branches than intended',
+    where: "CI pipeline",
+    identity: "The CI system’s OIDC token for the job",
+    user: "Usually none: the job acts as itself",
+    secrets: "Nowhere, with federation",
+    risk: "Trust rules that match more repositories or branches than intended",
   },
   {
-    where: 'Sandbox',
-    identity: 'Whatever the host gives it, ideally nothing reusable',
-    user: 'Held outside; injected per request',
-    secrets: 'Outside the sandbox',
-    risk: 'Misuse of access while the sandbox runs',
+    where: "Sandbox",
+    identity: "Whatever the host gives it, ideally nothing reusable",
+    user: "Held outside; injected per request",
+    secrets: "Outside the sandbox",
+    risk: "Misuse of access while the sandbox runs",
   },
 ];
 ---
