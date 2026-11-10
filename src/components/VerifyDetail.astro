@@ -6,7 +6,7 @@
  * prove, and what refusing and revoking take. Static, so it reads the same
  * with or without scripts.
  */
-import { checks, credentials, notProven, VERDICT_LABEL } from '../data/verify';
+import { checks, credentials, exampleToken, notProven, stopAspects, VERDICT_LABEL } from '../data/verify';
 import { inline } from '../lib/md';
 ---
 
@@ -69,6 +69,10 @@ import { inline } from '../lib/md';
       <p>Every verdict in the table assumes this has been done. An unvalidated token proves nothing.</p>
     </div>
     <div>
+      <h3>About the example token</h3>
+      {exampleToken.map((line) => <p class="vd-line" set:html={inline(line)} />)}
+    </div>
+    <div>
       <h3>What a valid credential does not prove</h3>
       <ul>
         {
@@ -84,10 +88,14 @@ import { inline } from '../lib/md';
       <h3>Refusing and revoking</h3>
       <dl>
         {
-          credentials.map((c) => (
+          stopAspects.map((a) => (
             <div>
-              <dt>{c.onWire}</dt>
-              <dd set:html={inline(c.stop)} />
+              <dt>{a.title}</dt>
+              {credentials.map((c) => (
+                <dd>
+                  <span class="vd-which">{c.onWire}:</span> <span set:html={inline(c.stop[a.key])} />
+                </dd>
+              ))}
             </div>
           ))
         }
@@ -198,6 +206,17 @@ import { inline } from '../lib/md';
   }
   .vd-more p {
     margin: 0;
+    color: var(--fg-muted);
+  }
+  .vd-more .vd-line {
+    margin: 0 0 0.6rem;
+    color: var(--fg);
+  }
+  .vd-more dd + dd {
+    margin-top: -0.3rem;
+  }
+  .vd-which {
+    font-weight: 500;
     color: var(--fg-muted);
   }
   .vd-more :is(dd, li, p) {

@@ -11,6 +11,12 @@
  *   3. what permissions it conveys                 (check: grant)
  *   4. proof that the presenter is that holder     (check: sender; detail only)
  *   5. whether access can be refused or revoked    (`stop`; not a verification)
+ *      Three things stay separate there: the API's own access policy, revocation
+ *      at the authorization server, and how the API learns of a revocation.
+ *
+ * The token is one specific example: a JWT access token following RFC 9068,
+ * shown abbreviated. Not every token or introspection response carries these
+ * fields; `exampleToken` says so on the Concepts page.
  *
  * `brief` is the few words shown beside a verdict in the compact version;
  * `detail` is the full explanation. A verdict only holds under the condition
@@ -46,6 +52,8 @@ export interface Credential {
   askDetail: string;
   /** The credential on the wire, as a short label for the arrow. */
   onWire: string;
+  /** What the example shown actually is, when it is more specific than the arrow's label. */
+  sample?: string;
   /** Claims the API can read from it, if any. */
   claims?: string[];
   /** What the API does with it. Every verdict below depends on this. */
@@ -56,8 +64,8 @@ export interface Credential {
   consequence: string;
   /** What the credential does not settle, however carefully it is checked. */
   boundary: string;
-  /** Refusing and revoking: who can stop it, and how finely. */
-  stop: string;
+  /** Refusing and revoking, as three separate things. */
+  stop: { policy: string; revoke: string; learns: string };
   flow: { href: string; text: string };
 }
 
@@ -92,7 +100,11 @@ export const credentials: Credential[] = [
     },
     consequence: 'The API can limit or refuse the agent as a whole. It cannot tell one user’s request from another’s.',
     boundary: 'Not proven: who is sending it. The key works for anyone holding a copy.',
-    stop: 'The API can refuse the key, or whoever issued it can revoke it. Either way every user the agent serves is cut off together, because nothing in a request tells them apart.',
+    stop: {
+      policy: 'The API can refuse the key. Every user the agent serves is refused together, because nothing in a request tells them apart.',
+      revoke: 'Whoever issued the key can revoke it, with the same effect.',
+      learns: 'The API looks the key up on every request, so it sees a revoked key at once.',
+    },
     flow: { href: '/flows/client-credentials/', text: 'When the agent acts as itself' },
   },
   {
@@ -102,8 +114,9 @@ export const credentials: Credential[] = [
     ask: 'approves',
     askDetail: 'Approves access at the authorization server',
     onWire: 'Access token',
+    sample: 'Example JWT access token',
     claims: ['sub=alice', 'client_id=agent', 'scope=calendar.read'],
-    reads: 'The API reads these once it has validated the token.',
+    reads: 'Abbreviated. The API reads these claims once it has validated the token.',
     how: 'The API checks the token’s signature against the issuer’s published keys, and that the issuer, audience and expiry are the ones it expects. An API that cannot read the token itself can ask the authorization server about it instead (token introspection).',
     results: {
       software: {
@@ -114,13 +127,14 @@ export const credentials: Credential[] = [
       user: {
         verdict: 'yes',
         brief: 'named in `sub`, vouched for by the issuer',
-        detail: '`sub` names Alice. The authorization server that signed the token vouches for it.',
+        detail:
+          '`sub` names Alice. Where a resource owner is involved, the profile has `sub` identify them, and the authorization server that signed the token vouches for it.',
       },
       grant: {
         verdict: 'yes',
         brief: 'recorded in `scope`: a scope, not each action',
         detail:
-          '`scope` and `aud` record what the authorization server granted after Alice approved, and where it applies. The API sees that record, not the approval itself, and it covers a scope, not each action.',
+          '`scope` and `aud` record what the authorization server granted after Alice approved, and where it applies. The API sees that record, not the approval itself, and it covers a scope, not each action. The profile only recommends `scope`, so a token may carry none.',
       },
       sender: {
         verdict: 'conditional',
@@ -129,11 +143,33 @@ export const credentials: Credential[] = [
           'Only if the token is bound to a key the agent holds, with DPoP or mutual TLS. A plain bearer token works for anyone who has a copy.',
       },
     },
-    consequence: 'The API can apply Alice’s permissions and the agent’s limits together, and refuse one without refusing the other.',
+    consequence:
+      'The API can use both identifiers in its access policy: for example, blocking this client while still allowing Alice to use another.',
     boundary: 'Not proven: who is sending it. A bearer token works for anyone holding a copy, unless it is bound to a key.',
-    stop: 'The API can refuse by `sub` or by `client_id` in its own policy, one without the other. Revoking a token already issued is done at the authorization server. An API that validates tokens on its own does not learn of that, so the token keeps working until it expires unless the API also asks the authorization server.',
+    stop: {
+      policy:
+        'The API can use both identifiers: for example, block this client while still allowing Alice to use another, or the reverse. That takes a validated token and a policy that reads both `sub` and `client_id`. Carrying two identifiers does not do it by itself.',
+      revoke:
+        'A client asks the authorization server to revoke a token ([RFC 7009](/standards/#rfc7009)). That is the authorization server’s mechanism, separate from the API’s policy.',
+      learns:
+        'Local token validation alone does not reveal a later revocation. Without an additional revocation mechanism, the API may continue accepting the token until it expires. Introspection is one such mechanism. RFC 7009 also describes communication between the authorization server and the API, and short-lived tokens that limit the exposure.',
+    },
     flow: { href: '/flows/authorization-code-pkce/', text: 'How the agent gets this token' },
   },
+];
+
+/** The three parts of "refusing and revoking", in the order they are shown. */
+export const stopAspects: { key: keyof Credential['stop']; title: string }[] = [
+  { key: 'policy', title: 'The API’s own access policy' },
+  { key: 'revoke', title: 'Revocation' },
+  { key: 'learns', title: 'How the API learns of a revocation' },
+];
+
+/** What the example token is, and what it is not. Shown on the Concepts page. */
+export const exampleToken: string[] = [
+  'The token in this example is a JWT access token following the JWT profile for OAuth 2.0 access tokens ([RFC 9068](/standards/#rfc9068)). That profile requires `sub` and `client_id`, and recommends `scope` when the request asked for one.',
+  'It is abbreviated. A complete token under the profile also carries `iss`, `exp`, `aud`, `iat` and `jti`, and is signed.',
+  'Not every access token is a JWT, and not every JWT follows this profile. An API that asks the authorization server instead, by token introspection ([RFC 7662](/standards/#rfc7662)), gets an answer in which `sub`, `client_id` and `scope` are all optional.',
 ];
 
 /** What a valid credential still leaves open. Shown on the Concepts page. */

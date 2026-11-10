@@ -42,7 +42,7 @@ const shown = checks.filter((c) => c.compact);
         <div
           class="vb-path"
           role="img"
-          aria-label={`Alice, the user, ${c.askDetail.toLowerCase()}. The agent then calls the API and presents: ${c.onWire.toLowerCase()}.`}
+          aria-label={`Alice, the user, ${c.askDetail.toLowerCase()}. The agent then calls the API and presents: ${(c.sample ?? c.onWire).toLowerCase()}.`}
         >
           <div class="vb-node role-human">
             <strong>User</strong>
@@ -63,7 +63,7 @@ const shown = checks.filter((c) => c.compact);
         </div>
 
         <p class="vb-reads">
-          <strong>{c.onWire}{c.claims ? ' carries' : '.'}</strong>{' '}
+          <strong>{c.sample ?? c.onWire}{c.claims ? '' : '.'}</strong>{' '}
           {c.claims && <span class="vb-claims">{c.claims.map((claim) => <code>{claim}</code>)}</span>}
           {c.reads}
         </p>
