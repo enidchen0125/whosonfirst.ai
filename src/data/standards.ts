@@ -984,6 +984,21 @@ export const standards: Standard[] = [
     url: "https://docs.cloud.google.com/iam/docs/workload-identity-federation",
   },
   {
+    id: "gcp-wif-x509",
+    name: "Google Cloud Federation with X.509 Certificates",
+    ref: "Google Cloud IAM",
+    body: "Google Cloud",
+    status: "project",
+    detail:
+      "Platform documentation. The workload authenticates over mutual TLS with a certificate that chains to a registered trust anchor.",
+    topics: ["workload"],
+    summary:
+      "Workload Identity Federation with a client certificate in place of a token. An administrator registers certificate authorities as trust anchors, and a workload holding a certificate that chains to one obtains short-lived Google Cloud credentials over a mutual TLS connection.",
+    agents:
+      "Federation without a JWT or OIDC discovery. Trust rests on a certificate chain, and the workload has to hold the private key, not only a copy of the certificate.",
+    url: "https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-x509-certificates",
+  },
+  {
     id: "gcp-auth",
     name: "Authentication on Google Cloud",
     ref: "Google Cloud authentication",

@@ -51,7 +51,11 @@ const firstSentence = primary.detail
 // On the one-line summary: a revision or version if the entry leads with one, a date for an RFC.
 const numbered = /^(Revision|Version) ([^\s,.;]+)/.exec(firstSentence ?? "");
 const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? "");
+// A flow that covers more than its diagram draws says so wherever its basis, its required
+// references and its rating are stated: all three belong to the arrangement drawn.
+const drawn = Boolean(flow.illustrated);
 const based = {
+  key: drawn ? "Diagram based on" : undefined,
   refs: basis.map((s) => ({ ref: s.ref, href: `/standards/#${s.id}` })),
   status:
     basis.length > 1
@@ -124,8 +128,11 @@ const details = [
     note: "An explanation, not a specification",
   },
   ...basis.map((s, n) => ({
-    label:
-      basis.length > 1
+    label: drawn
+      ? basis.length > 1
+        ? `Diagram basis ${n + 1} of ${basis.length}`
+        : "Diagram’s specification"
+      : basis.length > 1
         ? `Basis ${n + 1} of ${basis.length}`
         : "Primary specification",
     value: s.name,
@@ -146,11 +153,15 @@ const details = [
         value: makeup,
         href: "#standards",
         note:
-          others > 0
-            ? unsettled > 0
-              ? `${others} more listed: ${unsettled} with ${unsettled === 1 ? "a role" : "roles"} not settled, the rest optional or background`
-              : `${others} more listed as optional or background`
-            : undefined,
+          [
+            drawn && "Required by the flow the diagram draws",
+            others > 0 &&
+              (unsettled > 0
+                ? `${others} more listed: ${unsettled} with ${unsettled === 1 ? "a role" : "roles"} not settled, the rest optional or background`
+                : `${others} more listed as optional or background`),
+          ]
+            .filter(Boolean)
+            .join(". ") || undefined,
       }
     : {
         label: `All ${standards.length} specifications`,
@@ -163,7 +174,9 @@ const details = [
     note: rated?.provisional
       ? `Provisional until the role of ${pendingNames} is settled: what the rating means`
       : flow.roles
-        ? "From its required references: what the rating means"
+        ? drawn
+          ? "For the flow the diagram draws, from its required references: what the rating means"
+          : "From its required references: what the rating means"
         : "What the rating means",
     noteHref: "/about/#how-flows-are-rated",
   },
@@ -207,6 +220,7 @@ const details = [
           <kbd>→</kbd> or select any arrow.</span>
         </p>
       </div>
+      {flow.illustrated && <div class="prose drawn" set:html={block(flow.illustrated.steps)} />}
       <FlowDiagram flow={flow} />
     </section>
 
@@ -328,6 +342,9 @@ const details = [
                 {REF_ROLE_BLURB[g.role]}
                 {g.role === 'unresolved' && ` ${unsettledNote}`}
               </p>
+              {g.role === 'required' && flow.illustrated && (
+                <p class="scope" set:html={inline(flow.illustrated.references)} />
+              )}
               <div class="grid">
                 {g.items.map((s) => (
                   <StandardCard standard={s} compact />
@@ -450,6 +467,19 @@ const details = [
     border-radius: 3px;
     padding: 0 0.35em;
     background: var(--bg-raised);
+  }
+
+  /* what the diagram draws, said before it */
+  .drawn {
+    margin: -0.6rem 0 1.4rem;
+  }
+  .drawn :global(p) {
+    margin: 0;
+  }
+  /* the scope of "required", in the body color so that it is not read as part of the gloss above it */
+  .refs > .scope {
+    max-width: var(--prose);
+    color: var(--fg);
   }
 
   /* comparison, where there is room: a table. Column headings are phrases here, so they wrap;

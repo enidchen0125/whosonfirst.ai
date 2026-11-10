@@ -17,6 +17,8 @@ export interface MetaItem {
 interface Props {
   /** The specification, or specifications, the page says the flow implements. */
   based?: {
+    /** The label, when "Based on" would claim too much: e.g. "Diagram based on". */
+    key?: string;
     refs: { ref: string; href: string }[];
     status: string;
     revision?: string;
@@ -47,7 +49,7 @@ const whole = (s: string) => s.replace(/(\d)-(?=\d)/g, "$1\u2011");
     {
       based && (
         <span class="doc-fact">
-          <span class="doc-key">Based on</span>
+          <span class="doc-key">{based.key ?? 'Based on'}</span>
           {based.refs.map((r, i) => (
             <>
               {i > 0 && ' and '}

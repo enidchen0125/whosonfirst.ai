@@ -167,13 +167,15 @@ That is the agentâ€™s own authority. Nothing in this flow carries a human userâ€
     "aws-sts-web-identity",
     "aws-outbound-federation",
     "gcp-wif",
+    "gcp-wif-x509",
     "entra-wif",
     "aws-iam-roles",
     "gcp-auth",
     "azure-managed-identities",
   ],
-  // No single specification defines the pattern. The two things the general steps show are
-  // required; each provider's mechanism, and the Kubernetes worked example, is a variant.
+  // No single specification defines the pattern. Required here means required by the flow the
+  // diagram draws (see `illustrated`): a JWT identity credential and OIDC discovery. Each
+  // provider's mechanism, other proofs, and the Kubernetes worked example are variants.
   roles: {
     rfc7519: "required", // the identity credential drawn in step 1 is a JWT; step 4 teaches the audience and expiry rules it sets
     "oidc-discovery": "required", // step 3 shows the discovery document the receiver reads to find the issuer's keys
@@ -186,6 +188,7 @@ That is the agentâ€™s own authority. Nothing in this flow carries a human userâ€
     "aws-sts-web-identity": "optional", // its request format and what it returns
     "aws-outbound-federation": "optional", // AWS as the identity provider
     "gcp-wif": "optional", // one receiving system
+    "gcp-wif-x509": "optional", // a proof other than a JWT, named above the diagram and in the cautions; not drawn
     "entra-wif": "optional", // one receiving system
     "aws-iam-roles": "background", // native identity, named as the contrast with federation
     "gcp-auth": "background", // native identity, named as the contrast with federation
@@ -232,6 +235,10 @@ Audience values, credential lifetimes, the claims a rule can match on and the wa
 Short lifetimes on both credentials keep the gaps small. Deleting a pod, a service account or a job is not an instant cut-off, and neither is deleting a trust rule.`,
     },
   ],
+  illustrated: {
+    steps: `The diagram shows a common JWT-based federation flow using OIDC discovery. Other implementations use different proofs and verification mechanisms, such as an X.509 certificate presented over mutual TLS, a signed request, or keys an administrator uploads.`,
+    references: `These are required by the flow the diagram draws: a JWT identity credential, and OIDC discovery to find the keys that verify it. They are not required of every implementation of workload identity federation. One that proves identity with a certificate or a signed request, or verifies against uploaded keys, depends on neither. The maturity rating describes the diagramâ€™s flow in the same way.`,
+  },
   comparison: {
     title: "The same pattern by environment",
     intro: `Each environment is a place a workload runs. Where it runs and how it gets its initial identity describe platform-provided identity. The receiving system shows where federation comes in, and where it does not.`,
