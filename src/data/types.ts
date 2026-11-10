@@ -144,15 +144,33 @@ export interface Flow {
     after?: string;
   };
   /** One setting worked through concretely, kept apart from the general steps. */
-  example?: {
+  example?: Omit<FlowSection, "id">;
+  /**
+   * Further sections after the worked example, in the same form: what to do with the flow once
+   * its steps are understood, or documented implementations of it.
+   */
+  sections?: FlowSection[];
+}
+
+/** A section of a flow page made of parts in reading order, between the steps and the cautions. */
+export interface FlowSection {
+  /** The heading's anchor. */
+  id: string;
+  title: string;
+  /** md-lite blocks. */
+  intro: string;
+  parts: {
     title: string;
-    intro: string;
-    parts: {
-      title: string;
-      body: string;
-      code?: { lang: string; text: string };
-    }[];
-  };
+    /** Short labels under the heading: whose product it is, its release stage, what kind of example. */
+    tags?: { text: string; tone?: string }[];
+    /** md-lite blocks. */
+    body: string;
+    code?: { lang: string; text: string };
+    /** The documents the part is drawn from, linked by title. */
+    sources?: { label: string; href: string }[];
+  }[];
+  /** md-lite blocks, after the parts. */
+  after?: string;
 }
 
 export const GROUPS: { id: FlowGroup; title: string; blurb: string }[] = [

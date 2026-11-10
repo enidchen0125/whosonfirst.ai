@@ -36,6 +36,11 @@ const group = must(
   `group "${flow.group}"`,
 );
 const standards = flow.standards.map(std);
+// The worked example and any further sections are drawn the same way, in that order.
+const sections = [
+  ...(flow.example ? [{ id: "example", ...flow.example }] : []),
+  ...(flow.sections ?? []),
+];
 const rel = related(flow);
 const i = flows.indexOf(flow);
 const prev = flows[i - 1];
@@ -281,16 +286,25 @@ const details = [
     }
 
     {
-      flow.example && (
-        <section aria-labelledby="example">
+      sections.map((sec) => (
+        <section aria-labelledby={sec.id}>
           <div class="section-head">
-            <h2 id="example">{flow.example.title}</h2>
+            <h2 id={sec.id}>{sec.title}</h2>
           </div>
-          <div class="prose" set:html={block(flow.example.intro)} />
+          <div class="prose" set:html={block(sec.intro)} />
           <div class="worked">
-            {flow.example.parts.map((part) => (
+            {sec.parts.map((part) => (
               <div class="part">
                 <h3>{part.title}</h3>
+                {part.tags && (
+                  <p class="chips part-tags">
+                    {part.tags.map((tag) => (
+                      <span class="chip" data-tone={tag.tone}>
+                        {tag.text}
+                      </span>
+                    ))}
+                  </p>
+                )}
                 <div class="prose" set:html={block(part.body)} />
                 {part.code && (
                   <Code
@@ -300,11 +314,26 @@ const details = [
                     defaultColor={false}
                   />
                 )}
+                {part.sources && (
+                  <div class="sources">
+                    <p>{part.sources.length === 1 ? 'Source' : 'Sources'}</p>
+                    <ul>
+                      {part.sources.map((src) => (
+                        <li>
+                          <a href={src.href} rel="noopener">
+                            {src.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
           </div>
+          {sec.after && <div class="prose section-after" set:html={block(sec.after)} />}
         </section>
-      )
+      ))
     }
 
     <section class="cols" aria-label="Cautions and notes">
@@ -587,6 +616,37 @@ const details = [
   }
   .part :global(pre) {
     max-width: var(--prose);
+  }
+  .part-tags {
+    margin: 0 0 0.7rem;
+  }
+  /* where a part comes from: a label as on the page-facts line, then the documents by title */
+  .sources {
+    max-width: var(--prose);
+    margin-top: 0.2rem;
+    font-size: 0.93rem;
+  }
+  .sources p {
+    margin: 0 0 0.2rem;
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .sources ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sources li {
+    margin: 0 0 0.15rem;
+  }
+  .section-after {
+    margin-top: 1.3rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--border);
   }
 
   .cols {
