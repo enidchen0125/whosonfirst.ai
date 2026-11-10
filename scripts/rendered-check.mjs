@@ -68,8 +68,11 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 
 /* ---------- what is looked at ---------- */
 const FLOW = "/flows/mcp-authorization/";
+const LESSON = "/learn/tokens/";
 const PAGES = [
   { path: "/", name: "home" },
+  { path: "/learn/", name: "lessons index" },
+  { path: LESSON, name: "lesson" },
   { path: FLOW, name: "flow" },
   { path: "/standards/", name: "standards" },
   { path: "/concepts/", name: "concepts" },
@@ -85,17 +88,21 @@ const THEMES = ["light", "dark"];
 // The narrowest window the site is held to: a small phone, or a desktop window
 // zoomed to 400%. Only sideways overflow is measured there: on the pages above,
 // on the About page, whose long addresses are the first thing to push a page
-// past the window, and on every flow, since each flow brings its own
-// credentials and labels.
+// past the window, and on every flow and every lesson, since each brings its
+// own credentials, labels and figures.
 const NARROW = { width: 320, height: 568 };
+const under = (dir) =>
+  readdirSync(join(root, dir), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => `/${dir}/${d.name}/`)
+    .sort();
+const LESSONS = under("learn");
 const NARROW_PAGES = [
   ...new Set([
     ...PAGES.map((p) => p.path),
     "/about/",
-    ...readdirSync(join(root, "flows"), { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => `/flows/${d.name}/`)
-      .sort(),
+    ...under("flows"),
+    ...LESSONS,
   ]),
 ];
 
@@ -187,7 +194,7 @@ const diagramLabels = () => {
 const prose = () => {
   const out = [];
   for (const p of document.querySelectorAll(
-    "main .prose p, main .article > p, main .step-body p, main .lede",
+    "main .prose p, main .article > p, main .lesson > p, main .step-body p, main .lede",
   )) {
     if (!p.offsetParent) continue;
     const cs = getComputedStyle(p);
@@ -232,6 +239,120 @@ const sideways = () => {
   };
 };
 
+/**
+ * A scenario figure's path, in the variation showing: how many of its labels overlap
+ * a box or another label, or reach outside the figure.
+ */
+const pathClean = (figure) => {
+  const panel = [...document.querySelectorAll(`${figure} .sc-panel`)].find(
+    (e) => e.offsetParent,
+  );
+  const chain = panel.querySelector(".sc-chain");
+  const box = chain.getBoundingClientRect();
+  const rects = (sel) =>
+    [...chain.querySelectorAll(sel)].map((e) => e.getBoundingClientRect());
+  const hit = (a, c) =>
+    a.left < c.right - 0.5 &&
+    c.left < a.right - 0.5 &&
+    a.top < c.bottom - 0.5 &&
+    c.top < a.bottom - 0.5;
+  let bad = 0;
+  const labels = rects(".sc-hop");
+  labels.forEach((l, i) => {
+    for (const n of rects(".sc-node")) if (hit(l, n)) bad++;
+    labels.forEach((o, j) => {
+      if (j > i && hit(l, o)) bad++;
+    });
+    if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
+  });
+  return bad;
+};
+
+/* ---------- checks that need no browser ---------- */
+
+/** Every page of the built site, as { path, html }. */
+const built = [];
+(function walk(dir, at) {
+  for (const d of readdirSync(dir, { withFileTypes: true })) {
+    if (d.isDirectory()) walk(join(dir, d.name), `${at}${d.name}/`);
+    else if (d.name === "index.html")
+      built.push({ path: at, html: readFileSync(join(dir, d.name), "utf8") });
+  }
+})(root, "/");
+
+// The lessons in reading order, as the lessons index lists them.
+const LESSON_ORDER = [
+  ...built
+    .find((p) => p.path === "/learn/")
+    .html.matchAll(/<a href="(\/learn\/[^"/]+\/)"[^>]*>\s*<span class="n"/g),
+].map((m) => m[1]);
+record(
+  "lessons",
+  "the lessons index lists every lesson page",
+  LESSON_ORDER.length === LESSONS.length &&
+    LESSONS.every((l) => LESSON_ORDER.includes(l)),
+  `${LESSON_ORDER.length} listed, ${LESSONS.length} built`,
+);
+
+// Internal links: the page exists, and so does the anchor on it.
+{
+  const ids = new Map(
+    built.map((p) => [
+      p.path,
+      new Set([...p.html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])),
+    ]),
+  );
+  const broken = [];
+  for (const p of built) {
+    // links that a script writes into the page at run time are templates, not addresses
+    const html = p.html.replace(/<script\b[\s\S]*?<\/script>/g, "");
+    for (const [, href] of html.matchAll(/<a\s[^>]*?href="([^"]+)"/g)) {
+      if (/^(https?:|mailto:)/.test(href)) continue;
+      const url = new URL(href.replaceAll("&amp;", "&"), `http://x${p.path}`);
+      const file = url.pathname.endsWith("/")
+        ? url.pathname
+        : `${url.pathname}/`;
+      const anchor = decodeURIComponent(url.hash.slice(1));
+      if (!ids.has(file)) {
+        if (!existsSync(join(root, url.pathname)))
+          broken.push(`${p.path} → ${href} (no such page)`);
+      } else if (anchor && !ids.get(file).has(anchor)) {
+        broken.push(`${p.path} → ${href} (no such anchor)`);
+      }
+    }
+  }
+  record(
+    "links",
+    "every internal link leads to a page, and every anchor to something on it",
+    broken.length === 0,
+    broken.slice(0, 12).join("; ") +
+      (broken.length > 12 ? `; and ${broken.length - 12} more` : ""),
+  );
+}
+
+// A line break in a template between a word and an inline element loses its
+// space, and the two run together on the page ("calls thisclient credentials").
+{
+  const run = [];
+  for (const p of built) {
+    const main = p.html.slice(
+      p.html.indexOf("<main"),
+      p.html.indexOf("</main>"),
+    );
+    for (const m of main.matchAll(
+      /[A-Za-z,.;:](<(?:strong|em|a|code)\b[^>]*>[^<]{0,24})/g,
+    ))
+      run.push(`${p.path} “…${m[0].replace(/<[^>]+>/, "|")}”`);
+  }
+  record(
+    "text",
+    "no word runs into the inline element after it",
+    run.length === 0,
+    run.slice(0, 8).join("; ") +
+      (run.length > 8 ? `; and ${run.length - 8} more` : ""),
+  );
+}
+
 /* ---------- run ---------- */
 const browser = await chromium.launch();
 for (const theme of THEMES) {
@@ -254,9 +375,9 @@ for (const theme of THEMES) {
       record(where, "no script errors", errors.length === 0, errors.join("; "));
       if (pg.name === "home") {
         const dest = [
+          "/learn/",
           "/guide/",
           "/flows/",
-          "/concepts/",
           "/deployments/",
           "/standards/",
           "/glossary/",
@@ -274,8 +395,8 @@ for (const theme of THEMES) {
           const closed = await visibleLinks();
           record(
             where,
-            "header keeps the flow chooser in view",
-            closed.includes("/guide/"),
+            "header keeps the lessons in view",
+            closed.includes("/learn/"),
             closed.join(" "),
           );
           await page.focus(".menu-toggle");
@@ -315,7 +436,7 @@ for (const theme of THEMES) {
           record(
             where,
             "first menu link takes focus next, with a visible ring",
-            focused.href === "/guide/" && focused.outline,
+            focused.href === "/learn/" && focused.outline,
             JSON.stringify(focused),
           );
           await page.keyboard.press("Escape");
@@ -393,81 +514,59 @@ for (const theme of THEMES) {
       }
 
       if (pg.name === "home") {
+        // The figure in the hero is lesson 1's, without its listings. It has to make
+        // its point before anything is clicked, and without a page of scrolling.
         const first = await page.evaluate(() => {
-          const panel = [...document.querySelectorAll(".vb-panel")].find(
+          const fig = document.querySelector(".hero .sc");
+          const panel = [...fig.querySelectorAll(".sc-panel")].find(
             (p) => p.offsetParent,
           );
-          const box = document.querySelector(".vb").getBoundingClientRect();
           return panel
             ? {
-                rows: panel.querySelectorAll("tbody tr").length,
-                marks: [...panel.querySelectorAll(".vb-mark")].map((m) =>
+                rows: panel.querySelectorAll(".sc-findings tbody tr").length,
+                marks: [...panel.querySelectorAll(".sc-mark")].map((m) =>
                   m.textContent.trim(),
                 ),
-                height: box.height,
+                so: panel.querySelector(".sc-so").textContent.trim().length,
+                height: fig.getBoundingClientRect().height,
               }
             : null;
         });
         record(
           where,
           "explainer shows a complete first state",
-          !!first && first.rows === 3,
+          !!first && first.rows === 3 && first.so > 0,
           first ? first.marks.join(", ") : "not visible",
         );
+        // beside the text on a wide screen it fits the window; on a phone, where
+        // its path runs down the page, it may run a little past one
+        const room = vp.name === "phone" ? vp.height * 1.3 : vp.height;
         record(
           where,
-          "explainer fits in one screen",
-          !!first && first.height <= vp.height,
-          first ? `${Math.round(first.height)}px of ${vp.height}px` : "",
+          "explainer fits in about one screen",
+          !!first && first.height <= room,
+          first
+            ? `${Math.round(first.height)}px, allowed ${Math.round(room)}px`
+            : "",
         );
-        const pathClean = () =>
-          page.evaluate(() => {
-            const panel = [...document.querySelectorAll(".vb-panel")].find(
-              (e) => e.offsetParent,
-            );
-            const path = panel.querySelector(".vb-path");
-            const box = path.getBoundingClientRect();
-            const rects = (s) =>
-              [...path.querySelectorAll(s)].map((e) =>
-                e.getBoundingClientRect(),
-              );
-            const hit = (a, c) =>
-              a.left < c.right - 0.5 &&
-              c.left < a.right - 0.5 &&
-              a.top < c.bottom - 0.5 &&
-              c.top < a.bottom - 0.5;
-            let bad = 0;
-            const labels = rects(".vb-label");
-            labels.forEach((l, i) => {
-              for (const n of rects(".vb-node")) if (hit(l, n)) bad++;
-              labels.forEach((o, j) => {
-                if (j > i && hit(l, o)) bad++;
-              });
-              if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
-            });
-            const broken = [...panel.querySelectorAll(".vb-reads code")].filter(
-              (c) => c.getClientRects().length > 1,
-            ).length;
-            return { bad, broken };
-          });
-        const keyPath = await pathClean();
-        await page.check('.vb input[value="delegated"]', { force: true });
+        const keyPath = await page.evaluate(pathClean, ".hero .sc");
+        await page.check('.hero .sc input[value="token"]', { force: true });
         const second = await page.evaluate(() =>
-          [...document.querySelectorAll(".vb-panel")]
+          [...document.querySelectorAll(".hero .sc-panel")]
             .filter((p) => p.offsetParent)
-            .map((p) => p.dataset.credential),
+            .map((p) => p.dataset.option),
         );
         record(
           where,
-          "choosing the other credential changes the panel",
-          second.length === 1 && second[0] === "delegated",
+          "choosing another credential changes the panel",
+          second.length === 1 && second[0] === "token",
           second.join(","),
         );
-        const tokenPath = await pathClean();
+        const tokenPath = await page.evaluate(pathClean, ".hero .sc");
         record(
           where,
-          "explainer path: no label overlaps a box or is clipped, no claim is broken, in either state",
-          keyPath.bad + keyPath.broken + tokenPath.bad + tokenPath.broken === 0,
+          "explainer path: no label overlaps a box or another label, or leaves the figure, in either state",
+          keyPath === 0 && tokenPath === 0,
           JSON.stringify({ keyPath, tokenPath }),
         );
         // both answers to "whose authority" are on screen together, before either list of flows
@@ -515,11 +614,161 @@ for (const theme of THEMES) {
         );
         record(
           where,
-          "three ways in: guide, roles, flows",
-          ["/guide/", "/concepts/#roles", "/flows/"].every((h) =>
-            routes.includes(h),
-          ),
+          "three ways in: lessons, guide, flows",
+          ["/learn/", "/guide/", "/flows/"].every((h) => routes.includes(h)),
           routes.join(" "),
+        );
+        const path = await page.evaluate(() =>
+          [...document.querySelectorAll("ol.path a")].map((a) =>
+            a.getAttribute("href"),
+          ),
+        );
+        record(
+          where,
+          "every lesson is listed, in order",
+          path.join() === LESSON_ORDER.join(),
+          path.join(" "),
+        );
+      }
+
+      if (pg.name === "lesson") {
+        // the figure: a complete first state, every variation in the table beneath,
+        // and a choice that changes what is shown
+        const fig = await page.evaluate(() => {
+          const sc = document.querySelector(".lesson .sc");
+          const shown = () =>
+            [...sc.querySelectorAll(".sc-panel")]
+              .filter((p) => p.offsetParent)
+              .map((p) => p.dataset.option);
+          const options = [...sc.querySelectorAll(".sc-choices input")].map(
+            (i) => i.value,
+          );
+          return {
+            options,
+            first: shown(),
+            findings: [...sc.querySelectorAll(".sc-panel")]
+              .find((p) => p.offsetParent)
+              .querySelectorAll(".sc-findings tbody tr").length,
+            glanceRows: sc.querySelectorAll(".sc-glance tbody tr").length,
+            glanceMarks: sc.querySelectorAll(".sc-glance .sc-mark").length,
+            questions: sc.querySelectorAll(".sc-glance thead th").length - 1,
+          };
+        });
+        record(
+          where,
+          "figure shows one complete variation before anything is chosen",
+          fig.first.length === 1 && fig.findings > 0,
+          `${fig.first.join()} with ${fig.findings} answers`,
+        );
+        record(
+          where,
+          "every variation is in the table beneath, so nothing depends on clicking",
+          fig.glanceRows === fig.options.length &&
+            fig.glanceMarks === fig.options.length * fig.questions,
+          `${fig.glanceRows} of ${fig.options.length} rows, ${fig.glanceMarks} answers`,
+        );
+        const last = fig.options.at(-1);
+        await page.check(`.lesson .sc input[value="${last}"]`, { force: true });
+        const after = await page.evaluate(() =>
+          [...document.querySelectorAll(".lesson .sc-panel")]
+            .filter((p) => p.offsetParent)
+            .map((p) => p.dataset.option),
+        );
+        record(
+          where,
+          "choosing a variation shows it, and only it",
+          after.join() === last,
+          after.join(","),
+        );
+        const clean = await page.evaluate(pathClean, ".lesson .sc");
+        record(
+          where,
+          "figure path: no label overlaps a box or another label, or leaves the figure",
+          clean === 0,
+          `${clean} collisions`,
+        );
+        // check yourself: nothing is given away until an answer is chosen, and the
+        // explanation that then appears is the chosen answer's own
+        const quiz = await page.evaluate(() => {
+          const q = document.querySelector(".ck.closing fieldset");
+          const open = () =>
+            [...q.querySelectorAll(".ck-why")].filter((w) => w.offsetParent)
+              .length;
+          const before = open();
+          const wrong = q.querySelector("li.is-wrong input");
+          wrong.click();
+          const afterWrong = [...q.querySelectorAll("li")]
+            .filter((li) => li.querySelector(".ck-why").offsetParent)
+            .map((li) => li.className);
+          q.querySelector("li.is-right input").click();
+          const afterRight = [...q.querySelectorAll("li")]
+            .filter((li) => li.querySelector(".ck-why").offsetParent)
+            .map((li) => li.className);
+          return {
+            before,
+            afterWrong,
+            afterRight,
+            questions: document.querySelectorAll(".ck.closing fieldset").length,
+            right: document.querySelectorAll(".ck.closing li.is-right").length,
+          };
+        });
+        record(
+          where,
+          "check yourself: no explanation shows until an answer is chosen",
+          quiz.before === 0,
+          `${quiz.before} showing`,
+        );
+        record(
+          where,
+          "check yourself: the chosen answer, and only it, is explained",
+          quiz.afterWrong.join() === "is-wrong" &&
+            quiz.afterRight.join() === "is-right",
+          `${quiz.afterWrong} then ${quiz.afterRight}`,
+        );
+        record(
+          where,
+          "check yourself: each question has exactly one right answer",
+          quiz.questions > 0 && quiz.right === quiz.questions,
+          `${quiz.right} right answers for ${quiz.questions} questions`,
+        );
+        // the shape every lesson shares
+        const shape = await page.evaluate(() => {
+          const top = (sel) => {
+            const el = document.querySelector(sel);
+            return el ? el.getBoundingClientRect().top + scrollY : null;
+          };
+          return {
+            order: [
+              top(".lesson .sc"),
+              top("#check-yourself"),
+              top("#keep"),
+              top("#names"),
+              top("#deeper"),
+              top(".pager"),
+            ],
+            here: document
+              .querySelector(".path a[aria-current='page']")
+              ?.getAttribute("href"),
+            steps: document.querySelectorAll(".path a").length,
+            next: document.querySelector(".pager .next")?.getAttribute("href"),
+          };
+        });
+        record(
+          where,
+          "lesson runs in its order: figure, questions, what to keep, names, go deeper, next",
+          shape.order.every((y) => y !== null) &&
+            shape.order.every((y, i) => i === 0 || y > shape.order[i - 1]),
+          shape.order
+            .map((y) => (y === null ? "missing" : Math.round(y)))
+            .join(" "),
+        );
+        record(
+          where,
+          "lesson says where it sits among the others, and what comes next",
+          shape.here === LESSON &&
+            shape.steps === LESSON_ORDER.length &&
+            shape.next === LESSON_ORDER[LESSON_ORDER.indexOf(LESSON) + 1],
+          `${shape.here} of ${shape.steps}, next ${shape.next}`,
         );
       }
 
