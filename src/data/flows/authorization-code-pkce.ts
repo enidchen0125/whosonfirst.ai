@@ -11,7 +11,7 @@ export const authorizationCodePkce: Flow = {
     'The baseline. A person signs in, approves specific scopes, and the agent receives a token that says so.',
   summary: `This is the flow almost everything else on this site builds on or stands in for. The user is sent to an authorization server they already trust, signs in there, and approves what the agent may do. The agent never sees a password; it gets a short-lived access token scoped to one resource.
 
-OAuth 2.1 folds a decade of security guidance into the default: PKCE on every authorization code request, exact redirect URI matching, no implicit grant, no password grant. If an agent acts for a person and that person is at the keyboard, start here.`,
+This page shows the flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching; a token restricted to one audience; and no implicit or password grant. If an agent acts for a person and that person is at the keyboard, start here.`,
   fits: [
     'A user is present and can complete a browser sign-in.',
     'The agent needs access to **that user’s** data, with that user’s permissions.',
@@ -58,11 +58,11 @@ state          = random()`,
       kind: 'front',
       label: 'Authorization request',
       title: 'The agent sends the user’s browser to the authorization server',
-      body: `Everything in this request is visible to the browser, so it carries no secrets: who the client is, where to send the user back, what is being asked for, and which resource the token is for. The \`resource\` parameter matters more for agents than for classic apps, because one agent talks to many servers and a token must be good for exactly one.`,
+      body: `Everything in this request is visible to the browser, so it carries no secrets: who the client is, where to send the user back, what is being asked for, and which resource the token is for. \`client_id\` is the identifier the authorization server gave this client when it was registered. The \`resource\` parameter matters more for agents than for classic apps, because one agent talks to many servers and a token must be good for exactly one.`,
       code: {
         lang: 'http',
         text: `GET /authorize?response_type=code
-  &client_id=https://agent.example/client.json
+  &client_id=s6BhdRkqt3
   &redirect_uri=http://127.0.0.1:52100/callback
   &scope=calendar.read
   &resource=https://calendar.example/api
@@ -110,7 +110,7 @@ Host: 127.0.0.1:52100`,
       kind: 'back',
       label: 'Token request + verifier',
       title: 'The agent redeems the code directly',
-      body: `This call goes straight from the agent to the token endpoint, not through the browser. The agent presents the code and the original \`code_verifier\`. The server hashes the verifier and compares it with the challenge from step 3; only the party that started the flow can finish it.`,
+      body: `This call goes straight from the agent to the token endpoint, not through the browser. The agent presents the code and the original \`code_verifier\`. The server hashes the verifier and compares it with the challenge from step 3; only the party that started the flow can finish it. \`redirect_uri\` is sent again because RFC 6749 requires it here whenever the authorization request carried one.`,
       code: {
         lang: 'http',
         text: `POST /token HTTP/1.1
@@ -120,7 +120,7 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=authorization_code
 &code=SplxlOBeZQQYbYS6WxSbIA
 &redirect_uri=http://127.0.0.1:52100/callback
-&client_id=https://agent.example/client.json
+&client_id=s6BhdRkqt3
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 &resource=https://calendar.example/api`,
       },
@@ -132,7 +132,7 @@ grant_type=authorization_code
       kind: 'resp',
       label: 'Access token (+ refresh)',
       title: 'The authorization server issues tokens',
-      body: `The access token is short-lived and bound to one audience. The refresh token, if issued, lets the agent get new access tokens without the user. For public clients OAuth 2.1 requires refresh tokens to be either rotated on use or sender-constrained.`,
+      body: `The access token is short-lived and bound to one audience. The refresh token, if issued, lets the agent get new access tokens without the user. For public clients the security best current practice (RFC 9700) requires refresh tokens to be either sender-constrained or rotated on use.`,
       code: {
         lang: 'json',
         text: `{
@@ -176,9 +176,29 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
       kind: 'resp',
       label: '200 OK',
       title: 'The API responds',
-      body: `The API knows which user this is for (\`sub\`) and which client is calling (\`client_id\`). What it does not know from a plain access token is that an *AI agent* was in the middle, or which model run decided to make the call. Flows further down this site add that information.`,
+      body: `The token in this example is a JWT access token (RFC 9068), so the API can read which user it is for (\`sub\`) and which client it was issued to (\`client_id\`). What it does not know from a plain access token is that an *AI agent* was in the middle, or which model run decided to make the call. Flows further down this site add that information.`,
     },
   ],
-  standards: ['oauth-2-1', 'rfc7636', 'rfc8707', 'rfc9207', 'rfc9700', 'rfc8252'],
+  standards: ['rfc6749', 'rfc7636', 'rfc9700', 'rfc8707', 'rfc9207', 'rfc8252', 'rfc6750', 'rfc9068', 'oauth-2-1'],
+  basis: ['rfc6749', 'rfc7636'],
+  roles: {
+    rfc6749: 'required', // the grant itself: every step
+    rfc7636: 'required', // steps 2, 3, 7
+    rfc9700: 'required', // the security rules the page teaches: PKCE for public clients, exact redirect matching, audience restriction, refresh token protection
+    rfc8707: 'required', // `resource`, steps 3 and 7
+    rfc9207: 'required', // `iss`, step 6
+    rfc8252: 'required', // the loopback redirect, steps 3, 6, 7
+    rfc6750: 'required', // the Bearer header, step 9
+    rfc9068: 'required', // the example token and the claims validated in steps 10 and 11
+    'oauth-2-1': 'background', // a related draft; this page does not implement it
+  },
   related: ['mcp-authorization', 'device-authorization', 'dpop', 'step-up-authorization'],
+  notes: [
+    {
+      title: 'How OAuth 2.1 relates',
+      body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated 30 October 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behaviour as it does.
+
+Two of its changes touch this page. A token request no longer carries \`redirect_uri\`, and the PKCE \`plain\` method is removed. This page shows the published RFCs, so step 7 still sends \`redirect_uri\`. A flow built on the draft, such as [MCP authorization](/flows/mcp-authorization/), leaves it out.`,
+    },
+  ],
 };
