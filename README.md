@@ -73,6 +73,7 @@ Biome does not handle `.mdx`, so the deployment guides and the About page are no
 | `src/components/DocMeta.astro`        | Page facts: one line for the specification followed and the review date, the rest in a disclosure |
 | `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram                                                                |
 | `src/pages/deployments/*.mdx`         | Long-form deployment guides                                                                       |
+| `docs/source-review.md`               | What goes out of date, where to check it, and where each fact has to be changed                   |
 
 ## Editing content
 
@@ -94,7 +95,7 @@ A reference marked `unresolved` is not counted and is not assumed to be optional
 
 **Cross-references are checked at build time.** A flow that names an unknown standard or related flow, or a decision-guide rule that names an unknown flow or answer, fails the build.
 
-**When you re-verify the standards**, update `REVIEWED` in `src/data/site.ts`.
+**When you re-verify the standards**, follow `docs/source-review.md`. It lists what to check and how often, and every place the review date and a changed fact have to be updated, starting with `REVIEWED` in `src/data/site.ts`.
 
 ## Design
 
@@ -128,5 +129,7 @@ Two checks cover this:
 ## Accuracy
 
 Drafts in this area change monthly. Revision numbers and dates in the tracker were taken from the IETF document mirror and specification repositories. Process states (for example "in last call") came from secondary sources and are worded as reported. Vendor products are described from vendor documentation and were not tested. See the About page for the full method.
+
+`docs/source-review.md` is the checklist for keeping it that way: what to re-check, against which source, and what a periodic review reports.
 
 Corrections are welcome as issues or pull requests.
