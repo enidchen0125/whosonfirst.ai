@@ -908,6 +908,140 @@ export const standards: Standard[] = [
     url: "https://github.com/agentgateway/agentgateway",
   },
 
+  /* ───────────── Cloud and CI platforms ───────────── */
+  {
+    id: "aws-iam-roles",
+    name: "AWS IAM Roles",
+    ref: "IAM User Guide",
+    body: "AWS",
+    status: "project",
+    detail:
+      "Platform documentation. Each compute service documents how it delivers a role’s credentials to code.",
+    topics: ["workload"],
+    summary:
+      "An AWS identity with permissions and no long-term credentials of its own. Whoever assumes a role receives temporary security credentials for that session. Compute services such as Lambda and EC2 assume a role attached to the function or instance and supply its credentials to the code.",
+    agents:
+      "Native workload identity on AWS: an agent running there calls AWS APIs without an access key being provisioned for it. Using a role inside AWS is not federation.",
+    url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+  },
+  {
+    id: "aws-oidc-federation",
+    name: "AWS OIDC Federation",
+    ref: "IAM OIDC identity providers",
+    body: "AWS",
+    status: "project",
+    detail:
+      "Platform documentation. The role’s trust policy decides which tokens from the issuer are accepted.",
+    topics: ["workload"],
+    summary:
+      "An IAM OIDC identity provider registers an outside issuer with an AWS account. A workload holding a JWT from that issuer exchanges it for temporary security credentials that map to an IAM role.",
+    agents:
+      "The way into AWS for CI jobs, Kubernetes pods and workloads on other clouds. The conditions the trust policy puts on audience and subject are the security boundary.",
+    url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_oidc.html",
+  },
+  {
+    id: "aws-sts-web-identity",
+    name: "AWS Web Identity Exchange",
+    ref: "STS AssumeRoleWithWebIdentity",
+    body: "AWS",
+    status: "project",
+    detail:
+      "API reference. Sessions last one hour by default, and from 15 minutes up to the maximum set on the role.",
+    topics: ["workload"],
+    summary:
+      "The Security Token Service operation that takes a web identity token and a role, and returns an access key ID, a secret access key and a session token. The call itself is not signed with AWS credentials.",
+    agents:
+      "What comes back signs AWS API requests. It is not an OAuth bearer access token, which matters to any agent framework that expects one.",
+    url: "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html",
+  },
+  {
+    id: "aws-outbound-federation",
+    name: "AWS Outbound Identity Federation",
+    ref: "STS GetWebIdentityToken",
+    body: "AWS",
+    status: "project",
+    detail:
+      "Has to be enabled for the account before a token can be requested. Not available on the STS global endpoint.",
+    topics: ["workload"],
+    summary:
+      "AWS as the identity provider. A workload that already has AWS credentials calls `GetWebIdentityToken` for a short-lived signed JWT naming its IAM principal, for an audience it specifies. Outside services verify the token against keys published under an issuer URL specific to the account.",
+    agents:
+      "Lets an agent on AWS prove its identity to a service outside AWS, where the token is exchanged for that service’s own credential.",
+    url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_outbound.html",
+  },
+  {
+    id: "gcp-wif",
+    name: "Google Cloud Workload Identity Federation",
+    ref: "Google Cloud IAM",
+    body: "Google Cloud",
+    status: "project",
+    detail: "Platform documentation. The token exchange follows RFC 8693.",
+    topics: ["workload"],
+    summary:
+      "Workloads outside Google Cloud present a credential from their own identity provider to Google’s Security Token Service, which returns a federated access token. A workload identity pool provider holds the trust in the outside issuer and the conditions on its attributes.",
+    agents:
+      "The way into Google Cloud without a service account key, from AWS, Azure, GitHub, GitLab, Kubernetes clusters, or any OIDC or SAML 2.0 identity provider.",
+    url: "https://docs.cloud.google.com/iam/docs/workload-identity-federation",
+  },
+  {
+    id: "gcp-auth",
+    name: "Authentication on Google Cloud",
+    ref: "Google Cloud authentication",
+    body: "Google Cloud",
+    status: "project",
+    detail: "Platform documentation.",
+    topics: ["workload"],
+    summary:
+      "How code gets credentials on Google Cloud. A service account attached to the resource is the workload’s identity, and client libraries find its credentials through Application Default Credentials, which asks the metadata server.",
+    agents:
+      "Native workload identity on Google Cloud. Google recommends it for code running there, and Workload Identity Federation for code running on-premises or on another cloud.",
+    url: "https://docs.cloud.google.com/docs/authentication",
+  },
+  {
+    id: "entra-wif",
+    name: "Microsoft Entra Workload Identity Federation",
+    ref: "Microsoft Entra Workload ID",
+    body: "Microsoft",
+    status: "project",
+    detail:
+      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported.",
+    topics: ["workload"],
+    summary:
+      "An app registration or a user-assigned managed identity is configured, through a federated identity credential, to trust tokens from an outside issuer. The workload sends that token as the client assertion on a client credentials request and receives a Microsoft Entra access token.",
+    agents:
+      "The way into Microsoft Entra without a client secret or certificate, from Kubernetes, GitHub Actions, Google Cloud, AWS or SPIFFE.",
+    url: "https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation",
+  },
+  {
+    id: "azure-managed-identities",
+    name: "Azure Managed Identities",
+    ref: "Managed identities for Azure resources",
+    body: "Microsoft",
+    status: "project",
+    detail: "Platform documentation.",
+    topics: ["workload"],
+    summary:
+      "An identity in Microsoft Entra that Azure creates for a resource, or that you create and assign to one. Code on the resource asks a local endpoint for Microsoft Entra tokens. Azure manages the underlying credentials, which you never handle.",
+    agents:
+      "Native workload identity on Azure. A user-assigned managed identity can also be what federation from outside maps onto.",
+    url: "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview",
+  },
+  {
+    id: "github-actions-oidc",
+    name: "OpenID Connect in GitHub Actions",
+    ref: "GitHub Actions OIDC",
+    body: "GitHub",
+    status: "project",
+    detail:
+      "Platform documentation. A job needs the `id-token: write` permission to request its token.",
+    topics: ["workload"],
+    summary:
+      "GitHub’s OIDC provider issues a job a signed JWT whose claims name the repository, the branch or environment, and the workflow. A cloud or other service that trusts the issuer exchanges it for short-lived access.",
+    agents:
+      "The identity of an agent that runs in a CI job. One issuer serves every repository on GitHub.com, so the receiving trust rule has to name the repository.",
+    url: "https://docs.github.com/en/actions/concepts/security/openid-connect",
+  },
+
   /* ───────────── MCP ───────────── */
   {
     id: "mcp-authorization",
