@@ -243,6 +243,7 @@ Content-Type: application/json
     'rfc9207',
     'rfc7636',
     'rfc6750',
+    'oidc-discovery',
     'rfc7591',
   ],
   basis: ['mcp-authorization'],
@@ -256,6 +257,7 @@ Content-Type: application/json
     rfc9207: 'required', // `iss`, steps 4, 9, 10
     rfc7636: 'required', // PKCE, steps 5, 6, 11
     rfc6750: 'required', // the Bearer challenge and header, steps 2 and 13
+    'oidc-discovery': 'optional', // the other discovery document a client must support, named in step 4; not drawn
     rfc7591: 'optional', // the deprecated alternative; no registration message is drawn
   },
   related: ['authorization-code-pkce', 'url-elicitation', 'cross-app-access', 'step-up-authorization'],
