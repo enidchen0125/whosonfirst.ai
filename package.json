@@ -8,7 +8,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check && node scripts/rating-check.mjs && node scripts/contrast-check.mjs",
+    "check": "biome check",
+    "fmt": "biome check --write",
+    "test": "astro check && node scripts/rating-check.mjs && node scripts/contrast-check.mjs",
+    "check:types": "astro check",
     "check:rating": "node scripts/rating-check.mjs",
     "check:contrast": "node scripts/contrast-check.mjs",
     "check:rendered": "node scripts/rendered-check.mjs",
@@ -31,6 +34,7 @@
     "node": ">=22"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.6",
     "axe-core": "4.14.0",
     "playwright": "1.63.0"
   }
