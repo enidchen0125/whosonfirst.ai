@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!**/dist", "!design-system/components/**/*.html"]
+    "includes": ["**", "!!**/dist"]
   },
   "formatter": {
     "enabled": true,

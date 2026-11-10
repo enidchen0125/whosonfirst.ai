@@ -14,8 +14,7 @@
     "check:types": "astro check",
     "check:rating": "node scripts/rating-check.mjs",
     "check:contrast": "node scripts/contrast-check.mjs",
-    "check:rendered": "node scripts/rendered-check.mjs",
-    "ds:build": "node scripts/build-design-system.mjs"
+    "check:rendered": "node scripts/rendered-check.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",
