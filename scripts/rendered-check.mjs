@@ -765,6 +765,71 @@ for (const path of NARROW_PAGES) {
   );
 }
 await ctx.close();
+// colour theme: the page follows the system setting, live, and a theme picked
+// with the header button lasts only until the system setting next changes
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    colorScheme: "light",
+  });
+  const page = await ctx.newPage();
+  await page.goto(`${origin}/`, { waitUntil: "networkidle" });
+  const settle = () =>
+    page.evaluate(
+      () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r)),
+        ),
+    );
+  const read = async () => {
+    await settle();
+    return page.evaluate(() => {
+      const [r, g, b] = getComputedStyle(document.body)
+        .backgroundColor.match(/[\d.]+/g)
+        .map(Number);
+      return {
+        dark: r + g + b < 384,
+        picked: document.documentElement.dataset.theme ?? null,
+        stored: localStorage.getItem("theme"),
+      };
+    });
+  };
+  const steps = [];
+  const step = async (name, want) => {
+    const got = await read();
+    const ok =
+      got.dark === want.dark &&
+      got.picked === want.picked &&
+      got.stored === want.picked;
+    steps.push(ok ? null : `${name}: ${JSON.stringify(got)}`);
+  };
+  await step("light system", { dark: false, picked: null });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await step("system changes to dark", { dark: true, picked: null });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.click("button.theme");
+  await step("button on a light system", { dark: true, picked: "dark" });
+  await page.reload({ waitUntil: "networkidle" });
+  await step("reload keeps the choice", { dark: true, picked: "dark" });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await step("system changes to dark: choice dropped", {
+    dark: true,
+    picked: null,
+  });
+  await page.emulateMedia({ colorScheme: "light" });
+  await step("system changes to light: page follows", {
+    dark: false,
+    picked: null,
+  });
+  const wrong = steps.filter(Boolean);
+  record(
+    "theme",
+    "theme follows the system setting, and a picked theme ends when it changes",
+    wrong.length === 0,
+    wrong.join("; "),
+  );
+  await ctx.close();
+}
 await browser.close();
 server.close();
 

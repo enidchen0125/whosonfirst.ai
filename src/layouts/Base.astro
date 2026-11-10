@@ -65,11 +65,16 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
     <script is:inline>
+      // The page follows the system's light or dark setting through CSS alone.
+      // A theme picked with the header button is kept only while it differs
+      // from the system's; once they agree, the page is simply following again.
       (() => {
-        const root = document.documentElement;
         try {
-          const t = localStorage.getItem('theme');
-          if (t === 'light' || t === 'dark') root.dataset.theme = t;
+          const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          const picked = localStorage.getItem('theme');
+          if (picked !== 'light' && picked !== 'dark') return;
+          if (picked === system) localStorage.removeItem('theme');
+          else document.documentElement.dataset.theme = picked;
         } catch {}
       })();
     </script>
@@ -164,17 +169,27 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       });
       window.matchMedia('(min-width: 62.01rem)').addEventListener('change', () => setOpen(false));
 
-      const btn = document.querySelector<HTMLButtonElement>('.theme');
-      btn?.addEventListener('click', () => {
-        const root = document.documentElement;
-        const current =
-          root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        const next = current === 'dark' ? 'light' : 'dark';
+      // Colour theme. With no choice made, CSS follows the system setting, and
+      // keeps following it when it changes. The button picks the other theme;
+      // that choice lasts until the system setting next changes.
+      const root = document.documentElement;
+      const dark = window.matchMedia('(prefers-color-scheme: dark)');
+      const system = () => (dark.matches ? 'dark' : 'light');
+      const follow = () => {
+        delete root.dataset.theme;
+        try {
+          localStorage.removeItem('theme');
+        } catch {}
+      };
+      document.querySelector<HTMLButtonElement>('.theme')?.addEventListener('click', () => {
+        const next = (root.dataset.theme ?? system()) === 'dark' ? 'light' : 'dark';
+        if (next === system()) return follow();
         root.dataset.theme = next;
         try {
           localStorage.setItem('theme', next);
         } catch {}
       });
+      dark.addEventListener('change', follow);
     </script>
   </body>
 </html>
