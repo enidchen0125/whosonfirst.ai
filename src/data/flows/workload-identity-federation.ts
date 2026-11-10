@@ -8,48 +8,289 @@ export const workloadIdentityFederation: Flow = {
   human: "absent",
   maturity: "stable",
   tagline:
-    "The platform vouches for the agent. A short-lived platform token is exchanged for access elsewhere, and no secret is ever stored.",
-  summary: `Every secret an agent holds has to be created, delivered, stored, rotated and eventually revoked. Workload identity federation removes the secret. The platform the agent runs on, such as a Kubernetes cluster, a cloud function runtime or a CI system, already knows which workload it started. It issues that workload a short-lived signed token saying so. Other systems are configured to trust the platform’s signing keys, and exchange the platform token for their own.
+    "Your agent uses an identity established by its runtime to obtain short-lived access from a system that trusts that identity.",
+  summary: `The place an agent runs already knows which workload it started. Cloud services, virtual machines, containers, CI jobs and on-premises infrastructure can all turn that knowledge into an identity the workload can prove. Kubernetes service account tokens are one implementation, worked through [further down](#example).
 
-The agent’s credential is now a fact about where it is running, attested by infrastructure, valid for minutes, and refreshed automatically. There is nothing to leak into a prompt or bake into an image. For agents with no human in the loop this is the strongest foundation available today.`,
+Two related ideas are involved, and they are not interchangeable. **Platform-provided workload identity** means the infrastructure establishes the workload’s identity and supplies its credentials, so the application owner does not provision a long-lived application secret. **Workload identity federation** means a receiving system trusts an identity established in another trust domain and uses it to grant access.
+
+A Lambda function calling AWS APIs with its execution role is using native workload identity: one identity system, and nothing is federated. Using that function’s identity to obtain access in a different identity system is federation. The other system does not have to belong to another cloud provider. A Kubernetes cluster and the cloud it runs in are separate trust domains, and so are a CI service and the account it deploys to.
+
+What the pattern removes is the need to provision and manage a long-lived application secret, for the integrations that support it. It does not remove credentials. The identity credential and whatever is issued in exchange are short-lived, and they still need protecting. The destination also has to support the trust arrangement: an API that only accepts an API key cannot be federated to, and a [credential broker](/flows/credential-broker/) is the usual answer there.`,
   fits: [
-    "Agents running on Kubernetes, a major cloud, or a CI system that issues OIDC tokens.",
-    "Calling cloud APIs, model providers or internal services as the agent itself.",
-    "Anywhere you would otherwise mount an API key from a secret.",
+    "Agents running where the platform can identify the workload: a cloud function, virtual machine or managed container, a Kubernetes pod, a CI job.",
+    "Calling cloud APIs, or any service that can be configured to trust the platform’s identities, as the agent itself.",
+    "Anywhere you would otherwise deliver an API key or client secret to the workload, provided the destination supports the trust arrangement.",
   ],
   watchOut: [
-    "**Match on more than the issuer.** A trust rule that accepts any token from the cluster lets every pod become your agent. Pin the `sub` (namespace and service account) and the `aud`.",
-    "Set a specific audience on the projected token. A token minted for the Kubernetes API server and replayed at an external service is a classic confused-deputy path.",
-    "One service account shared by many agents gives them one identity. If agents differ in what they may do, they need different service accounts.",
-    "The receiving side must be able to fetch the cluster’s signing keys. For private clusters that means publishing the issuer discovery document somewhere reachable, or uploading the keys.",
+    "**Trust a specific issuer, and know who else it serves.** Some issuers sign for many tenants under one URL. GitHub Actions on GitHub.com uses a single issuer for every repository, so trusting the issuer alone trusts all of them.",
+    "**Require the audience you intended.** The identity credential should name the receiving token service, and the receiver should refuse any other value. A credential issued for one recipient and accepted by another is a confused-deputy path.",
+    "**Match the exact workload.** Pin the subject, or the claims that stand in for it, to one workload: one service account, one repository and environment, one role. Avoid wildcards and prefix matches, and prefer identifiers that cannot be reassigned, such as IDs over names where the issuer offers them. What a rule can match on differs by receiver.",
+    "**Grant the least access that works.** The role or permission behind the trust rule is what a stolen credential is worth.",
+    "**Do not share one identity between agents.** Agents that share a service account, a role or a job identity are one principal to every system downstream. They cannot be limited, audited or cut off separately.",
+    "**Short-lived credentials still need protecting.** The identity credential and the credential issued for it both work for anyone holding a copy until they expire. Keep them out of logs, prompts and tool output. Anything that can make requests from inside the workload, including a tool the agent was talked into calling, may be able to ask the platform for the same credentials.",
+    "**Stopping issuance is not revocation.** Deleting the workload, its identity or the trust rule stops new credentials. Those already issued can stay valid until they expire. See the note on stopping access.",
+    "**The receiver has to reach the issuer’s keys.** A private cluster or an internal identity provider has to publish its discovery document and keys somewhere the receiver can fetch them, or upload the keys where the receiver allows that.",
+    "**Workload identity is not a user’s authority.** Federation establishes which workload is calling. It does not carry a person’s identity or consent, and it does not turn the agent’s access into the user’s.",
   ],
   participants: [
     {
-      id: "k8s",
-      label: "Kubernetes",
-      sub: "API server + kubelet",
+      id: "idp",
+      label: "Identity provider",
+      sub: "workload’s platform",
       role: "infra",
     },
-    { id: "agent", label: "Agent pod", sub: "ServiceAccount", role: "agent" },
+    { id: "agent", label: "Agent workload", role: "agent" },
     {
       id: "sts",
       label: "Token service",
-      sub: "Cloud STS or AS",
+      sub: "receiving system",
       role: "authz",
     },
-    { id: "api", label: "External API", role: "resource" },
+    { id: "api", label: "Target API", role: "resource" },
   ],
   steps: [
     {
-      from: "k8s",
+      from: "idp",
       to: "agent",
       kind: "back",
-      label: "Mount projected token",
-      title: "The kubelet delivers an identity token to the pod",
-      body: `The pod spec asks for a projected service account token with a chosen audience and lifetime. The kubelet obtains it from the API server’s TokenRequest API and writes it to a file in the pod. The token is bound to this pod: once the pod is deleted, the API server no longer accepts it. The kubelet replaces the file before the token expires.`,
+      label: "Workload identity credential",
+      title: "The platform gives the workload an identity credential",
+      body: `The workload identity provider is whatever established which workload this is: a cloud’s metadata service, a Kubernetes cluster, a CI system, a SPIFFE implementation. It supplies a short-lived, signed statement of that identity, most often a JWT (RFC 7519) like the one shown. How it arrives depends on the platform: a file that is kept fresh, a local endpoint, a request the workload makes when it needs one. Some receivers accept other proofs instead, such as an X.509 certificate or a signed request.
+
+*Usually handled by the platform, and read by an SDK.*`,
+      code: {
+        lang: "jsonc",
+        text: `// Illustrative claims.
+// Names and values depend on the issuer.
+{
+  "iss": "https://identity.platform.example",
+  "sub": "workload:research-agent",
+  "aud": "https://sts.receiver.example",
+  "iat": 1794268800,
+  "exp": 1794272400
+}`,
+      },
+      gain: [["agent", "identity credential (aud: token service)"]],
+    },
+    {
+      from: "agent",
+      to: "sts",
+      kind: "back",
+      label: "Present identity credential",
+      title: "The workload presents it to the receiving token service",
+      body: `This is the federation step. The receiving token service belongs to the system the agent wants access to: a cloud’s security token service, or an identity platform’s token endpoint. The request has no universal format. Google Cloud uses OAuth token exchange (RFC 8693). Microsoft Entra takes the credential as the client assertion on a client credentials request. AWS has its own operation, \`AssumeRoleWithWebIdentity\`. The note on request formats, below, sets out the differences.
+
+*Usually handled by an SDK or credential library, once it is told where to find the identity credential and what to ask for.*`,
+    },
+    {
+      from: "sts",
+      to: "idp",
+      kind: "back",
+      label: "Fetch issuer keys",
+      title: "The token service finds the issuer’s public keys",
+      body: `A signed credential is checked against its issuer’s public keys. Most receivers read them from the issuer’s OpenID Connect discovery document, at \`/.well-known/openid-configuration\` under the issuer URL, which points to a key set (JWKS). They cache what they find. Where the issuer cannot be reached from outside, some receivers let an administrator upload the keys instead. Either way the issuer was registered in advance: a token service does not go looking for the keys of an issuer nobody told it to trust.
+
+*Handled by the receiving system.*`,
+    },
+    {
+      from: "sts",
+      kind: "self",
+      label: "Validate the credential",
+      title: "The token service validates what it was given",
+      body: `It checks the signature against the issuer’s keys, that the issuer is one it was configured to trust, that the audience names this token service, and that the credential has not expired. The audience check is what stops a token issued for one recipient from being replayed at another: RFC 7519 requires a recipient to reject a JWT whose audience does not include it. What the audience value should be is for the receiver to define, and differs by provider.
+
+So far the receiver knows only that a trusted issuer made this statement, for this recipient, recently. It has not yet decided what the workload may do.
+
+*Handled by the receiving system.*`,
+    },
+    {
+      from: "sts",
+      kind: "self",
+      label: "Apply the trust rule",
+      title: "A trust rule turns the identity into permissions",
+      body: `An administrator wrote the rule in advance: credentials from *this* issuer, for *this* audience, naming *this* workload, get *that* access. Receivers call it different things, such as a role trust policy, a federated identity credential, or an attribute condition on an identity pool. The syntax differs, and so does what a rule can match on, but this rule is the security boundary everywhere. One that matches more workloads than you meant gives each of them the access.
+
+*Written ahead of time by whoever administers the receiving system. This part is yours to get right.*`,
       code: {
         lang: "yaml",
-        text: `volumes:
+        text: `# Conceptual trust rule.
+# Each receiver has its own syntax.
+issuer:   https://identity.platform.example
+audience: https://sts.receiver.example
+subject:  workload:research-agent
+grants:   role/model-inference`,
+      },
+    },
+    {
+      from: "sts",
+      to: "agent",
+      kind: "resp",
+      label: "Short-lived credential",
+      title: "The token service issues a short-lived credential",
+      body: `What comes back depends on the receiver. Google Cloud returns a federated access token, used directly or to impersonate a service account. Microsoft Entra returns an OAuth access token. AWS returns temporary security credentials: an access key ID, a secret access key and a session token. Those sign requests. They are not an OAuth bearer token.
+
+How long the credential lasts is the receiver’s setting, and differs by provider and configuration. When it expires, the exchange is repeated with a fresh identity credential.
+
+*Usually cached and renewed by the SDK.*`,
+      gain: [["agent", "short-lived credential (for the target API)"]],
+    },
+    {
+      from: "agent",
+      to: "api",
+      kind: "back",
+      label: "Call API with the credential",
+      title: "The agent calls the target API",
+      body: `How the credential is used depends on its kind. An OAuth access token is sent as a bearer token in the \`Authorization\` header. AWS credentials are used to sign the request. The identity credential from step 1 is not sent to the API: its audience is the token service.
+
+*Usually handled by the SDK or client library, which attaches the token or signs the request.*`,
+    },
+    {
+      from: "api",
+      to: "agent",
+      kind: "resp",
+      label: "200 OK",
+      title: "The API responds",
+      body: `The API authorized the call with the access the trust rule granted. Its logs attribute the call to that role or identity, which traces back to one workload if the rule was written for one.
+
+That is the agent’s own authority. Nothing in this flow carries a human user’s identity or consent. If the agent is acting for a person, that authority has to come from a delegation flow, such as [authorization code](/flows/authorization-code-pkce/) or [token exchange](/flows/token-exchange/).`,
+    },
+  ],
+  standards: [
+    "rfc7519",
+    "oidc-discovery",
+    "rfc8693",
+    "rfc7523",
+    "k8s-sa-tokens",
+    "spiffe",
+    "github-actions-oidc",
+    "aws-oidc-federation",
+    "aws-sts-web-identity",
+    "aws-outbound-federation",
+    "gcp-wif",
+    "entra-wif",
+    "aws-iam-roles",
+    "gcp-auth",
+    "azure-managed-identities",
+  ],
+  // No single specification defines the pattern. The two things the general steps show are
+  // required; each provider's mechanism, and the Kubernetes worked example, is a variant.
+  roles: {
+    rfc7519: "required", // the identity credential drawn in step 1 is a JWT; step 4 teaches the audience and expiry rules it sets
+    "oidc-discovery": "required", // step 3 shows the discovery document the receiver reads to find the issuer's keys
+    rfc8693: "optional", // one request format (Google Cloud, and the worked example); no general step depends on it
+    rfc7523: "optional", // the client assertion format Microsoft Entra uses; named, not drawn
+    "k8s-sa-tokens": "optional", // the worked example's identity credential; one implementation of step 1
+    spiffe: "optional", // one identity provider for workloads outside a cluster or cloud; named in the comparison
+    "github-actions-oidc": "optional", // the CI row: one identity provider
+    "aws-oidc-federation": "optional", // one receiving system
+    "aws-sts-web-identity": "optional", // its request format and what it returns
+    "aws-outbound-federation": "optional", // AWS as the identity provider
+    "gcp-wif": "optional", // one receiving system
+    "entra-wif": "optional", // one receiving system
+    "aws-iam-roles": "background", // native identity, named as the contrast with federation
+    "gcp-auth": "background", // native identity, named as the contrast with federation
+    "azure-managed-identities": "background", // native identity, named as the contrast with federation
+  },
+  basis: ["rfc7519", "oidc-discovery"],
+  related: [
+    "spiffe-workload-identity",
+    "client-credentials",
+    "wimse-workload-tokens",
+    "token-exchange",
+  ],
+  notes: [
+    {
+      title: "What the platform and the SDK do for you",
+      body: `In most deployments you write none of the eight steps. The platform issues the identity credential and keeps it fresh. A cloud SDK or credential library, pointed at that credential, makes the exchange, caches what comes back, renews it, and attaches it to requests or signs them. The receiving system does the validation. What is left to you is configuration: which identity the workload runs as, the trust rule on the receiving side, and the access behind it.
+
+With native workload identity there is less still. A function, virtual machine or managed container calling its own cloud’s APIs is handed credentials for that cloud’s identity system by the platform, and nothing is exchanged. Federation starts when the system being called is not the one that established the identity.`,
+    },
+    {
+      title: "One exchange, several request formats",
+      body: `No single specification defines this pattern. What the implementations share is a signed identity credential, usually a JWT, and a published way to find the issuer’s keys, usually OpenID Connect discovery. The exchange itself is where they differ.
+
+**Google Cloud** follows OAuth token exchange (RFC 8693). The workload posts its credential to the Security Token Service as the subject token and receives a federated access token. The service also accepts credentials that are not JWTs, including a signed AWS request and an X.509 client certificate.
+
+**Microsoft Entra** uses the client credentials grant. The outside token goes in \`client_assertion\`, with \`client_assertion_type\` set to the JWT bearer type from RFC 7523, in place of an assertion the application would otherwise sign with its own certificate. Its issuer, subject and audience must match the federated identity credential exactly.
+
+**AWS, inbound.** \`AssumeRoleWithWebIdentity\` takes the token and the role to assume. The call is not signed with AWS credentials. It returns temporary security credentials for signing requests, not an OAuth access token.
+
+**AWS, outbound.** A workload that already has AWS credentials can call \`GetWebIdentityToken\` for a short-lived JWT to present to a service outside AWS. The feature has to be enabled for the account first, and the caller needs permission for the operation. The caller names the audience and the signing algorithm. The token lasts from one minute to an hour, five minutes by default. The issuer URL is specific to the account, and the operation is not available on the STS global endpoint. AWS describes the token as proof of identity, to be exchanged at the outside service for that service’s own credentials.
+
+Audience values, credential lifetimes, the claims a rule can match on and the way keys are discovered are each provider’s own. Do not carry one provider’s settings over to another.`,
+    },
+    {
+      title: "Stopping access",
+      body: `Two different things get called revocation.
+
+**Stopping future issuance.** Deleting the workload, disabling its platform identity or removing the trust rule means no new credential can be obtained, once the change has taken effect.
+
+**Invalidating what was already issued.** That is a separate matter, and often not possible. A receiver that validates a JWT offline, against cached keys, sees a valid signature and an unexpired token. It cannot see that the pod, service account or job behind the token is gone. Kubernetes binds a token to its pod, and the API server rejects the token once the pod is deleted, but that check is made by the API server. An outside system verifying the signature does not make it. The credential the receiver issued likewise runs to its own expiry unless the receiver offers a way to cut it short.
+
+Providers differ here. AWS can revoke the sessions a role issued before a given time, by attaching a policy that denies them. Azure says a managed identity’s token cannot be forced to refresh before it expires, and that changes to the identity’s group or role membership can take several hours to apply.
+
+Plan for the gap. Keep lifetimes short, know which control at the destination takes effect at once, and do not treat deleting a pod, a service account or a trust rule as an instant cut-off.`,
+    },
+  ],
+  comparison: {
+    title: "The same pattern by environment",
+    intro: `Each row is a place a workload runs. The first two columns describe platform-provided identity. The third shows where federation comes in, and where it does not.`,
+    columns: [
+      "Environment",
+      "Where the workload runs",
+      "How it gets its initial identity",
+      "Which system trusts that identity",
+      "What it receives, and how it is used",
+    ],
+    rows: [
+      [
+        "AWS",
+        "A Lambda function, an EC2 instance, an ECS task.",
+        "An IAM role attached to the function, instance or task. AWS supplies the role’s temporary credentials to the code.",
+        "AWS itself: this is native identity, with nothing to federate. A system outside AWS can trust the workload through outbound federation, where the account has enabled it.",
+        "Temporary AWS credentials that sign API requests. For outbound federation, a short-lived JWT from `GetWebIdentityToken`, exchanged at the outside system.",
+      ],
+      [
+        "Google Cloud",
+        "A Cloud Run service or function, a Compute Engine VM.",
+        "A service account attached to the resource. Client libraries get its credentials from the metadata server.",
+        "Google Cloud itself, natively. An outside system can be configured to trust a Google-signed ID token for the service account.",
+        "OAuth access tokens for Google APIs, sent as bearer tokens. For an outside system, an ID token with the audience the workload asks for.",
+      ],
+      [
+        "Azure",
+        "A function app, a virtual machine, a container app.",
+        "A managed identity assigned to the resource. Code asks a local endpoint on the platform for tokens.",
+        "Microsoft Entra itself, natively. An app registration can also be configured to trust a managed identity, which is federation without leaving Azure.",
+        "Microsoft Entra access tokens for the resource the workload names, sent as bearer tokens.",
+      ],
+      [
+        "CI/CD",
+        "A GitHub Actions job. GitLab CI has an equivalent.",
+        "The CI system’s OIDC provider issues the job a JWT that describes it: repository, branch or environment, workflow. The job has to be permitted to request it.",
+        "A cloud or service configured in advance with the CI issuer and a rule on the token’s claims: an IAM role’s trust policy, a workload identity pool provider, a federated identity credential.",
+        "Whatever that receiver issues: temporary AWS credentials, a Google federated access token, a Microsoft Entra access token.",
+      ],
+      [
+        "Kubernetes and on-premises",
+        "A pod in any cluster, or a service on hosts you run.",
+        "In a cluster, a service account token signed by the cluster and projected into the pod. Elsewhere, an identity provider you operate, such as a SPIFFE implementation or an existing OIDC or SAML provider.",
+        "Any receiver that can be given the issuer and reach its keys. Managed Kubernetes services offer this for their own cloud’s identity system.",
+        "The receiver’s short-lived credential, as in the rows above. The worked example below follows this row.",
+      ],
+    ],
+    after: `These are recognizable examples, not a catalog. Not every service offers every path. Audience values, lifetimes and the claims a rule can match on differ by provider, so check the documentation for the combination you need. Managed agent platforms apply the same model to the agents they host: see [agent platforms](/deployments/agent-platforms/) and the other [deployment guides](/deployments/).`,
+  },
+  example: {
+    title: "Worked example: a Kubernetes pod",
+    intro: `One concrete case of the steps above: an agent in a pod federates from its cluster to a token service outside it. The details are specific to Kubernetes. Other environments do not mount a token file, and their tokens do not carry these claims.`,
+    parts: [
+      {
+        title: "The pod asks for a projected token",
+        body: `The pod spec asks for a service account token with a chosen audience and lifetime. The kubelet obtains it through the TokenRequest API, writes it to a file in the pod, and replaces it before it expires. Set the audience. Left unset, the token is issued for the cluster’s own API server, which is the wrong recipient for an outside service.`,
+        code: {
+          lang: "yaml",
+          text: `volumes:
   - name: agent-identity
     projected:
       sources:
@@ -57,18 +298,16 @@ The agent’s credential is now a fact about where it is running, attested by in
             audience: https://sts.example
             expirationSeconds: 3600
             path: token`,
+        },
       },
-      gain: [["agent", "ServiceAccount token (aud: token service)"]],
-    },
-    {
-      from: "agent",
-      kind: "self",
-      label: "Read token from volume",
-      title: "The agent reads its identity",
-      body: `A JWT (RFC 7519) signed by the cluster. The subject names the namespace and service account, and a \`kubernetes.io\` claim records the exact pod and node. Read it fresh each time; it rotates on disk.`,
-      code: {
-        lang: "json",
-        text: `{
+      {
+        title: "The token names the service account and the pod",
+        body: `The token is a JWT signed by the cluster. The subject names the namespace and service account, and the \`kubernetes.io\` claim records the pod and node the token is bound to. Read the file fresh each time, because it rotates on disk.`,
+        code: {
+          lang: "jsonc",
+          text: `// Illustrative claims from a projected
+// service account token.
+{
   "iss": "https://oidc.cluster.example",
   "sub": "system:serviceaccount:agents:research-agent",
   "aud": ["https://sts.example"],
@@ -81,18 +320,18 @@ The agent’s credential is now a fact about where it is running, attested by in
     "node": { "name": "node-3", "uid": "…" }
   }
 }`,
+        },
       },
-    },
-    {
-      from: "agent",
-      to: "sts",
-      kind: "back",
-      label: "Exchange platform token",
-      title: "The agent trades it for an access token",
-      body: `The shape varies by provider. Some use RFC 8693 token exchange, as shown. Others accept the platform token as a \`client_assertion\` (RFC 7523) on an ordinary token request. In managed Kubernetes this step is usually hidden inside an SDK or a metadata endpoint.`,
-      code: {
-        lang: "http",
-        text: `POST /token HTTP/1.1
+      {
+        title: "The cluster publishes its keys",
+        body: `The cluster serves a discovery document at \`/.well-known/openid-configuration\` under its issuer URL, and its signing keys at \`/openid/v1/jwks\`. Kubernetes describes these as compatible with OpenID Connect without being strictly compliant. The receiving token service has to be able to fetch both. For a private cluster that means publishing them somewhere reachable, or uploading the keys where the receiver supports it.`,
+      },
+      {
+        title: "The agent exchanges the token",
+        body: `The receiver in this example takes OAuth token exchange (RFC 8693), the form Google Cloud’s Security Token Service follows. The request is illustrative: the host, audience and scope are placeholders. Microsoft Entra would take the same token as a \`client_assertion\`, and AWS as the \`WebIdentityToken\` parameter of \`AssumeRoleWithWebIdentity\`.`,
+        code: {
+          lang: "http",
+          text: `POST /token HTTP/1.1
 Host: sts.example
 Content-Type: application/x-www-form-urlencoded
 
@@ -101,85 +340,25 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &subject_token_type=urn:ietf:params:oauth:token-type:jwt
 &audience=https://models.example/api
 &scope=inference`,
+        },
       },
-    },
-    {
-      from: "sts",
-      to: "k8s",
-      kind: "back",
-      label: "Fetch issuer keys",
-      title: "The token service finds the cluster’s public keys",
-      body: `Clusters publish standard OIDC discovery metadata at \`/.well-known/openid-configuration\` under the issuer URL, pointing to a JWKS. The token service caches the keys. The cluster is acting as an identity provider for its workloads.`,
-    },
-    {
-      from: "sts",
-      kind: "self",
-      label: "Verify; map subject to role",
-      title: "Trust policy turns an identity into permissions",
-      body: `The token service verifies the signature, issuer, audience and expiry, then evaluates a rule that an administrator wrote in advance: tokens from *this* issuer with *this* subject may assume *that* role. This rule is the entire security boundary.`,
-      code: {
-        lang: "yaml",
-        text: `# conceptual trust rule
+      {
+        title: "The trust rule names the service account",
+        body: `The rule on the receiving side pins the cluster’s issuer, the audience, and one namespace and service account. A rule that accepts any token from the cluster lets every pod in it become your agent.`,
+        code: {
+          lang: "yaml",
+          text: `# Conceptual trust rule.
+# Each receiver has its own syntax.
 issuer:   https://oidc.cluster.example
 audience: https://sts.example
 subject:  system:serviceaccount:agents:research-agent
 grants:   role/model-inference`,
+        },
       },
-    },
-    {
-      from: "sts",
-      to: "agent",
-      kind: "resp",
-      label: "Short-lived access token",
-      title: "The agent receives a scoped credential",
-      body: `Minutes to an hour, scoped to the mapped role. When it expires the agent repeats the exchange with whatever token is on disk by then.`,
-      gain: [["agent", "access token (aud: API)"]],
-    },
-    {
-      from: "agent",
-      to: "api",
-      kind: "back",
-      label: "Call API with access token",
-      title: "The agent calls the external API",
-      body: `No API key was provisioned, stored or rotated.`,
-    },
-    {
-      from: "api",
-      to: "agent",
-      kind: "resp",
-      label: "200 OK",
-      title: "The API responds",
-      body: `Access logs attribute the call to a role that maps back to one namespace and service account. Deleting the service account, or the trust rule, cuts access without touching a secret store.`,
-    },
-  ],
-  standards: [
-    "k8s-sa-tokens",
-    "rfc8693",
-    "oidc-discovery",
-    "rfc7519",
-    "rfc7523",
-    "spiffe",
-    "wimse-arch",
-  ],
-  roles: {
-    "k8s-sa-tokens": "required", // projected tokens, their claims and issuer discovery: steps 1, 2, 4
-    rfc8693: "required", // the exchange as drawn: steps 3 and 6
-    "oidc-discovery": "required", // fetching the issuer's keys, step 4
-    rfc7519: "required", // the platform token is a JWT: step 2 shows its claims, step 5 teaches checking issuer, audience and expiry
-    rfc7523: "optional", // the client-assertion alternative named in step 3 but not drawn
-    spiffe: "background", // related; not named or used on this page
-    "wimse-arch": "background", // related; not named or used on this page
+      {
+        title: "On managed Kubernetes",
+        body: `EKS, GKE and AKS each tie a Kubernetes service account to an identity in their own cloud, and usually do the exchange for the pod, in an SDK, a node agent or a metadata endpoint. The mechanisms differ: see [reaching the cloud](/deployments/kubernetes/#reaching-the-cloud) in the Kubernetes guide.`,
+      },
+    ],
   },
-  related: [
-    "spiffe-workload-identity",
-    "client-credentials",
-    "wimse-workload-tokens",
-    "token-exchange",
-  ],
-  notes: [
-    {
-      title: "The same pattern outside Kubernetes",
-      body: `CI systems issue OIDC tokens to jobs. Cloud runtimes issue instance and function identity tokens. Managed agent platforms have started doing the same for agents. Whenever the place your agent runs can sign a statement about what it is running, federation applies. See [deployments](/deployments/) for specifics.`,
-    },
-  ],
 };
