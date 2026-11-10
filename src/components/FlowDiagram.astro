@@ -39,6 +39,9 @@ const y0 = top + boxH + 52;
 const rowH = 64;
 const LINE = 17; // line height of a two-line arrow label
 const H = y0 + rowH * (steps.length - 1) + 40;
+// The participant boxes are drawn in a strip of their own, so that it can stay
+// in view while a long sequence scrolls beneath it.
+const headH = top + boxH + 8;
 
 const idx = (id: string) => {
   const i = P.findIndex((p) => p.id === id);
@@ -175,22 +178,16 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
           ))
       }
     </ul>
-    <p class="flow-hint">Scroll sideways to see every party. Tap a step to jump to its explanation.</p>
+    <p class="flow-hint">Drag to see every party and step. Tap a step to jump to its explanation.</p>
     <div class="flow-canvas" tabindex="0" role="group" aria-label={`Sequence diagram: ${flow.title}`}>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        width={W}
-        height={H}
-        style={`--natural: ${W}px`}
-        role="img"
-        aria-label={`${flow.title}: ${steps.length} steps between ${P.map((p) => p.label).join(', ')}. Each step is described in the list that follows.`}
-      >
+      <div class="flow-sheet" style={`--natural: ${W}px`}>
+      <svg class="flow-heads" viewBox={`0 0 ${W} ${headH}`} width={W} height={headH} aria-hidden="true">
         {
           P.map((p) => {
             const x = xOf(p.id);
             return (
               <g class={`actor role-${p.role}`} data-actor={p.id}>
-                <line class="lifeline" x1={x} y1={top + boxH} x2={x} y2={H - 6} />
+                <line class="lifeline" x1={x} y1={top + boxH} x2={x} y2={headH} />
                 <rect class="actor-box" x={x - boxW / 2} y={top} width={boxW} height={boxH} rx="4" />
                 <text class="actor-label" x={x} y={top + (p.sub ? 21 : 29)} text-anchor="middle">
                   {p.label}
@@ -203,6 +200,22 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
               </g>
             );
           })
+        }
+      </svg>
+      <svg
+        class="flow-lines"
+        viewBox={`0 ${headH} ${W} ${H - headH}`}
+        width={W}
+        height={H - headH}
+        role="img"
+        aria-label={`${flow.title}: ${steps.length} steps between ${P.map((p) => p.label).join(', ')}. Each step is described in the list that follows.`}
+      >
+        {
+          P.map((p) => (
+            <g class={`actor role-${p.role}`} data-actor={p.id}>
+              <line class="lifeline" x1={xOf(p.id)} y1={headH} x2={xOf(p.id)} y2={H - 6} />
+            </g>
+          ))
         }
 
         {
@@ -252,6 +265,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
           )
         }
       </svg>
+      </div>
     </div>
     <p class="flow-back">
       <button class="btn small" type="button" data-act="close">Back to the steps</button>
@@ -453,6 +467,20 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
           if (mark && (mark.left < box.left + 8 || mark.right > box.right - 8)) {
             canvas.scrollLeft += mark.left + mark.width / 2 - (box.left + box.width / 2);
           }
+          // Beside the panel the diagram is as tall as its sequence and the page scrolls it.
+          // Move the page just far enough to keep the current row below the pinned
+          // participant strip and above the bottom of the window.
+          if (canvas.scrollHeight <= canvas.clientHeight + 1) {
+            const now = g.getBoundingClientRect();
+            const heads = this.querySelector('.flow-heads')!.getBoundingClientRect();
+            const upper = Math.max(heads.bottom, 0) + 8;
+            const lower = window.innerHeight - 16;
+            const by = now.top < upper ? now.top - upper : now.bottom > lower ? now.bottom - lower : 0;
+            if (by) {
+              const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              window.scrollBy({ top: by, behavior: calm ? 'auto' : 'smooth' });
+            }
+          }
         }
         history.replaceState(null, '', `#step-${i + 1}`);
       }
@@ -545,19 +573,48 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     padding: 0.6rem;
     scrollbar-width: thin;
   }
-  @media (max-width: 67.99rem) {
-    .flow[data-js]:not([data-all]):not([data-narrative]) .flow-canvas {
-      max-height: 62vh;
-    }
-  }
-  .flow-canvas svg {
-    display: block;
+  .flow-sheet {
     width: 100%;
     max-width: calc(var(--natural) * 1.08);
-    height: auto;
-    margin-inline: auto;
     min-width: 33rem;
+    margin-inline: auto;
+  }
+  .flow-sheet svg {
+    display: block;
+    width: 100%;
+    height: auto;
     font-family: var(--font-body);
+  }
+  /* The participant strip stays in view while the sequence scrolls under it:
+     pinned inside the frame where the frame scrolls, under the site header
+     where the page does. */
+  .flow-heads {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-raised);
+  }
+  @media (min-width: 48rem) {
+    /* from here up the diagram fits its column, so the frame need not clip it */
+    .flow-canvas {
+      overflow: visible;
+    }
+    .flow-sheet {
+      min-width: 0;
+    }
+    .flow-heads {
+      top: calc(3.5rem + 1px);
+    }
+  }
+  @media (min-width: 48rem) and (max-width: 67.99rem) {
+    /* stacked above the panel, the stepper keeps the diagram in a frame of its own */
+    .flow[data-js]:not([data-all]) .flow-canvas {
+      max-height: 62vh;
+      overflow: auto;
+    }
+    .flow[data-js]:not([data-all]) .flow-heads {
+      top: -0.6rem;
+    }
   }
 
   @media (max-width: 47.99rem) {
@@ -630,8 +687,13 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         linear-gradient(to left, color-mix(in srgb, var(--fg) 30%, transparent), transparent) right / 0.8rem 100% no-repeat scroll,
         var(--bg-raised);
     }
-    /* opened on demand, the diagram keeps its natural size and scrolls sideways */
-    .flow[data-narrative] .flow-canvas svg {
+    /* opened on demand, the diagram keeps its natural size inside a frame that
+       pans both ways, with the participant strip pinned to the frame's top */
+    .flow[data-narrative] .flow-canvas {
+      max-height: 70vh;
+      padding-top: 0;
+    }
+    .flow[data-narrative] .flow-sheet {
       width: var(--natural);
       max-width: none;
       margin-inline: 0;
