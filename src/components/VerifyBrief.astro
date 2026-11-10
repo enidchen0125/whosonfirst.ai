@@ -171,12 +171,21 @@ const shown = checks.filter((c) => c.compact);
     outline-offset: -4px;
   }
 
-  .vb-panel {
-    display: none;
+  /* one credential at a time; a browser without :has() shows both, one after the other */
+  .vb-panel + .vb-panel {
+    margin-top: 1.2rem;
   }
-  .vb:has(input[value='key']:checked) [data-credential='key'],
-  .vb:has(input[value='delegated']:checked) [data-credential='delegated'] {
-    display: block;
+  @supports selector(:has(*)) {
+    .vb-panel {
+      display: none;
+    }
+    .vb-panel + .vb-panel {
+      margin-top: 0;
+    }
+    .vb:has(input[value='key']:checked) [data-credential='key'],
+    .vb:has(input[value='delegated']:checked) [data-credential='delegated'] {
+      display: block;
+    }
   }
 
   /* the path: three named parties and what passes between them */
