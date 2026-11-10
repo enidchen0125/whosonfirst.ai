@@ -24,6 +24,14 @@ import "../styles/directions/linemap.css";
 import "../styles/directions/draft.css";
 import "../styles/directions/draft01.css";
 import "../styles/global.css";
+// The four faces every first screen uses under the default direction: body text,
+// bold, labels and titles. Preloading them starts the downloads with the page
+// instead of after the stylesheet, so the text does not paint in a fallback
+// font first. These resolve to the same files the @fontsource CSS points at.
+import plexMono500 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2?url";
+import plexMono600 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2?url";
+import plexSans400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
+import plexSans600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
 import Logo from "../components/Logo.astro";
 import DesignSwitcher from "../components/DesignSwitcher.astro";
 import { DEFAULT_DIRECTION, directions } from "../data/directions";
@@ -54,6 +62,7 @@ const nav = [
 ];
 const path = Astro.url.pathname;
 const directionIds = directions.map((d) => d.id);
+const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
 ---
 
 <!doctype html>
@@ -61,6 +70,7 @@ const directionIds = directions.map((d) => d.id);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {preloadFonts.map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />

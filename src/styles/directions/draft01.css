@@ -33,9 +33,11 @@
   --font-display:
     "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-heading:
-    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    "IBM Plex Sans", "IBM Plex Sans Fallback", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-body:
-    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    "IBM Plex Sans", "IBM Plex Sans Fallback", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-mono:
     "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-label: var(--font-mono);

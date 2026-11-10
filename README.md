@@ -105,6 +105,8 @@ Internet-Draft -01 is the site's design: `DEFAULT_DIRECTION` in `src/data/direct
 
 Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher and the four other directions are exploration aids; remove them, and the fonts only they use, when the comparison is no longer needed.
 
+**Fonts.** The four font files every first screen needs (Plex Sans 400 and 600, Plex Mono 500 and 600) are preloaded from `src/layouts/Base.astro`, so they download alongside the stylesheet and the text does not paint in a fallback font and then change. If one is still late, `IBM Plex Sans Fallback` in `src/styles/global.css` stands in: Arial scaled to Plex Sans's measurements, so the swap does not move the text. If you change which weights the first screen uses, change the preload list to match; a preloaded file that is not used is a wasted download.
+
 Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labelled disclosure, and history follows the lookup it belongs to.
 
 Three rules hold in every direction:

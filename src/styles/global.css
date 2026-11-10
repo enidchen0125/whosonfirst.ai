@@ -5,6 +5,20 @@
    direction is a set of token values plus a few rules of its own.
 ------------------------------------------------------------------- */
 
+/* What shows if IBM Plex Sans has not arrived when the text first paints:
+   Arial, scaled and aligned to Plex Sans so the swap does not move anything.
+   The numbers come from the two fonts' own metrics (average character width,
+   ascent, descent), worked out with the capsize library. Where Arial is not
+   installed the stack falls through to the system font. */
+@font-face {
+  font-family: "IBM Plex Sans Fallback";
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 101.1663%;
+  ascent-override: 101.3184%;
+  descent-override: 27.183%;
+  line-gap-override: 0%;
+}
+
 :root {
   color-scheme: light dark;
 
