@@ -25,12 +25,16 @@ interface Props {
   description?: string;
 }
 
-const SITE = "Who's on First";
+// The publication's name is "Who’s on First". whosonfirst.ai is its address, and
+// appears only where an address is meant.
+const SITE = "Who’s on First";
+const DESCRIPTOR = "A field guide to agent authentication and authorization";
 const {
   title,
-  description = "A field guide to authentication and authorization for AI agents: the flows, the deployments, and the standards — with and without a human in the loop.",
+  description = `${DESCRIPTOR}: the flows, the deployments and the standards, with and without a human in the loop.`,
 } = Astro.props;
-const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — auth for AI agents`;
+// Seen outside the site, a title has to say what the page is about and where it is from.
+const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — ${DESCRIPTOR}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 // The task most readers arrive with comes first, and stays in reach on a phone.
@@ -59,6 +63,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:site_name" content={SITE} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
@@ -83,10 +88,9 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap bar">
-        <a class="brand" href="/">
+        <a class="brand" href="/" aria-label={`${SITE}, home`}>
           <Logo />
-          <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
-          <span class="visually-hidden">, home</span>
+          <span class="wordmark">{SITE}</span>
         </a>
         <a class="quick" href={QUICK.href} aria-current={path.startsWith(QUICK.href) ? 'page' : undefined}>
           {QUICK.label}
@@ -124,11 +128,10 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
         <div>
           <a class="brand" href="/">
             <Logo size={22} />
-            <span class="wordmark">who’s on first<span class="tld">.ai</span></span>
+            <span class="wordmark">{SITE}</span>
           </a>
           <p>
-            A field guide to authentication and authorization for AI agents. Who is acting, on whose behalf, and
-            who said they could.
+            {DESCRIPTOR}. Who is acting, for whom, and who said they could?
           </p>
         </div>
         <ul>
@@ -137,7 +140,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
           <li><a href="/about/">About</a></li>
         </ul>
         <p class="fine">
-          Standards status last reviewed {REVIEWED}. Drafts move quickly: check the linked source before you build
+          <a href="/">whosonfirst.ai</a> · Standards status last reviewed {REVIEWED}. Drafts move quickly: check the linked source before you build
           on one.
         </p>
       </div>
@@ -239,15 +242,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     font-size: 0.98rem;
     letter-spacing: -0.02em;
     white-space: nowrap;
-  }
-  .tld {
-    font-family: var(--font-mono);
-    font-style: normal;
-    font-weight: 500;
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
-    color: var(--accent);
-    margin-left: 0.1em;
   }
   nav ul {
     display: flex;
@@ -423,9 +417,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
   }
   /* on a phone the name drops its suffix and steps down a size to leave room */
   @media (max-width: 30rem) {
-    .tld {
-      display: none;
-    }
     .site-header .wordmark {
       font-size: 0.9rem;
     }

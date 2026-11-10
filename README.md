@@ -1,6 +1,6 @@
 # whosonfirst.ai
 
-A field guide to authentication and authorization for AI agents: who is acting, on whose behalf, and who said they could.
+Who’s on First is a field guide to agent authentication and authorization: who is acting, for whom, and who said they could. It is published at [whosonfirst.ai](https://whosonfirst.ai).
 
 The site covers every common way an agent obtains and presents credentials, with a person present, with a person on call, and with no human at all. It has three parts:
 
