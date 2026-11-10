@@ -608,13 +608,6 @@ export const standards: Standard[] = [
     // Evidence for the level: the project's README says "SPIRE is a graduated project of the Cloud
     // Native Computing Foundation". This is the project as a whole, not each plugin or flagged feature.
     level: 'stable',
-    // FOLLOW-UP, recorded 10 November 2026 and not resolved: the release line below, and the November
-    // entry under "What moved" on the standards page, need confirming. SPIRE's own sources disagreed
-    // on that date. CHANGELOG.md at the tag v1.16.0 reads "[1.16.0] - 2026-11-05" and lists experimental
-    // WIT-SVID support (https://github.com/spiffe/spire/blob/v1.16.0/CHANGELOG.md). CHANGELOG.md on
-    // main reads "[1.16.0] - Unreleased" and has no 1.15.5 entry
-    // (https://github.com/spiffe/spire/blob/main/CHANGELOG.md). The published release list
-    // (https://github.com/spiffe/spire/releases) was not read. Confirm there, then remove this note.
     detail: 'Version 1.16.0, November 2026, adds experimental WIT-SVID support.',
     topics: ['workload', 'kubernetes'],
     summary: 'The reference implementation of SPIFFE: a server and per-node agents that attest workloads and issue identities.',
