@@ -79,7 +79,7 @@ WWW-Authenticate: Bearer
       kind: 'back',
       label: 'Get server metadata',
       title: 'The client discovers the authorization server',
-      body: `The client fetches OAuth authorization server metadata (RFC 8414) or OpenID Connect discovery; it must support both. Three checks happen here. The \`issuer\` in the document must be identical to the one used to build the URL. \`code_challenge_methods_supported\` must be present, or the client must refuse to continue. And the client looks for \`client_id_metadata_document_supported\` to decide how to identify itself.`,
+      body: `This exchange shows OAuth authorization server metadata (RFC 8414). An MCP authorization server must publish that or OpenID Connect Discovery metadata, and a conforming client must support both: it tries the RFC 8414 location first, then the OpenID one. Three checks happen here. The \`issuer\` in the document must be identical to the one used to build the URL. \`code_challenge_methods_supported\` must be present, or the client must refuse to continue. And the client looks for \`client_id_metadata_document_supported\` to decide how to identify itself.`,
       code: {
         lang: 'json',
         text: `{
@@ -242,8 +242,8 @@ Content-Type: application/json
     'rfc8707',
     'rfc9207',
     'rfc7636',
-    'rfc6750',
     'oidc-discovery',
+    'rfc6750',
     'rfc7591',
   ],
   basis: ['mcp-authorization'],
@@ -252,13 +252,13 @@ Content-Type: application/json
     'oauth-2-1': 'required', // the MCP revision requires it, and cites draft -13
     cimd: 'required', // how the client is identified in steps 4 to 8
     rfc9728: 'required', // steps 2 and 3
-    rfc8414: 'required', // step 4
+    rfc8414: 'required', // step 4, as drawn
+    'oidc-discovery': 'required', // not drawn, but step 4 says a conforming client must support it: MCP 2026-07-28 says clients MUST support both
     rfc8707: 'required', // `resource`, steps 6, 11, 14
     rfc9207: 'required', // `iss`, steps 4, 9, 10
     rfc7636: 'required', // PKCE, steps 5, 6, 11
     rfc6750: 'required', // the Bearer challenge and header, steps 2 and 13
-    'oidc-discovery': 'optional', // the other discovery document a client must support, named in step 4; not drawn
-    rfc7591: 'optional', // the deprecated alternative; no registration message is drawn
+    rfc7591: 'optional', // deprecated, and MCP 2026-07-28 says clients and servers MAY support it; no registration message is drawn
   },
   related: ['authorization-code-pkce', 'url-elicitation', 'cross-app-access', 'step-up-authorization'],
   notes: [

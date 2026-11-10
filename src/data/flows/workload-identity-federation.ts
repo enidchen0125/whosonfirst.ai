@@ -55,7 +55,7 @@ The agent’s credential is now a fact about where it is running, attested by in
       kind: 'self',
       label: 'Read token from volume',
       title: 'The agent reads its identity',
-      body: `A JWT signed by the cluster. The subject names the namespace and service account, and a \`kubernetes.io\` claim records the exact pod and node. Read it fresh each time; it rotates on disk.`,
+      body: `A JWT (RFC 7519) signed by the cluster. The subject names the namespace and service account, and a \`kubernetes.io\` claim records the exact pod and node. Read it fresh each time; it rotates on disk.`,
       code: {
         lang: 'json',
         text: `{
@@ -142,11 +142,12 @@ grants:   role/model-inference`,
       body: `Access logs attribute the call to a role that maps back to one namespace and service account. Deleting the service account, or the trust rule, cuts access without touching a secret store.`,
     },
   ],
-  standards: ['k8s-sa-tokens', 'rfc8693', 'oidc-discovery', 'rfc7523', 'spiffe', 'wimse-arch'],
+  standards: ['k8s-sa-tokens', 'rfc8693', 'oidc-discovery', 'rfc7519', 'rfc7523', 'spiffe', 'wimse-arch'],
   roles: {
     'k8s-sa-tokens': 'required', // projected tokens, their claims and issuer discovery: steps 1, 2, 4
     rfc8693: 'required', // the exchange as drawn: steps 3 and 6
     'oidc-discovery': 'required', // fetching the issuer's keys, step 4
+    rfc7519: 'required', // the platform token is a JWT: step 2 shows its claims, step 5 teaches checking issuer, audience and expiry
     rfc7523: 'optional', // the client-assertion alternative named in step 3 but not drawn
     spiffe: 'background', // related; not named or used on this page
     'wimse-arch': 'background', // related; not named or used on this page

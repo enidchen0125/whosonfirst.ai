@@ -126,6 +126,19 @@ export const standards: Standard[] = [
     url: rfc(9207),
   },
   {
+    id: 'rfc7519',
+    name: 'JSON Web Token (JWT)',
+    ref: 'RFC 7519',
+    body: 'IETF',
+    status: 'rfc',
+    detail: 'May 2015.',
+    topics: ['core'],
+    summary:
+      'A compact way to carry claims between two parties, signed or encrypted, with seven registered claims: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat` and `jti`. A recipient not named in `aud` must reject the token, and no one may accept it at or after `exp`.',
+    agents: 'The format under most tokens on this site: JWT access tokens, ID tokens, Kubernetes service account tokens and workload identity tokens.',
+    url: rfc(7519),
+  },
+  {
     id: 'rfc9068',
     name: 'JWT Profile for Access Tokens',
     ref: 'RFC 9068',
@@ -232,10 +245,11 @@ export const standards: Standard[] = [
     ref: 'OpenID Connect Discovery 1.0',
     body: 'OpenID Foundation',
     status: 'final',
-    detail: 'Final specification.',
+    // The published page titles itself "Final: OpenID Connect Discovery 1.0 incorporating errata set 2".
+    detail: 'Final specification, incorporating errata set 2, 15 December 2023.',
     topics: ['discovery'],
     summary: 'The `/.well-known/openid-configuration` document and its JWKS pointer.',
-    agents: 'Accepted by MCP as an alternative to RFC 8414, and the format Kubernetes clusters and CI systems use to publish workload-identity signing keys.',
+    agents: 'An MCP authorization server publishes this or RFC 8414 metadata, and an MCP client must support both. It is also the format Kubernetes clusters and CI systems use to publish workload-identity signing keys.',
     url: 'https://openid.net/specs/openid-connect-discovery-1_0.html',
   },
   {
