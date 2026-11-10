@@ -128,7 +128,7 @@ export const credentials: Credential[] = [
         verdict: 'yes',
         brief: 'named in `sub`, vouched for by the issuer',
         detail:
-          '`sub` names Alice. Where a resource owner is involved, the profile has `sub` identify them, and the authorization server that signed the token vouches for it.',
+          '`sub` names Alice. Where a resource owner is involved, the profile says `sub` should identify them, and the authorization server that signed the token vouches for it.',
       },
       grant: {
         verdict: 'yes',
