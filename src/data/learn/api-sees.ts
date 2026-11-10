@@ -21,7 +21,7 @@ export const apiSees: Scenario = {
     { label: "Calendar API", sub: "has her events", role: "resource" },
   ],
   asks: "What the API can tell",
-  questions: ["Who is acting?", "For whom?", "Who said it could?"],
+  questions: ["Who is acting?", "For whom?", "Who said they could?"],
   options: [
     {
       id: "key",

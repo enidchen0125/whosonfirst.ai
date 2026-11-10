@@ -320,7 +320,7 @@ const checks: CheckQuestion[] = [
       {
         code: '"iss": "https://auth.example"',
         says: 'The **issuer**. The authorization server at auth.example signed this.',
-        tag: 'Who said it could',
+        tag: 'Who said they could',
       },
       { code: '"sub": "alice"', says: 'The **subject**. It is about Alice.', tag: 'For whom' },
       {
@@ -331,17 +331,17 @@ const checks: CheckQuestion[] = [
       {
         code: '"aud": "https://calendar.example"',
         says: 'The **audience**. It is meant for the calendar API and for nothing else.',
-        tag: 'Who said it could',
+        tag: 'Who said they could',
       },
       {
         code: '"scope": "calendar.read"',
         says: 'The **scope**. It allows reading the calendar.',
-        tag: 'Who said it could',
+        tag: 'Who said they could',
       },
       {
         code: '"exp": 1794305400',
         says: 'It stops working at 10:10, ten minutes after it was issued. The number is seconds since 1970.',
-        tag: 'Who said it could',
+        tag: 'Who said they could',
       },
     ]}
   />
