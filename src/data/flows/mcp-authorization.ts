@@ -6,7 +6,7 @@ export const mcpAuthorization: Flow = {
   short: 'MCP authorization',
   group: 'human-present',
   human: 'present',
-  maturity: 'stable',
+  maturity: 'emerging',
   tagline:
     'How an MCP client that has never seen a server before discovers where to sign in, identifies itself, and gets a token good for that server alone.',
   summary: `The Model Context Protocol has a problem classic OAuth never had to solve: any client may meet any server, with no prior arrangement. A user pastes in a server URL, and the client has to work out which authorization server protects it, introduce itself to that server, and obtain a token, all at runtime.
@@ -177,7 +177,7 @@ Host: 127.0.0.1:3000`,
       kind: 'back',
       label: 'Token request + verifier',
       title: 'The client redeems the code',
-      body: `With the PKCE verifier and, again, the \`resource\` parameter.`,
+      body: `With the PKCE verifier and, again, the \`resource\` parameter. There is no \`redirect_uri\` here: MCP builds on OAuth 2.1, which removed it from the token request.`,
       code: {
         lang: 'http',
         text: `POST /token HTTP/1.1
@@ -186,7 +186,6 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code
 &code=SplxlOBeZQQYbYS6WxSbIA
-&redirect_uri=http://127.0.0.1:3000/callback
 &client_id=https://app.example.com/oauth/client.json
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 &resource=https://mcp.example.com/mcp`,
@@ -237,15 +236,34 @@ Content-Type: application/json
   standards: [
     'mcp-authorization',
     'oauth-2-1',
+    'cimd',
     'rfc9728',
     'rfc8414',
-    'cimd',
     'rfc8707',
     'rfc9207',
+    'rfc7636',
+    'rfc6750',
     'rfc7591',
   ],
+  basis: ['mcp-authorization'],
+  roles: {
+    'mcp-authorization': 'required', // the stated basis: revision 2026-07-28
+    'oauth-2-1': 'required', // the MCP revision requires it, and cites draft -13
+    cimd: 'required', // how the client is identified in steps 4 to 8
+    rfc9728: 'required', // steps 2 and 3
+    rfc8414: 'required', // step 4
+    rfc8707: 'required', // `resource`, steps 6, 11, 14
+    rfc9207: 'required', // `iss`, steps 4, 9, 10
+    rfc7636: 'required', // PKCE, steps 5, 6, 11
+    rfc6750: 'required', // the Bearer challenge and header, steps 2 and 13
+    rfc7591: 'optional', // the deprecated alternative; no registration message is drawn
+  },
   related: ['authorization-code-pkce', 'url-elicitation', 'cross-app-access', 'step-up-authorization'],
   notes: [
+    {
+      title: 'Why this flow is rated emerging',
+      body: `The 2026-07-28 revision is published and current, but two things this page draws rest on IETF working-group drafts. The revision requires authorization servers to implement OAuth 2.1 and cites draft -13; the current draft is -17. It recommends Client ID Metadata Documents, which steps 4 to 8 use, and cites draft -00; the current draft is -03. Either draft can still change. The rating describes those dependencies. It is not a judgement on how safe the flow is.`,
+    },
     {
       title: 'How the specification got here',
       body: `**2025-03-26.** First authorization framework. The MCP server doubled as the authorization server.

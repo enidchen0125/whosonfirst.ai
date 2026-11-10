@@ -44,8 +44,7 @@ Host: auth.example
 Content-Type: application/x-www-form-urlencoded
 
 client_id=cli-agent
-&scope=repo.read
-&resource=https://git.example/api`,
+&scope=repo.read`,
       },
     },
     {
@@ -95,7 +94,7 @@ and enter the code  WDJB-MJHT`,
       kind: 'back',
       label: 'Poll token endpoint',
       title: 'The agent polls',
-      body: `While the user is busy, the agent asks the token endpoint whether a decision has been made, no more often than \`interval\` seconds.`,
+      body: `While the user is busy, the agent asks the token endpoint whether a decision has been made, no more often than \`interval\` seconds. The \`resource\` parameter names the API the token is for. RFC 8707 defines it on token requests for every grant type; RFC 8628 gives the device authorization request only \`client_id\` and \`scope\`.`,
       code: {
         lang: 'http',
         text: `POST /token HTTP/1.1
@@ -104,7 +103,8 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=urn:ietf:params:oauth:grant-type:device_code
 &device_code=GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS
-&client_id=cli-agent`,
+&client_id=cli-agent
+&resource=https://git.example/api`,
       },
     },
     {
@@ -157,7 +157,15 @@ grant_type=urn:ietf:params:oauth:grant-type:device_code
       body: `The API sees an ordinary access token. It cannot tell that the approval happened on a different device from the one making the call.`,
     },
   ],
-  standards: ['rfc8628', 'cross-device-bcp', 'oauth-2-1'],
+  standards: ['rfc8628', 'rfc6749', 'cross-device-bcp', 'rfc8707', 'rfc6750', 'oauth-2-1'],
+  roles: {
+    rfc8628: 'required', // the grant: steps 1 to 6 and 8
+    rfc6749: 'required', // the token endpoint and its responses
+    'cross-device-bcp': 'required', // RFC 10027: its practices apply to this grant, and the page teaches its defences against code phishing
+    rfc8707: 'required', // `resource` on the token request, step 5
+    rfc6750: 'required', // the Bearer header on the API call
+    'oauth-2-1': 'background', // a related draft; not named or used on this page
+  },
   related: ['authorization-code-pkce', 'ciba', 'mcp-authorization'],
   notes: [
     {
