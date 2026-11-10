@@ -61,4 +61,8 @@ export const directions: Direction[] = [
   },
 ];
 
-export const DEFAULT_DIRECTION = "scorecard";
+/**
+ * The site's design. The layout puts it on <html data-direction>; the base
+ * tokens on :root are still Scorecard's, which the other directions override.
+ */
+export const DEFAULT_DIRECTION = "draft01";

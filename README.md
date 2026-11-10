@@ -93,17 +93,17 @@ A reference marked `unresolved` is not counted and is not assumed to be optional
 
 ## Design
 
-The look is under exploration. Five directions share one set of token names and differ only in values. Internet-Draft -01 is the one being developed; the others are kept for comparison until it has been reviewed.
+Internet-Draft -01 is the site's design: `DEFAULT_DIRECTION` in `src/data/directions.ts`, which the layout puts on `<html data-direction>`. The four directions it was chosen from are still in the repository for comparison. All five share one set of token names and differ only in values.
 
-| Direction           | File                                   | Idea                                                                                                                                    |
-| ------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Internet-Draft -01  | `src/styles/directions/draft01.css`    | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
-| Internet-Draft -00  | `src/styles/directions/draft.css`      | The first pass: monospace throughout                                                                                                    |
-| Scorecard (default) | `src/styles/directions/scorecard.css`  | A paper scorecard: warm stock, serif titles                                                                                             |
-| Scoreboard          | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals                                                                           |
-| Line Map            | `src/styles/directions/linemap.css`    | Transit signage: black, white and five line colours                                                                                     |
+| Direction                    | File                                   | Idea                                                                                                                                    |
+| ---------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Internet-Draft -01 (default) | `src/styles/directions/draft01.css`    | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
+| Internet-Draft -00           | `src/styles/directions/draft.css`      | The first pass: monospace throughout                                                                                                    |
+| Scorecard                    | `src/styles/directions/scorecard.css`  | A paper scorecard: warm stock, serif titles                                                                                             |
+| Scoreboard                   | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals                                                                           |
+| Line Map                     | `src/styles/directions/linemap.css`    | Transit signage: black, white and five line colours                                                                                     |
 
-Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
+Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher and the four other directions are exploration aids; remove them, and the fonts only they use, when the comparison is no longer needed.
 
 Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labelled disclosure, and history follows the lookup it belongs to.
 

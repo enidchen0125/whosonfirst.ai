@@ -5,14 +5,17 @@
  * Remove this component, and the unused direction stylesheets, once a
  * direction is chosen.
  */
-import { directions } from "../data/directions";
+import { DEFAULT_DIRECTION, directions } from "../data/directions";
+
+const initial =
+  directions.find((d) => d.id === DEFAULT_DIRECTION) ?? directions[0];
 ---
 
-<design-switcher class="dsw" hidden>
+<design-switcher class="dsw" data-default={initial.id} hidden>
   <details>
     <summary>
       <span class="dsw-label">Design</span>
-      <strong data-current>{directions[0].name}</strong>
+      <strong data-current>{initial.name}</strong>
     </summary>
     <fieldset>
       <legend class="visually-hidden">Design direction</legend>
@@ -40,7 +43,7 @@ import { directions } from "../data/directions";
       const inputs = [...this.querySelectorAll<HTMLInputElement>('input[type=radio]')];
       const current = this.querySelector<HTMLElement>('[data-current]')!;
       const sync = () => {
-        const id = root.dataset.direction ?? inputs[0].value;
+        const id = root.dataset.direction ?? this.dataset.default ?? inputs[0].value;
         for (const i of inputs) i.checked = i.value === id;
         current.textContent = inputs.find((i) => i.checked)?.closest('label')?.querySelector('strong')?.textContent ?? '';
       };

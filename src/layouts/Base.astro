@@ -26,7 +26,7 @@ import "../styles/directions/draft01.css";
 import "../styles/global.css";
 import Logo from "../components/Logo.astro";
 import DesignSwitcher from "../components/DesignSwitcher.astro";
-import { directions } from "../data/directions";
+import { DEFAULT_DIRECTION, directions } from "../data/directions";
 import { REVIEWED } from "../data/site";
 
 interface Props {
@@ -57,7 +57,7 @@ const directionIds = directions.map((d) => d.id);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-direction={DEFAULT_DIRECTION}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -70,8 +70,8 @@ const directionIds = directions.map((d) => d.id);
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
-    <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e141a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
     <script is:inline define:vars={{ directionIds }}>
       (() => {
         const root = document.documentElement;
