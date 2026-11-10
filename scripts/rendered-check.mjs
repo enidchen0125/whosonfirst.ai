@@ -24,9 +24,9 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const axePath = require.resolve("axe-core/axe.min.js");
 
-const root = fileURLToPath(new URL("../dist/", import.meta.url));
+const root = fileURLToPath(new URL("../dist/client/", import.meta.url));
 if (!existsSync(join(root, "index.html"))) {
-  console.error("dist/ is missing. Run `npm run build` first.");
+  console.error("dist/client/ is missing. Run `npm run build` first.");
   process.exit(1);
 }
 const verbose = process.argv.includes("--verbose");
@@ -37,7 +37,7 @@ const MIN_LABEL = 12; // px a diagram label may be drawn at
 const MIN_PROSE = 16; // px for running text
 const MAX_MEASURE = 82; // characters per line of running text
 
-/* ---------- a static server for dist/ ---------- */
+/* ---------- a static server for dist/client/ ---------- */
 const TYPES = {
   ".html": "text/html",
   ".css": "text/css",
