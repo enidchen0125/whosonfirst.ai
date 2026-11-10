@@ -307,8 +307,8 @@ const news = [
 
 <style>
   .hero {
-    border-bottom: 1px solid var(--border);
-    background: var(--hero-bg);
+    border-bottom: 1px solid var(--fg);
+    background: var(--bg);
     padding-block: clamp(2.5rem, 7vw, 5rem) clamp(2rem, 5vw, 3.5rem);
   }
   .hero-grid {
@@ -523,10 +523,8 @@ const news = [
     grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
     gap: 0.2rem 2rem;
     padding: 0.85rem 0;
+    color: var(--accent);
     text-decoration: none;
-  }
-  .news a:hover {
-    color: inherit;
   }
   .news a:hover strong {
     color: var(--accent);

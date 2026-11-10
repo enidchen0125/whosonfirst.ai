@@ -44,11 +44,13 @@ const { standard: s, compact = false } = Astro.props;
     font-size: 1.05rem;
   }
   h4 a {
+    color: var(--accent);
     text-decoration: none;
   }
   h4 a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
   }
   p {
     margin: 0;

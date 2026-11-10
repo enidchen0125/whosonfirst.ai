@@ -1,30 +1,15 @@
 ---
-import "@fontsource-variable/fraunces/opsz.css";
-import "@fontsource-variable/fraunces/opsz-italic.css";
 import "@fontsource/ibm-plex-sans/400.css";
 import "@fontsource/ibm-plex-sans/400-italic.css";
 import "@fontsource/ibm-plex-sans/500.css";
 import "@fontsource/ibm-plex-sans/600.css";
 import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource/ibm-plex-mono/500.css";
-// fonts for the other design directions (only downloaded when a direction uses them)
-import "@fontsource-variable/big-shoulders-display";
-import "@fontsource/barlow/400.css";
-import "@fontsource/barlow/400-italic.css";
-import "@fontsource/barlow/500.css";
-import "@fontsource/barlow/600.css";
-import "@fontsource-variable/archivo/wdth.css";
-import "@fontsource-variable/archivo/wdth-italic.css";
-import "@fontsource-variable/jetbrains-mono/wght.css";
 import "@fontsource/ibm-plex-mono/400-italic.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
-import "../styles/directions/scorecard.css";
-import "../styles/directions/scoreboard.css";
-import "../styles/directions/linemap.css";
-import "../styles/directions/draft.css";
-import "../styles/directions/draft01.css";
+import "../styles/tokens.css";
 import "../styles/global.css";
-// The four faces every first screen uses under the default direction: body text,
+// The four faces every first screen uses: body text,
 // bold, labels and titles. Preloading them starts the downloads with the page
 // instead of after the stylesheet, so the text does not paint in a fallback
 // font first. These resolve to the same files the @fontsource CSS points at.
@@ -33,8 +18,6 @@ import plexMono600 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600
 import plexSans400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
 import plexSans600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
 import Logo from "../components/Logo.astro";
-import DesignSwitcher from "../components/DesignSwitcher.astro";
-import { DEFAULT_DIRECTION, directions } from "../data/directions";
 import { REVIEWED } from "../data/site";
 
 interface Props {
@@ -61,12 +44,11 @@ const nav = [
   { href: "/glossary/", label: "Glossary" },
 ];
 const path = Astro.url.pathname;
-const directionIds = directions.map((d) => d.id);
 const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
 ---
 
 <!doctype html>
-<html lang="en" data-direction={DEFAULT_DIRECTION}>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -82,19 +64,12 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     <meta name="twitter:card" content="summary" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
-    <script is:inline define:vars={{ directionIds }}>
+    <script is:inline>
       (() => {
         const root = document.documentElement;
         try {
           const t = localStorage.getItem('theme');
           if (t === 'light' || t === 'dark') root.dataset.theme = t;
-        } catch {}
-        // design direction (exploration): ?direction=<id> wins and is remembered
-        try {
-          const asked = new URLSearchParams(location.search).get('direction');
-          const d = directionIds.includes(asked) ? asked : localStorage.getItem('direction');
-          if (directionIds.includes(d)) root.dataset.direction = d;
-          if (directionIds.includes(asked)) localStorage.setItem('direction', asked);
         } catch {}
       })();
     </script>
@@ -163,8 +138,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       </div>
     </footer>
 
-    <DesignSwitcher />
-
     <script>
       // The phone menu. Without this script the navigation is simply shown in full.
       const header = document.querySelector<HTMLElement>('.site-header')!;
@@ -225,9 +198,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in srgb, var(--bg) 94%, transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--bg);
     border-bottom: 1px solid var(--border);
   }
   .bar {
@@ -250,8 +221,8 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     font-family: var(--font-display);
     font-style: var(--display-italic);
     font-weight: 600;
-    font-size: 1.16rem;
-    letter-spacing: -0.01em;
+    font-size: 0.98rem;
+    letter-spacing: -0.02em;
     white-space: nowrap;
   }
   .tld {
@@ -467,7 +438,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
   }
 
   .site-footer {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--fg);
     background: var(--bg-sunken);
     margin-top: clamp(3rem, 8vw, 6rem);
     padding-block: 2.5rem 2rem;

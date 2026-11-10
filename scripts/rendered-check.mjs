@@ -10,7 +10,6 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
  * are present and work.
  *
  *   npm run build && node scripts/rendered-check.mjs
- *   node scripts/rendered-check.mjs --direction=all     every design direction
  *   node scripts/rendered-check.mjs --verbose           list every measurement
  *
  * Needs Chromium for Playwright: `npx playwright install chromium`.
@@ -30,16 +29,7 @@ if (!existsSync(join(root, "index.html"))) {
   console.error("dist/ is missing. Run `npm run build` first.");
   process.exit(1);
 }
-const arg = (k, d) =>
-  (process.argv.find((a) => a.startsWith(`--${k}=`)) ?? `--${k}=${d}`).split(
-    "=",
-  )[1];
 const verbose = process.argv.includes("--verbose");
-const ALL = ["scorecard", "scoreboard", "linemap", "draft", "draft01"];
-const directions =
-  arg("direction", "draft01") === "all"
-    ? ALL
-    : arg("direction", "draft01").split(",");
 
 /* ---------- thresholds ---------- */
 const AA = 4.5; // text contrast
@@ -244,563 +234,537 @@ const sideways = () => {
 
 /* ---------- run ---------- */
 const browser = await chromium.launch();
-for (const direction of directions) {
-  for (const theme of THEMES) {
-    for (const vp of VIEWPORTS) {
-      const ctx = await browser.newContext({
-        viewport: { width: vp.width, height: vp.height },
-        isMobile: vp.isMobile,
-        hasTouch: vp.hasTouch,
-        colorScheme: theme,
-        reducedMotion: "reduce",
-      });
-      for (const pg of PAGES) {
-        const where = `${direction} ${theme} ${vp.name} ${pg.name}`;
-        const page = await ctx.newPage();
-        const errors = [];
-        page.on("pageerror", (e) => errors.push(String(e)));
-        await page.goto(`${origin}${pg.path}?direction=${direction}`, {
-          waitUntil: "networkidle",
-        });
-        await page.evaluate(() => document.fonts.ready);
-        // the direction switcher is an exploration aid, not part of the page under test
-        await page.addStyleTag({
-          content: "design-switcher{display:none!important}",
-        });
+for (const theme of THEMES) {
+  for (const vp of VIEWPORTS) {
+    const ctx = await browser.newContext({
+      viewport: { width: vp.width, height: vp.height },
+      isMobile: vp.isMobile,
+      hasTouch: vp.hasTouch,
+      colorScheme: theme,
+      reducedMotion: "reduce",
+    });
+    for (const pg of PAGES) {
+      const where = `${theme} ${vp.name} ${pg.name}`;
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(String(e)));
+      await page.goto(`${origin}${pg.path}`, { waitUntil: "networkidle" });
+      await page.evaluate(() => document.fonts.ready);
 
-        record(
-          where,
-          "no script errors",
-          errors.length === 0,
-          errors.join("; "),
-        );
-        if (pg.name === "home") {
-          const dest = [
-            "/guide/",
-            "/flows/",
-            "/concepts/",
-            "/deployments/",
-            "/standards/",
-            "/glossary/",
-          ];
-          const visibleLinks = () =>
-            page.evaluate(() =>
-              [...document.querySelectorAll(".site-header a")]
-                .filter((a) => {
-                  const r = a.getBoundingClientRect();
-                  return r.width > 0 && r.right <= innerWidth && r.left >= 0;
-                })
-                .map((a) => a.getAttribute("href")),
-            );
-          if (vp.name === "phone") {
-            const closed = await visibleLinks();
-            record(
-              where,
-              "header keeps the flow chooser in view",
-              closed.includes("/guide/"),
-              closed.join(" "),
-            );
-            await page.focus(".menu-toggle");
-            await page.keyboard.press("Enter");
-            const open = await visibleLinks();
-            const size = await page.evaluate(() =>
-              Math.min(
-                ...[
-                  ...document.querySelectorAll(
-                    ".site-header nav a, .menu-toggle",
-                  ),
-                ].map((el) => el.getBoundingClientRect().height),
-              ),
-            );
-            record(
-              where,
-              "menu opens from the keyboard and shows every destination",
-              dest.every((d) => open.includes(d)),
-              open.join(" "),
-            );
-            record(
-              where,
-              "menu targets are at least 44px tall",
-              size >= 44,
-              `smallest ${Math.round(size)}px`,
-            );
-            await page.keyboard.press("Tab");
-            const focused = await page.evaluate(() => {
-              const el = document.activeElement;
-              const cs = getComputedStyle(el);
-              return {
-                href: el.getAttribute("href"),
-                outline:
-                  cs.outlineStyle !== "none" &&
-                  parseFloat(cs.outlineWidth) >= 2,
-              };
-            });
-            record(
-              where,
-              "first menu link takes focus next, with a visible ring",
-              focused.href === "/guide/" && focused.outline,
-              JSON.stringify(focused),
-            );
-            await page.keyboard.press("Escape");
-            const back = await page.evaluate(() => ({
-              expanded: document
-                .querySelector(".menu-toggle")
-                .getAttribute("aria-expanded"),
-              onToggle:
-                document.activeElement ===
-                document.querySelector(".menu-toggle"),
-            }));
-            record(
-              where,
-              "Escape closes the menu and returns focus to its button",
-              back.expanded === "false" && back.onToggle,
-              JSON.stringify(back),
-            );
-          } else {
-            const shown = await visibleLinks();
-            record(
-              where,
-              "every destination is in the header",
-              dest.every((d) => shown.includes(d)),
-              shown.join(" "),
-            );
-          }
-        }
-        const overflow = await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth -
-            document.documentElement.clientWidth,
-        );
-        record(
-          where,
-          "no sideways overflow",
-          overflow <= 0,
-          overflow > 0 ? `${overflow}px` : "",
-        );
-
-        await page.addScriptTag({ path: axePath });
-        const violations = await page.evaluate(async () => {
-          const r = await window.axe.run(document, {
-            runOnly: {
-              type: "tag",
-              values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"],
-            },
-          });
-          return r.violations.map(
-            (v) =>
-              `${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(" ")}`,
+      record(where, "no script errors", errors.length === 0, errors.join("; "));
+      if (pg.name === "home") {
+        const dest = [
+          "/guide/",
+          "/flows/",
+          "/concepts/",
+          "/deployments/",
+          "/standards/",
+          "/glossary/",
+        ];
+        const visibleLinks = () =>
+          page.evaluate(() =>
+            [...document.querySelectorAll(".site-header a")]
+              .filter((a) => {
+                const r = a.getBoundingClientRect();
+                return r.width > 0 && r.right <= innerWidth && r.left >= 0;
+              })
+              .map((a) => a.getAttribute("href")),
           );
-        });
-        record(
-          where,
-          "axe: no WCAG A/AA violations",
-          violations.length === 0,
-          violations.join(" | "),
-        );
-
-        const text = await page.evaluate(prose);
-        if (text.length) {
-          const small = Math.min(...text.map((t) => t.size));
+        if (vp.name === "phone") {
+          const closed = await visibleLinks();
           record(
             where,
-            `running text at least ${MIN_PROSE}px`,
-            small >= MIN_PROSE,
-            `smallest ${small.toFixed(1)}px`,
+            "header keeps the flow chooser in view",
+            closed.includes("/guide/"),
+            closed.join(" "),
           );
-          const long = Math.max(0, ...text.map((t) => t.perLine));
-          if (long)
-            record(
-              where,
-              `at most ${MAX_MEASURE} characters a line`,
-              long <= MAX_MEASURE,
-              `longest ${long.toFixed(0)}`,
-            );
-        }
-
-        if (pg.name === "home") {
-          const first = await page.evaluate(() => {
-            const panel = [...document.querySelectorAll(".vb-panel")].find(
-              (p) => p.offsetParent,
-            );
-            const box = document.querySelector(".vb").getBoundingClientRect();
-            return panel
-              ? {
-                  rows: panel.querySelectorAll("tbody tr").length,
-                  marks: [...panel.querySelectorAll(".vb-mark")].map((m) =>
-                    m.textContent.trim(),
-                  ),
-                  height: box.height,
-                }
-              : null;
-          });
-          record(
-            where,
-            "explainer shows a complete first state",
-            !!first && first.rows === 3,
-            first ? first.marks.join(", ") : "not visible",
+          await page.focus(".menu-toggle");
+          await page.keyboard.press("Enter");
+          const open = await visibleLinks();
+          const size = await page.evaluate(() =>
+            Math.min(
+              ...[
+                ...document.querySelectorAll(
+                  ".site-header nav a, .menu-toggle",
+                ),
+              ].map((el) => el.getBoundingClientRect().height),
+            ),
           );
           record(
             where,
-            "explainer fits in one screen",
-            !!first && first.height <= vp.height,
-            first ? `${Math.round(first.height)}px of ${vp.height}px` : "",
-          );
-          const pathClean = () =>
-            page.evaluate(() => {
-              const panel = [...document.querySelectorAll(".vb-panel")].find(
-                (e) => e.offsetParent,
-              );
-              const path = panel.querySelector(".vb-path");
-              const box = path.getBoundingClientRect();
-              const rects = (s) =>
-                [...path.querySelectorAll(s)].map((e) =>
-                  e.getBoundingClientRect(),
-                );
-              const hit = (a, c) =>
-                a.left < c.right - 0.5 &&
-                c.left < a.right - 0.5 &&
-                a.top < c.bottom - 0.5 &&
-                c.top < a.bottom - 0.5;
-              let bad = 0;
-              const labels = rects(".vb-label");
-              labels.forEach((l, i) => {
-                for (const n of rects(".vb-node")) if (hit(l, n)) bad++;
-                labels.forEach((o, j) => {
-                  if (j > i && hit(l, o)) bad++;
-                });
-                if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
-              });
-              const broken = [
-                ...panel.querySelectorAll(".vb-reads code"),
-              ].filter((c) => c.getClientRects().length > 1).length;
-              return { bad, broken };
-            });
-          const keyPath = await pathClean();
-          await page.check('.vb input[value="delegated"]', { force: true });
-          const second = await page.evaluate(() =>
-            [...document.querySelectorAll(".vb-panel")]
-              .filter((p) => p.offsetParent)
-              .map((p) => p.dataset.credential),
+            "menu opens from the keyboard and shows every destination",
+            dest.every((d) => open.includes(d)),
+            open.join(" "),
           );
           record(
             where,
-            "choosing the other credential changes the panel",
-            second.length === 1 && second[0] === "delegated",
-            second.join(","),
+            "menu targets are at least 44px tall",
+            size >= 44,
+            `smallest ${Math.round(size)}px`,
           );
-          const tokenPath = await pathClean();
-          record(
-            where,
-            "explainer path: no label overlaps a box or is clipped, no claim is broken, in either state",
-            keyPath.bad + keyPath.broken + tokenPath.bad + tokenPath.broken ===
-              0,
-            JSON.stringify({ keyPath, tokenPath }),
-          );
-          // both answers to "whose authority" are on screen together, before either list of flows
-          const au = await page.evaluate(() => {
-            const choices = [
-              ...document.querySelectorAll(".au-choices label"),
-            ].map((l) => l.getBoundingClientRect());
-            const branch = [...document.querySelectorAll(".au-branch")].find(
-              (b) => b.offsetParent,
-            );
+          await page.keyboard.press("Tab");
+          const focused = await page.evaluate(() => {
+            const el = document.activeElement;
+            const cs = getComputedStyle(el);
             return {
-              n: choices.length,
-              lastChoiceBottom: Math.max(...choices.map((r) => r.bottom)),
-              firstChoiceTop: Math.min(...choices.map((r) => r.top)),
-              branchTop: branch?.getBoundingClientRect().top ?? 0,
-              shown: [...document.querySelectorAll(".au-branch")]
-                .filter((b) => b.offsetParent)
-                .map((b) => b.dataset.authority),
+              href: el.getAttribute("href"),
+              outline:
+                cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) >= 2,
             };
           });
           record(
             where,
-            "both authority answers shown before either branch",
-            au.n === 2 &&
-              au.lastChoiceBottom <= au.branchTop &&
-              au.lastChoiceBottom - au.firstChoiceTop <= vp.height,
-            `${Math.round(au.lastChoiceBottom - au.firstChoiceTop)}px for both`,
+            "first menu link takes focus next, with a visible ring",
+            focused.href === "/guide/" && focused.outline,
+            JSON.stringify(focused),
           );
-          await page.check('.au-choices input[value="agent"]', { force: true });
-          const after = await page.evaluate(() =>
-            [...document.querySelectorAll(".au-branch")]
+          await page.keyboard.press("Escape");
+          const back = await page.evaluate(() => ({
+            expanded: document
+              .querySelector(".menu-toggle")
+              .getAttribute("aria-expanded"),
+            onToggle:
+              document.activeElement === document.querySelector(".menu-toggle"),
+          }));
+          record(
+            where,
+            "Escape closes the menu and returns focus to its button",
+            back.expanded === "false" && back.onToggle,
+            JSON.stringify(back),
+          );
+        } else {
+          const shown = await visibleLinks();
+          record(
+            where,
+            "every destination is in the header",
+            dest.every((d) => shown.includes(d)),
+            shown.join(" "),
+          );
+        }
+      }
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      record(
+        where,
+        "no sideways overflow",
+        overflow <= 0,
+        overflow > 0 ? `${overflow}px` : "",
+      );
+
+      await page.addScriptTag({ path: axePath });
+      const violations = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: {
+            type: "tag",
+            values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"],
+          },
+        });
+        return r.violations.map(
+          (v) => `${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(" ")}`,
+        );
+      });
+      record(
+        where,
+        "axe: no WCAG A/AA violations",
+        violations.length === 0,
+        violations.join(" | "),
+      );
+
+      const text = await page.evaluate(prose);
+      if (text.length) {
+        const small = Math.min(...text.map((t) => t.size));
+        record(
+          where,
+          `running text at least ${MIN_PROSE}px`,
+          small >= MIN_PROSE,
+          `smallest ${small.toFixed(1)}px`,
+        );
+        const long = Math.max(0, ...text.map((t) => t.perLine));
+        if (long)
+          record(
+            where,
+            `at most ${MAX_MEASURE} characters a line`,
+            long <= MAX_MEASURE,
+            `longest ${long.toFixed(0)}`,
+          );
+      }
+
+      if (pg.name === "home") {
+        const first = await page.evaluate(() => {
+          const panel = [...document.querySelectorAll(".vb-panel")].find(
+            (p) => p.offsetParent,
+          );
+          const box = document.querySelector(".vb").getBoundingClientRect();
+          return panel
+            ? {
+                rows: panel.querySelectorAll("tbody tr").length,
+                marks: [...panel.querySelectorAll(".vb-mark")].map((m) =>
+                  m.textContent.trim(),
+                ),
+                height: box.height,
+              }
+            : null;
+        });
+        record(
+          where,
+          "explainer shows a complete first state",
+          !!first && first.rows === 3,
+          first ? first.marks.join(", ") : "not visible",
+        );
+        record(
+          where,
+          "explainer fits in one screen",
+          !!first && first.height <= vp.height,
+          first ? `${Math.round(first.height)}px of ${vp.height}px` : "",
+        );
+        const pathClean = () =>
+          page.evaluate(() => {
+            const panel = [...document.querySelectorAll(".vb-panel")].find(
+              (e) => e.offsetParent,
+            );
+            const path = panel.querySelector(".vb-path");
+            const box = path.getBoundingClientRect();
+            const rects = (s) =>
+              [...path.querySelectorAll(s)].map((e) =>
+                e.getBoundingClientRect(),
+              );
+            const hit = (a, c) =>
+              a.left < c.right - 0.5 &&
+              c.left < a.right - 0.5 &&
+              a.top < c.bottom - 0.5 &&
+              c.top < a.bottom - 0.5;
+            let bad = 0;
+            const labels = rects(".vb-label");
+            labels.forEach((l, i) => {
+              for (const n of rects(".vb-node")) if (hit(l, n)) bad++;
+              labels.forEach((o, j) => {
+                if (j > i && hit(l, o)) bad++;
+              });
+              if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
+            });
+            const broken = [...panel.querySelectorAll(".vb-reads code")].filter(
+              (c) => c.getClientRects().length > 1,
+            ).length;
+            return { bad, broken };
+          });
+        const keyPath = await pathClean();
+        await page.check('.vb input[value="delegated"]', { force: true });
+        const second = await page.evaluate(() =>
+          [...document.querySelectorAll(".vb-panel")]
+            .filter((p) => p.offsetParent)
+            .map((p) => p.dataset.credential),
+        );
+        record(
+          where,
+          "choosing the other credential changes the panel",
+          second.length === 1 && second[0] === "delegated",
+          second.join(","),
+        );
+        const tokenPath = await pathClean();
+        record(
+          where,
+          "explainer path: no label overlaps a box or is clipped, no claim is broken, in either state",
+          keyPath.bad + keyPath.broken + tokenPath.bad + tokenPath.broken === 0,
+          JSON.stringify({ keyPath, tokenPath }),
+        );
+        // both answers to "whose authority" are on screen together, before either list of flows
+        const au = await page.evaluate(() => {
+          const choices = [
+            ...document.querySelectorAll(".au-choices label"),
+          ].map((l) => l.getBoundingClientRect());
+          const branch = [...document.querySelectorAll(".au-branch")].find(
+            (b) => b.offsetParent,
+          );
+          return {
+            n: choices.length,
+            lastChoiceBottom: Math.max(...choices.map((r) => r.bottom)),
+            firstChoiceTop: Math.min(...choices.map((r) => r.top)),
+            branchTop: branch?.getBoundingClientRect().top ?? 0,
+            shown: [...document.querySelectorAll(".au-branch")]
               .filter((b) => b.offsetParent)
               .map((b) => b.dataset.authority),
-          );
-          record(
-            where,
-            "one branch at a time, switched by the answer",
-            au.shown.join() === "person" && after.join() === "agent",
-            `${au.shown} then ${after}`,
-          );
-          const routes = await page.evaluate(() =>
-            [...document.querySelectorAll(".routes li > a")].map((a) =>
-              a.getAttribute("href"),
-            ),
-          );
-          record(
-            where,
-            "three ways in: guide, roles, flows",
-            ["/guide/", "/concepts/#roles", "/flows/"].every((h) =>
-              routes.includes(h),
-            ),
-            routes.join(" "),
-          );
-        }
+          };
+        });
+        record(
+          where,
+          "both authority answers shown before either branch",
+          au.n === 2 &&
+            au.lastChoiceBottom <= au.branchTop &&
+            au.lastChoiceBottom - au.firstChoiceTop <= vp.height,
+          `${Math.round(au.lastChoiceBottom - au.firstChoiceTop)}px for both`,
+        );
+        await page.check('.au-choices input[value="agent"]', { force: true });
+        const after = await page.evaluate(() =>
+          [...document.querySelectorAll(".au-branch")]
+            .filter((b) => b.offsetParent)
+            .map((b) => b.dataset.authority),
+        );
+        record(
+          where,
+          "one branch at a time, switched by the answer",
+          au.shown.join() === "person" && after.join() === "agent",
+          `${au.shown} then ${after}`,
+        );
+        const routes = await page.evaluate(() =>
+          [...document.querySelectorAll(".routes li > a")].map((a) =>
+            a.getAttribute("href"),
+          ),
+        );
+        record(
+          where,
+          "three ways in: guide, roles, flows",
+          ["/guide/", "/concepts/#roles", "/flows/"].every((h) =>
+            routes.includes(h),
+          ),
+          routes.join(" "),
+        );
+      }
 
-        if (pg.name === "flow" || pg.name === "standards") {
-          const facts = await page.evaluate(() => {
-            const line = document.querySelector(".page-head .doc-line");
-            const more = document.querySelector(".page-head .doc-details");
-            return line
-              ? {
-                  text: line.textContent.replace(/\s+/g, " "),
-                  links: [...line.querySelectorAll("a")].map((a) =>
-                    a.getAttribute("href"),
-                  ),
-                  closed: more ? !more.open : null,
-                }
-              : null;
-          });
+      if (pg.name === "flow" || pg.name === "standards") {
+        const facts = await page.evaluate(() => {
+          const line = document.querySelector(".page-head .doc-line");
+          const more = document.querySelector(".page-head .doc-details");
+          return line
+            ? {
+                text: line.textContent.replace(/\s+/g, " "),
+                links: [...line.querySelectorAll("a")].map((a) =>
+                  a.getAttribute("href"),
+                ),
+                closed: more ? !more.open : null,
+              }
+            : null;
+        });
+        record(
+          where,
+          "review date is on the page\u2019s first line of facts",
+          !!facts && /reviewed\s*\w+ \d{4}/i.test(facts.text),
+          facts ? facts.text.trim() : "no page facts",
+        );
+        record(
+          where,
+          "supporting details start closed and open on request",
+          !!facts &&
+            facts.closed === true &&
+            (await page.evaluate(() => {
+              const d = document.querySelector(".page-head .doc-details");
+              d.querySelector("summary").click();
+              return d.open && d.querySelector("dl").offsetParent !== null;
+            })),
+        );
+        if (pg.name === "flow")
           record(
             where,
-            "review date is on the page\u2019s first line of facts",
-            !!facts && /reviewed\s*\w+ \d{4}/i.test(facts.text),
-            facts ? facts.text.trim() : "no page facts",
-          );
-          record(
-            where,
-            "supporting details start closed and open on request",
+            "specification is named and linked beside the review date",
             !!facts &&
-              facts.closed === true &&
-              (await page.evaluate(() => {
-                const d = document.querySelector(".page-head .doc-details");
-                d.querySelector("summary").click();
-                return d.open && d.querySelector("dl").offsetParent !== null;
-              })),
+              facts.links.some((h) => h.startsWith("/standards/#")) &&
+              /based on/i.test(facts.text),
+            facts?.links.join(" ") ?? "",
           );
-          if (pg.name === "flow")
-            record(
-              where,
-              "specification is named and linked beside the review date",
-              !!facts &&
-                facts.links.some((h) => h.startsWith("/standards/#")) &&
-                /based on/i.test(facts.text),
-              facts?.links.join(" ") ?? "",
-            );
-          if (pg.name === "standards") {
-            const lookup = await page.evaluate(() => ({
-              search:
-                document
-                  .querySelector(".sx-search input")
-                  .getBoundingClientRect().top + scrollY,
-              first:
-                document.querySelector(".sx-item").getBoundingClientRect().top +
-                scrollY,
-              moved:
-                document.querySelector("#moved").getBoundingClientRect().top +
-                scrollY,
-            }));
-            record(
-              where,
-              "search and the first entry are within the first two screens",
-              lookup.first < vp.height * 2 && lookup.search < vp.height * 1.5,
-              `search at ${Math.round(lookup.search)}px, first entry at ${Math.round(lookup.first)}px`,
-            );
-            record(
-              where,
-              "history sits after the lookup",
-              lookup.moved > lookup.first,
-            );
-          }
+        if (pg.name === "standards") {
+          const lookup = await page.evaluate(() => ({
+            search:
+              document.querySelector(".sx-search input").getBoundingClientRect()
+                .top + scrollY,
+            first:
+              document.querySelector(".sx-item").getBoundingClientRect().top +
+              scrollY,
+            moved:
+              document.querySelector("#moved").getBoundingClientRect().top +
+              scrollY,
+          }));
+          record(
+            where,
+            "search and the first entry are within the first two screens",
+            lookup.first < vp.height * 2 && lookup.search < vp.height * 1.5,
+            `search at ${Math.round(lookup.search)}px, first entry at ${Math.round(lookup.first)}px`,
+          );
+          record(
+            where,
+            "history sits after the lookup",
+            lookup.moved > lookup.first,
+          );
         }
+      }
 
-        if (pg.name === "flow") {
-          const count = await page.evaluate(() =>
-            Number(document.querySelector(".flow").dataset.count),
-          );
-          if (vp.name === "desktop") {
-            // the stepper: measure the diagram at its first, a middle and its last step
-            for (const step of [1, Math.ceil(count / 2), count]) {
-              await page.evaluate((n) => {
-                location.hash = `#step-${n}`;
-              }, step);
-              await page.waitForTimeout(80);
-              const labels = await page.evaluate(diagramLabels);
-              const worst = labels.reduce((a, b) =>
-                b.ratio < a.ratio ? b : a,
-              );
-              record(
-                where,
-                `diagram at step ${step}: every label at least ${AA}:1 as drawn`,
-                worst.ratio >= AA,
-                `lowest ${worst.ratio.toFixed(2)} (“${worst.text}”, ${worst.state})`,
-              );
-              const tiny = labels.reduce((a, b) => (b.px < a.px ? b : a));
-              record(
-                where,
-                `diagram at step ${step}: labels drawn at ${MIN_LABEL}px or more`,
-                tiny.px >= MIN_LABEL - 0.05,
-                `smallest ${tiny.px.toFixed(1)}px (“${tiny.text}”)`,
-              );
-              const held = await page.evaluate(() => {
-                const li = [...document.querySelectorAll(".flow-step")].find(
-                  (s) => !s.hidden,
-                );
-                return {
-                  shown: document.querySelectorAll(".flow-step:not([hidden])")
-                    .length,
-                  route: li
-                    ?.querySelector(".step-route")
-                    ?.textContent.replace(/\s+/g, " ")
-                    .trim(),
-                };
-              });
-              record(
-                where,
-                `step ${step}: one step shown, with who is talking to whom`,
-                held.shown === 1 && !!held.route,
-                held.route ?? "",
-              );
-            }
-            // keyboard: Left and Right step, Down is left to scrolling, and focus is never stranded
-            // (the loop above ends on the last step, where Next is disabled and Previous is not)
-            await page.focus('[data-act="prev"]');
-            await page.keyboard.press("ArrowLeft");
-            const afterLeft = await page.evaluate(
-              () => document.querySelector(".flow-count").textContent,
-            );
-            await page.keyboard.press("ArrowDown");
-            const afterDown = await page.evaluate(
-              () => document.querySelector(".flow-count").textContent,
-            );
-            record(
-              where,
-              "arrow keys: Left steps back, Down does not change the step",
-              afterLeft.includes(`${count - 1} of`) && afterDown === afterLeft,
-              `${afterLeft} | ${afterDown}`,
-            );
-            await page.click('[data-act="next"]');
-            const handed = await page.evaluate(() => ({
-              disabled: document.querySelector('[data-act="next"]').disabled,
-              onPrev:
-                document.activeElement ===
-                document.querySelector('[data-act="prev"]'),
-            }));
-            record(
-              where,
-              "last step: focus moves from the disabled Next to Previous",
-              handed.disabled && handed.onPrev,
-              JSON.stringify(handed),
-            );
-            const holders = await page.evaluate(
-              () => document.querySelectorAll(".flow-step .held dt").length,
-            );
-            record(
-              where,
-              "steps say who holds which credential",
-              holders > 0,
-              `${holders} holder entries`,
-            );
-          } else {
-            // the phone: a narrative of every step, with the diagram on demand at full size
-            const state = await page.evaluate(() => ({
-              shown: document.querySelectorAll(".flow-step:not([hidden])")
-                .length,
-              open: document.querySelector(".flow-stage").open,
-              summary: !!document.querySelector(".flow-stage > summary")
-                ?.offsetParent,
-            }));
-            record(
-              where,
-              "every step is readable as a narrative",
-              state.shown === count,
-              `${state.shown} of ${count}`,
-            );
-            record(
-              where,
-              "diagram is offered on demand, not forced",
-              !state.open && state.summary,
-            );
-            await page.click(".flow-stage > summary");
+      if (pg.name === "flow") {
+        const count = await page.evaluate(() =>
+          Number(document.querySelector(".flow").dataset.count),
+        );
+        if (vp.name === "desktop") {
+          // the stepper: measure the diagram at its first, a middle and its last step
+          for (const step of [1, Math.ceil(count / 2), count]) {
+            await page.evaluate((n) => {
+              location.hash = `#step-${n}`;
+            }, step);
             await page.waitForTimeout(80);
             const labels = await page.evaluate(diagramLabels);
-            const tiny = Math.min(...labels.map((l) => l.px));
-            record(
-              where,
-              `opened diagram keeps labels at ${MIN_LABEL}px or more`,
-              tiny >= MIN_LABEL - 0.05,
-              `smallest ${tiny.toFixed(1)}px`,
-            );
             const worst = labels.reduce((a, b) => (b.ratio < a.ratio ? b : a));
             record(
               where,
-              `opened diagram: every label at least ${AA}:1 as drawn`,
+              `diagram at step ${step}: every label at least ${AA}:1 as drawn`,
               worst.ratio >= AA,
-              `lowest ${worst.ratio.toFixed(2)} (“${worst.text}”)`,
+              `lowest ${worst.ratio.toFixed(2)} (“${worst.text}”, ${worst.state})`,
             );
-            const still = await page.evaluate(
-              () =>
-                document.documentElement.scrollWidth -
-                document.documentElement.clientWidth,
-            );
+            const tiny = labels.reduce((a, b) => (b.px < a.px ? b : a));
             record(
               where,
-              "opened diagram scrolls inside its own frame",
-              still <= 0,
-              still > 0 ? `${still}px` : "",
+              `diagram at step ${step}: labels drawn at ${MIN_LABEL}px or more`,
+              tiny.px >= MIN_LABEL - 0.05,
+              `smallest ${tiny.px.toFixed(1)}px (“${tiny.text}”)`,
             );
-            await page.click(".flow-back button");
-            await page.waitForTimeout(80);
-            const left = await page.evaluate(() => {
-              const s = document.querySelector(".flow-stage > summary");
-              const r = s.getBoundingClientRect();
+            const held = await page.evaluate(() => {
+              const li = [...document.querySelectorAll(".flow-step")].find(
+                (s) => !s.hidden,
+              );
               return {
-                open: document.querySelector(".flow-stage").open,
-                focus: document.activeElement === s,
-                inView: r.top >= 0 && r.bottom <= innerHeight,
+                shown: document.querySelectorAll(".flow-step:not([hidden])")
+                  .length,
+                route: li
+                  ?.querySelector(".step-route")
+                  ?.textContent.replace(/\s+/g, " ")
+                  .trim(),
               };
             });
             record(
               where,
-              "leaving the diagram closes it and lands on its control, in view",
-              !left.open && left.focus && left.inView,
-              JSON.stringify(left),
+              `step ${step}: one step shown, with who is talking to whom`,
+              held.shown === 1 && !!held.route,
+              held.route ?? "",
             );
           }
+          // keyboard: Left and Right step, Down is left to scrolling, and focus is never stranded
+          // (the loop above ends on the last step, where Next is disabled and Previous is not)
+          await page.focus('[data-act="prev"]');
+          await page.keyboard.press("ArrowLeft");
+          const afterLeft = await page.evaluate(
+            () => document.querySelector(".flow-count").textContent,
+          );
+          await page.keyboard.press("ArrowDown");
+          const afterDown = await page.evaluate(
+            () => document.querySelector(".flow-count").textContent,
+          );
+          record(
+            where,
+            "arrow keys: Left steps back, Down does not change the step",
+            afterLeft.includes(`${count - 1} of`) && afterDown === afterLeft,
+            `${afterLeft} | ${afterDown}`,
+          );
+          await page.click('[data-act="next"]');
+          const handed = await page.evaluate(() => ({
+            disabled: document.querySelector('[data-act="next"]').disabled,
+            onPrev:
+              document.activeElement ===
+              document.querySelector('[data-act="prev"]'),
+          }));
+          record(
+            where,
+            "last step: focus moves from the disabled Next to Previous",
+            handed.disabled && handed.onPrev,
+            JSON.stringify(handed),
+          );
+          const holders = await page.evaluate(
+            () => document.querySelectorAll(".flow-step .held dt").length,
+          );
+          record(
+            where,
+            "steps say who holds which credential",
+            holders > 0,
+            `${holders} holder entries`,
+          );
+        } else {
+          // the phone: a narrative of every step, with the diagram on demand at full size
+          const state = await page.evaluate(() => ({
+            shown: document.querySelectorAll(".flow-step:not([hidden])").length,
+            open: document.querySelector(".flow-stage").open,
+            summary: !!document.querySelector(".flow-stage > summary")
+              ?.offsetParent,
+          }));
+          record(
+            where,
+            "every step is readable as a narrative",
+            state.shown === count,
+            `${state.shown} of ${count}`,
+          );
+          record(
+            where,
+            "diagram is offered on demand, not forced",
+            !state.open && state.summary,
+          );
+          await page.click(".flow-stage > summary");
+          await page.waitForTimeout(80);
+          const labels = await page.evaluate(diagramLabels);
+          const tiny = Math.min(...labels.map((l) => l.px));
+          record(
+            where,
+            `opened diagram keeps labels at ${MIN_LABEL}px or more`,
+            tiny >= MIN_LABEL - 0.05,
+            `smallest ${tiny.toFixed(1)}px`,
+          );
+          const worst = labels.reduce((a, b) => (b.ratio < a.ratio ? b : a));
+          record(
+            where,
+            `opened diagram: every label at least ${AA}:1 as drawn`,
+            worst.ratio >= AA,
+            `lowest ${worst.ratio.toFixed(2)} (“${worst.text}”)`,
+          );
+          const still = await page.evaluate(
+            () =>
+              document.documentElement.scrollWidth -
+              document.documentElement.clientWidth,
+          );
+          record(
+            where,
+            "opened diagram scrolls inside its own frame",
+            still <= 0,
+            still > 0 ? `${still}px` : "",
+          );
+          await page.click(".flow-back button");
+          await page.waitForTimeout(80);
+          const left = await page.evaluate(() => {
+            const s = document.querySelector(".flow-stage > summary");
+            const r = s.getBoundingClientRect();
+            return {
+              open: document.querySelector(".flow-stage").open,
+              focus: document.activeElement === s,
+              inView: r.top >= 0 && r.bottom <= innerHeight,
+            };
+          });
+          record(
+            where,
+            "leaving the diagram closes it and lands on its control, in view",
+            !left.open && left.focus && left.inView,
+            JSON.stringify(left),
+          );
         }
-        await page.close();
       }
-      await ctx.close();
+      await page.close();
     }
+    await ctx.close();
   }
-  // the narrowest window: nothing scrolls sideways, on the pages above or on any flow
-  const ctx = await browser.newContext({
-    viewport: NARROW,
-    isMobile: true,
-    hasTouch: true,
-    reducedMotion: "reduce",
-  });
-  const page = await ctx.newPage();
-  for (const path of NARROW_PAGES) {
-    await page.goto(`${origin}${path}?direction=${direction}`, {
-      waitUntil: "networkidle",
-    });
-    await page.evaluate(() => document.fonts.ready);
-    await page.addStyleTag({
-      content: "design-switcher{display:none!important}",
-    });
-    const over = await page.evaluate(sideways);
-    record(
-      `${direction} ${NARROW.width}px ${path}`,
-      `no sideways overflow at ${NARROW.width}px`,
-      over.by <= 0,
-      over.by > 0 ? `${over.by}px: ${over.what}` : "",
-    );
-  }
-  await ctx.close();
 }
+// the narrowest window: nothing scrolls sideways, on the pages above or on any flow
+const ctx = await browser.newContext({
+  viewport: NARROW,
+  isMobile: true,
+  hasTouch: true,
+  reducedMotion: "reduce",
+});
+const page = await ctx.newPage();
+for (const path of NARROW_PAGES) {
+  await page.goto(`${origin}${path}`, { waitUntil: "networkidle" });
+  await page.evaluate(() => document.fonts.ready);
+  const over = await page.evaluate(sideways);
+  record(
+    `${NARROW.width}px ${path}`,
+    `no sideways overflow at ${NARROW.width}px`,
+    over.by <= 0,
+    over.by > 0 ? `${over.by}px: ${over.what}` : "",
+  );
+}
+await ctx.close();
 await browser.close();
 server.close();
 
@@ -824,7 +788,7 @@ else
       `✗ ${r.where.padEnd(44)} ${r.check}${r.detail ? `  — ${r.detail}` : ""}`,
     );
 console.log(
-  `\n${directions.join(", ")}: ${PAGES.length} pages × ${VIEWPORTS.length} viewports × ${THEMES.length} themes, and ${NARROW_PAGES.length} pages at ${NARROW.width}px`,
+  `\n${PAGES.length} pages × ${VIEWPORTS.length} viewports × ${THEMES.length} themes, and ${NARROW_PAGES.length} pages at ${NARROW.width}px`,
 );
 for (const [check, { pass, fail }] of byCheck)
   console.log(

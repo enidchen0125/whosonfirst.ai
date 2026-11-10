@@ -1,0 +1,68 @@
+/* ------------------------------------------------------------------
+   whosonfirst.ai — the design's values.
+   The site takes the structure of an Internet-Draft, not its typewriter:
+   fine rules, link blue, compact metadata and numbered sections. Prose and
+   diagram labels are in a proportional face; the monospaced face is kept
+   for titles, metadata and anything literal: identifiers, parameters,
+   messages on the wire.
+
+   Every colour is a light and dark pair. Rules that use these values are
+   in global.css and in each component.
+------------------------------------------------------------------- */
+:root {
+  /* layout */
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --wide: 72rem;
+
+  /* surfaces, text, lines, accent, and the five role hues */
+  --bg: light-dark(#ffffff, #0e0f11);
+  --bg-raised: light-dark(#ffffff, #16171a);
+  --bg-sunken: light-dark(#f3f4f6, #090a0b);
+  --bg-inset: light-dark(#e6e8eb, #23252a);
+  --fg: light-dark(#15171a, #e9e9e7);
+  --fg-muted: light-dark(#434850, #b3b5b2);
+  --fg-subtle: light-dark(#5c6169, #94968f);
+  --border: light-dark(#cfd2d7, #32343a);
+  --border-strong: light-dark(#757a82, #7b7e85);
+  --accent: light-dark(#0b3fc4, #93b5ff);
+  --accent-soft: light-dark(#e7edfd, #18254e);
+  --on-accent: light-dark(#ffffff, #0e0f11);
+  --red: light-dark(#a61b1b, #ff8f8f);
+  --red-soft: light-dark(#fbe4e4, #3a1515);
+  /* teal, to stay distinct from link blue */
+  --blue: light-dark(#00607a, #6cd0e8);
+  --blue-soft: light-dark(#d9eef4, #0d2f3a);
+  --violet: light-dark(#5b2a86, #cfa8f5);
+  --violet-soft: light-dark(#ece2f6, #2c1a42);
+  --green: light-dark(#1c6b2a, #7fd491);
+  --green-soft: light-dark(#dff1e2, #12301a);
+  --amber: light-dark(#7a5200, #e8c063);
+  --amber-soft: light-dark(#f8ecc8, #3a2c08);
+
+  --font-display:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-heading:
+    "IBM Plex Sans", "IBM Plex Sans Fallback", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-body:
+    "IBM Plex Sans", "IBM Plex Sans Fallback", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-label: var(--font-mono);
+  --display-weight: 600;
+  --display-tracking: -0.015em;
+  --display-tracking-tight: -0.03em;
+  --display-transform: none;
+  --display-italic: normal;
+  --display-scale: 0.74;
+  --body-size: 1rem;
+  --body-leading: 1.62;
+  /* about 72 characters a line at this size */
+  --prose: 35rem;
+  --article-measure: 35rem;
+
+  --radius: 2px;
+  --radius-pill: 2px;
+  --radius-round: 50%;
+}

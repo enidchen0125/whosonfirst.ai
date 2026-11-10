@@ -1,7 +1,7 @@
 ---
 /**
  * The living style guide. Everything on this page is rendered with the real
- * tokens and components, so it shows whichever design direction is active.
+ * tokens and components, so it cannot drift from the site.
  * Values and contrast ratios are read from the browser, not written by hand.
  */
 import { Code } from "astro:components";
@@ -10,7 +10,6 @@ import FlowDiagram from "../../components/FlowDiagram.astro";
 import FlowCard from "../../components/FlowCard.astro";
 import TokenInspector from "../../components/TokenInspector.astro";
 import LastHop from "../../components/LastHop.astro";
-import { directions } from "../../data/directions";
 import { flow } from "../../data/flows";
 import { ROLE_LABEL, STATUS_LABEL, STATUS_TONE } from "../../data/types";
 import type { Role, StdStatus } from "../../data/types";
@@ -94,7 +93,6 @@ const cards = ["mcp-authorization", "ciba", "spiffe-workload-identity"].map(
 );
 
 const toc = [
-  ["directions", "Directions"],
   ["colour", "Colour"],
   ["contrast", "Contrast"],
   ["type", "Type"],
@@ -107,7 +105,7 @@ const toc = [
 
 <Base
   title="Style guide"
-  description="The living style guide for Who's on First: design directions, colour and type tokens with live contrast ratios, and every component rendered with the real code."
+  description="The living style guide for Who's on First: colour and type tokens with live contrast ratios, and every component rendered with the real code."
 >
   <div class="page-head">
     <div class="wrap">
@@ -115,7 +113,7 @@ const toc = [
       <h1>How the site looks, and why</h1>
       <p class="lede">
         Every swatch, specimen and component below is the real thing, rendered from the same tokens the site uses.
-        Choose a direction and the whole page, and the whole site, changes with it.
+        Use the theme button in the header to see it in light and dark.
       </p>
       <nav class="sg-toc" aria-label="On this page">
         {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
@@ -124,48 +122,11 @@ const toc = [
   </div>
 
   <style-guide>
-    <section class="section" id="directions">
-      <div class="wrap">
-        <div class="section-head">
-          <h2>Directions</h2>
-          <p>Four complete options. Each is one file of token values and a few rules of its own.</p>
-        </div>
-        <fieldset class="sg-directions">
-          <legend class="visually-hidden">Design direction</legend>
-          {
-            directions.map((d) => (
-              <label>
-                <input type="radio" name="sg-direction" value={d.id} />
-                <span class="sg-direction">
-                  <span class="sg-direction-name">{d.name}</span>
-                  <span class="sg-direction-source">{d.source}</span>
-                  <span class="sg-direction-idea">{d.idea}</span>
-                  <span class="sg-kv">
-                    <span>Type</span>
-                    {d.type}
-                  </span>
-                  <span class="sg-kv">
-                    <span>Trade-off</span>
-                    {d.tradeoff}
-                  </span>
-                </span>
-              </label>
-            ))
-          }
-        </fieldset>
-        <p class="sg-note">
-          Use the theme button in the header to see each direction in light and dark. To link someone straight to a
-          direction, add <code>?direction=scoreboard</code>, <code>linemap</code>, <code>draft</code> or
-          <code>scorecard</code> to any page address.
-        </p>
-      </div>
-    </section>
-
     <section class="section" id="colour">
       <div class="wrap">
         <div class="section-head">
           <h2>Colour</h2>
-          <p>Values shown are read from this page as rendered, in the current direction and theme.</p>
+          <p>Values shown are read from this page as rendered, in the current theme.</p>
         </div>
 
         <h3>Surfaces</h3>
@@ -303,7 +264,7 @@ const toc = [
           </table>
         </div>
         <p class="sg-note">
-          The same pairs are checked for every direction in both themes by <code>npm run check:contrast</code>, which
+          The same pairs are checked in both themes by <code>npm run check:contrast</code>, which
           fails if any text pair drops below 4.5 to 1.
         </p>
       </div>
@@ -313,7 +274,7 @@ const toc = [
       <div class="wrap">
         <div class="section-head">
           <h2>Type</h2>
-          <p>Four roles. A direction may fill several roles with one family.</p>
+          <p>Four roles, filled by two families.</p>
         </div>
         <div class="fam-list">
           {
@@ -579,7 +540,7 @@ grant_type=client_credentials
       <div class="wrap">
         <div class="section-head">
           <h2>Voice</h2>
-          <p>How the site talks. This part does not change with the direction.</p>
+          <p>How the site talks.</p>
         </div>
         <div class="voice">
           <div>
@@ -617,8 +578,6 @@ grant_type=client_credentials
   class StyleGuide extends HTMLElement {
     connectedCallback() {
       const root = document.documentElement;
-      const radios = [...this.querySelectorAll<HTMLInputElement>('input[name="sg-direction"]')];
-
       const rgb = (s: string) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
       const hex = (s: string) => '#' + rgb(s).map((n) => Math.round(n).toString(16).padStart(2, '0')).join('');
       const lum = (s: string) => {
@@ -630,9 +589,6 @@ grant_type=client_credentials
       };
 
       const refresh = () => {
-        const id = root.dataset.direction ?? radios[0]?.value;
-        for (const r of radios) r.checked = r.value === id;
-
         this.querySelectorAll<HTMLElement>('[data-swatch]').forEach((el) => {
           const out = el.parentElement?.classList.contains('hue-pair')
             ? null
@@ -657,17 +613,7 @@ grant_type=client_credentials
         });
       };
 
-      this.addEventListener('change', (e) => {
-        const input = e.target as HTMLInputElement;
-        if (input.name !== 'sg-direction') return;
-        root.dataset.direction = input.value;
-        try {
-          localStorage.setItem('direction', input.value);
-        } catch {}
-        document.dispatchEvent(new CustomEvent('directionchange', { detail: input.value }));
-      });
-      document.addEventListener('directionchange', refresh);
-      new MutationObserver(refresh).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-direction'] });
+      new MutationObserver(refresh).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refresh);
       document.fonts?.ready.then(refresh);
       refresh();
@@ -711,98 +657,6 @@ grant_type=client_credentials
   }
   .sg-gap {
     margin-top: 3rem;
-  }
-
-  /* directions */
-  .sg-directions {
-    border: 0;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.8rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr));
-  }
-  .sg-directions label {
-    cursor: pointer;
-    display: grid;
-  }
-  .sg-directions input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .sg-direction {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
-    padding: 1rem 1.1rem 1.1rem;
-    background: var(--bg-raised);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .sg-directions label:hover .sg-direction {
-    border-color: var(--border-strong);
-  }
-  .sg-directions input:checked + .sg-direction {
-    border-color: var(--fg);
-    box-shadow: inset 0 0 0 1.5px var(--fg);
-  }
-  .sg-directions input:focus-visible + .sg-direction {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-  .sg-direction-name {
-    font-family: var(--font-display);
-    font-weight: var(--display-weight);
-    font-size: 1.4rem;
-    line-height: 1.1;
-  }
-  .sg-direction-name::after {
-    content: 'Select';
-    float: right;
-    font-family: var(--font-label);
-    font-size: 0.66rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-muted);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
-    padding: 0.3em 0.6em;
-    line-height: 1;
-  }
-  input:checked + .sg-direction .sg-direction-name::after {
-    content: 'In use';
-    background: var(--fg);
-    border-color: var(--fg);
-    color: var(--bg);
-  }
-  .sg-direction-source {
-    font-family: var(--font-label);
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--fg-muted);
-  }
-  .sg-direction-idea {
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-  .sg-kv {
-    font-size: 0.86rem;
-    line-height: 1.4;
-    color: var(--fg-muted);
-    padding-top: 0.5rem;
-    border-top: 1px dashed var(--border-strong);
-  }
-  .sg-kv > span {
-    display: block;
-    font-family: var(--font-label);
-    font-size: 0.64rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-subtle);
   }
 
   /* swatches */

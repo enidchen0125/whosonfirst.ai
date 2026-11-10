@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /**
- * WCAG contrast audit for every design direction, in both themes.
+ * WCAG contrast audit of the site's colours, in both themes.
  *
- * Reads the colour tokens straight from src/styles/directions/*.css and checks
- * each text-on-surface pair the site actually uses. Exits 1 if any text pair
- * falls below 4.5:1, so it can gate a build.
+ * Reads the colour tokens straight from src/styles/tokens.css and checks each
+ * text-on-surface pair the site actually uses. Exits 1 if any text pair falls
+ * below 4.5:1, so it can gate a build.
  *
  *   node scripts/contrast-check.mjs            summary
  *   node scripts/contrast-check.mjs --verbose  every pair
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const dir = fileURLToPath(
-  new URL("../src/styles/directions/", import.meta.url),
+const file = fileURLToPath(
+  new URL("../src/styles/tokens.css", import.meta.url),
 );
 const verbose = process.argv.includes("--verbose");
 const AA = 4.5;
@@ -32,7 +32,7 @@ const ratio = (a, b) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-/** { '--bg': { light: '#fff', dark: '#000' }, … } from the first rule block of a direction file. */
+/** { '--bg': { light: '#fff', dark: '#000' }, … } from the first rule block of the tokens file. */
 function tokens(css) {
   const out = {};
   const block = css.slice(css.indexOf("{") + 1, css.indexOf("\n}"));
@@ -55,7 +55,7 @@ function pairs() {
       p.push([t, g]);
   for (const h of HUES) {
     for (const g of GROUNDS) p.push([`--${h}`, g]); // hue as text or outline label
-    p.push([`--${h}`, `--${h}-soft`]); // toned chip
+    p.push([`--${h}`, `--${h}-soft`]); // a role's label on its own tint
     p.push(["--fg", `--${h}-soft`]); // text inside a role box
   }
   p.push(["--fg", "--accent-soft"]); // targeted entry
@@ -65,52 +65,42 @@ function pairs() {
 
 let failures = 0;
 let checked = 0;
-const files = readdirSync(dir)
-  .filter((f) => f.endsWith(".css"))
-  .sort();
-
-for (const file of files) {
-  const t = tokens(readFileSync(dir + file, "utf8"));
-  const name = file.replace(".css", "");
-  const missing = pairs()
-    .flat()
-    .filter((k) => !t[k]);
-  if (missing.length) {
-    console.error(
-      `${name}: missing colour tokens: ${[...new Set(missing)].join(", ")}`,
-    );
-    failures++;
-    continue;
-  }
-  for (const theme of ["light", "dark"]) {
-    const rows = pairs().map(([fg, bg]) => ({
-      fg,
-      bg,
-      r: ratio(t[fg][theme], t[bg][theme]),
-    }));
-    const bad = rows.filter((x) => x.r < AA);
-    const tightest = rows.reduce((a, b) => (b.r < a.r ? b : a));
-    checked += rows.length;
-    failures += bad.length;
-    const status = bad.length ? `FAIL ${bad.length}` : "pass";
+const t = tokens(readFileSync(file, "utf8"));
+const missing = pairs()
+  .flat()
+  .filter((k) => !t[k]);
+if (missing.length) {
+  console.error(`missing colour tokens: ${[...new Set(missing)].join(", ")}`);
+  process.exit(1);
+}
+for (const theme of ["light", "dark"]) {
+  const rows = pairs().map(([fg, bg]) => ({
+    fg,
+    bg,
+    r: ratio(t[fg][theme], t[bg][theme]),
+  }));
+  const bad = rows.filter((x) => x.r < AA);
+  const tightest = rows.reduce((a, b) => (b.r < a.r ? b : a));
+  checked += rows.length;
+  failures += bad.length;
+  const status = bad.length ? `FAIL ${bad.length}` : "pass";
+  console.log(
+    `${theme.padEnd(5)} ${status.padEnd(7)} tightest ${tightest.r.toFixed(2)}  ${tightest.fg} on ${tightest.bg}`,
+  );
+  for (const x of verbose ? rows : bad) {
     console.log(
-      `${name.padEnd(11)} ${theme.padEnd(5)} ${status.padEnd(7)} tightest ${tightest.r.toFixed(2)}  ${tightest.fg} on ${tightest.bg}`,
+      `    ${x.r < AA ? "✗" : "✓"} ${x.r.toFixed(2).padStart(5)}  ${x.fg} on ${x.bg}`,
     );
-    for (const x of verbose ? rows : bad) {
-      console.log(
-        `    ${x.r < AA ? "✗" : "✓"} ${x.r.toFixed(2).padStart(5)}  ${x.fg} on ${x.bg}`,
-      );
-    }
-    // informational: control outlines are measured against 3:1, hairlines are not held to it
-    const outline = ratio(t["--border-strong"][theme], t["--bg"][theme]);
-    if (verbose)
-      console.log(
-        `    · ${outline.toFixed(2).padStart(5)}  --border-strong on --bg (non-text, 3:1 advisory)`,
-      );
   }
+  // informational: control outlines are measured against 3:1, hairlines are not held to it
+  const outline = ratio(t["--border-strong"][theme], t["--bg"][theme]);
+  if (verbose)
+    console.log(
+      `    · ${outline.toFixed(2).padStart(5)}  --border-strong on --bg (non-text, 3:1 advisory)`,
+    );
 }
 
 console.log(
-  `\n${checked} text pairs checked across ${files.length} directions, ${failures} below ${AA}:1.`,
+  `\n${checked} text pairs checked in two themes, ${failures} below ${AA}:1.`,
 );
 process.exit(failures ? 1 : 0);

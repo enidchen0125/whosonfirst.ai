@@ -383,7 +383,8 @@ const moved = [
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--accent);
+    /* blue is for links: a label that is not a link gives it up */
+    color: var(--fg-muted);
     padding-top: 0.25rem;
   }
   .moved p {
@@ -577,9 +578,6 @@ const moved = [
     font-size: 0.76rem;
     color: var(--fg-muted);
     word-break: break-word;
-  }
-  .chip.topic {
-    border-style: dashed;
   }
   .sx-summary {
     margin: 0.75rem 0 0.55rem;

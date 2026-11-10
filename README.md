@@ -92,23 +92,21 @@ A reference marked `unresolved` is not counted and is not assumed to be optional
 
 ## Design
 
-Internet-Draft -01 is the site's design: `DEFAULT_DIRECTION` in `src/data/directions.ts`, which the layout puts on `<html data-direction>`. The four directions it was chosen from are still in the repository for comparison. All five share one set of token names and differ only in values.
+The site takes the structure of an Internet-Draft, not its typewriter: fine rules, link blue, compact metadata and numbered sections. Titles, metadata and anything literal are in IBM Plex Mono; reading text is in IBM Plex Sans at 17px.
 
-| Direction                    | File                                   | Idea                                                                                                                                    |
-| ---------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Internet-Draft -01 (default) | `src/styles/directions/draft01.css`    | The document format's structure with selective monospace: titles, metadata and literals in Plex Mono, reading text in Plex Sans at 17px |
-| Internet-Draft -00           | `src/styles/directions/draft.css`      | The first pass: monospace throughout                                                                                                    |
-| Scorecard                    | `src/styles/directions/scorecard.css`  | A paper scorecard: warm stock, serif titles                                                                                             |
-| Scoreboard                   | `src/styles/directions/scoreboard.css` | A manual ballpark scoreboard: green board, condensed capitals                                                                           |
-| Line Map                     | `src/styles/directions/linemap.css`    | Transit signage: black, white and five line colours                                                                                     |
+| File                            | What                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/styles/tokens.css`         | The values: every colour as a light and dark pair, the type stacks, sizes and radii |
+| `src/styles/global.css`         | The rules that are not specific to one component                                    |
+| `<style>` in each `.astro` file | That component's own rules                                                          |
 
-Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher and the four other directions are exploration aids; remove them, and the fonts only they use, when the comparison is no longer needed.
+`/styleguide/` shows the tokens, type, components and diagrams as rendered, with live contrast ratios.
 
 **Fonts.** The four font files every first screen needs (Plex Sans 400 and 600, Plex Mono 500 and 600) are preloaded from `src/layouts/Base.astro`, so they download alongside the stylesheet and the text does not paint in a fallback font and then change. If one is still late, `IBM Plex Sans Fallback` in `src/styles/global.css` stands in: Arial scaled to Plex Sans's measurements, so the swap does not move the text. If you change which weights the first screen uses, change the preload list to match; a preloaded file that is not used is a wasted download.
 
 Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labelled disclosure, and history follows the lookup it belongs to.
 
-Three rules hold in every direction:
+Three rules hold throughout:
 
 - **Colour in a diagram means role.** User, agent, authorization server, resource server and infrastructure each keep one colour. The kind of message (direct call, response, through the browser, out of band) is carried by the line style.
 - **Nothing is dimmed with opacity.** Steps before and after the current one use the muted text colour, which the audit holds to 4.5:1.
@@ -116,8 +114,8 @@ Three rules hold in every direction:
 
 Two checks cover this:
 
-- `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing in any direction falls below 4.5:1.
-- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow page), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work: the home page explainer fits one screen and switches, both answers to "whose authority" appear before either list of flows, each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, the phone flow page reads as a narrative with the diagram on demand and easy to leave, and the stepper keeps keyboard focus usable (Left and Right step, Down scrolls, focus moves off a disabled button). It checks Internet-Draft -01 by default; add `--direction=all` for the rest. It needs Chromium: `npx playwright install chromium`.
+- `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing falls below 4.5:1 in either theme.
+- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow page), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work: the home page explainer fits one screen and switches, both answers to "whose authority" appear before either list of flows, each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, the phone flow page reads as a narrative with the diagram on demand and easy to leave, and the stepper keeps keyboard focus usable (Left and Right step, Down scrolls, focus moves off a disabled button). It needs Chromium: `npx playwright install chromium`.
 
 ## Accuracy
 

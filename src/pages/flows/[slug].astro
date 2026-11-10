@@ -325,11 +325,10 @@ const details = [
   .intro .prose {
     font-size: 1.08rem;
   }
+  /* "use it when" is a ruled note, not a coloured box */
   .fit {
-    background: var(--green-soft);
-    border: 1px solid var(--green);
-    border-radius: var(--radius);
-    padding: 1.1rem 1.25rem 0.6rem;
+    border-top: 1px solid var(--fg);
+    padding: 0.9rem 0 0;
   }
   .fit h2 {
     font-family: var(--font-label);
@@ -337,7 +336,7 @@ const details = [
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--fg-muted);
     margin-bottom: 0.7rem;
   }
   .fit ul {
