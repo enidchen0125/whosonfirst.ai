@@ -1,6 +1,7 @@
 ---
 import type { Flow } from '../data/types';
-import { HUMAN_LABEL, HUMAN_TONE, MATURITY_LABEL } from '../data/types';
+import { HUMAN_LABEL, HUMAN_TONE } from '../data/types';
+import { maturityLabel } from '../data/flows';
 
 interface Props {
   flow: Flow;
@@ -13,7 +14,7 @@ const { flow: f } = Astro.props;
   <p>{f.tagline}</p>
   <div class="chips">
     <span class="chip" data-tone={HUMAN_TONE[f.human]}>{HUMAN_LABEL[f.human]}</span>
-    <span class="chip">{MATURITY_LABEL[f.maturity]}</span>
+    <span class="chip">{maturityLabel(f)}</span>
   </div>
 </a>
 

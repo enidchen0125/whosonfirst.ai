@@ -591,6 +591,9 @@ export const standards: Standard[] = [
     ref: 'SPIRE 1.16',
     body: 'CNCF',
     status: 'project',
+    // Evidence for the level: the project's README says "SPIRE is a graduated project of the Cloud
+    // Native Computing Foundation". This is the project as a whole, not each plugin or flagged feature.
+    level: 'stable',
     detail: 'Version 1.16.0, November 2026, adds experimental WIT-SVID support.',
     topics: ['workload', 'kubernetes'],
     summary: 'The reference implementation of SPIFFE: a server and per-node agents that attest workloads and issue identities.',

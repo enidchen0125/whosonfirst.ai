@@ -1,8 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import FlowCard from '../../components/FlowCard.astro';
-import { byGroup, flows } from '../../data/flows';
-import { HUMAN_LABEL, MATURITY_LABEL } from '../../data/types';
+import { byGroup, flows, maturityLabel } from '../../data/flows';
+import { HUMAN_LABEL } from '../../data/types';
 
 const groups = byGroup();
 
@@ -112,7 +112,7 @@ const filters = [
                   <td>{HUMAN_LABEL[f.human].replace('Human ', '').replace('With or without a human', 'Either')}</td>
                   <td>{COMPARE[f.slug][0]}</td>
                   <td>{COMPARE[f.slug][1]}</td>
-                  <td>{MATURITY_LABEL[f.maturity]}</td>
+                  <td>{maturityLabel(f)}</td>
                 </tr>
               ))
             }

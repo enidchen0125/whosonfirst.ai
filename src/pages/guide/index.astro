@@ -1,8 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { questions, rules, cautions, deployLinks, ROLE_TITLE } from '../../data/guide';
-import { flows, flow } from '../../data/flows';
-import { HUMAN_LABEL, MATURITY_LABEL } from '../../data/types';
+import { flows, flow, maturityLabel } from '../../data/flows';
+import { HUMAN_LABEL } from '../../data/types';
 
 // fail the build if a rule points at a flow or answer that does not exist
 for (const r of rules) {
@@ -24,7 +24,7 @@ const data = {
   flows: Object.fromEntries(
     flows.map((f) => [
       f.slug,
-      { short: f.short, tagline: f.tagline, human: HUMAN_LABEL[f.human], maturity: MATURITY_LABEL[f.maturity] },
+      { short: f.short, tagline: f.tagline, human: HUMAN_LABEL[f.human], maturity: maturityLabel(f) },
     ]),
   ),
 };

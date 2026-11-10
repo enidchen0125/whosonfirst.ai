@@ -8,7 +8,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check && node scripts/contrast-check.mjs",
+    "check": "astro check && node scripts/rating-check.mjs && node scripts/contrast-check.mjs",
+    "check:rating": "node scripts/rating-check.mjs",
     "check:contrast": "node scripts/contrast-check.mjs",
     "check:rendered": "node scripts/rendered-check.mjs",
     "ds:build": "node scripts/build-design-system.mjs"

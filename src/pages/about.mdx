@@ -63,9 +63,10 @@ Each flow page carries a rating: stable, emerging or experimental. The rating de
 
 | Role | Meaning |
 | --- | --- |
-| Required | The page names it as what the flow implements, a numbered step shows something it defines, or the page teaches a security or validation rule it sets |
-| Optional extension | Offered as a variant or an addition. No step depends on it |
+| Required | The page names it as what the flow implements, a numbered step shows something it defines, the page teaches a security or validation rule it sets, or the page says a conforming implementation must support it, whether or not that path is drawn |
+| Optional extension | Offered as a variant or an addition. No step depends on it, and nothing on the page requires it |
 | Background | Named for context only |
+| Not settled | The sources read so far do not decide which of these it is |
 
 </div>
 
@@ -81,9 +82,11 @@ Each flow page carries a rating: stable, emerging or experimental. The rating de
 
 </div>
 
-A mechanism is not experimental merely because no standards body owns it. It is judged on what its maintainers publish about its stability. Where that evidence has not been found, the role or the rating is left unsettled and the page says so.
+A mechanism is not experimental merely because no standards body owns it. It is judged on what its maintainers publish about its stability. Where that evidence has not been found, its level is recorded as unknown, not assumed.
 
 **The rating.** A flow takes the level of its least mature required reference. One working-group draft among them makes the flow emerging; one individual draft makes it experimental. Optional extensions and background references never change it.
+
+**When a role is not settled.** A reference whose role is not settled is not counted, and it is not assumed to be optional. If it is less mature than the flow's rating, or its level is unknown, requiring it would lower the rating. The rating is then provisional, and shown as such, until that reference is classified. If it could not lower the rating, the rating stands. None of the five reviewed flows has an unsettled reference today, so none is provisional.
 
 **What the rating is not.** It describes the dependencies of the arrangement the page draws. It does not say the flow is secure, or ready for production where you run it. A stable flow can be deployed badly, and an emerging one can be the right choice.
 

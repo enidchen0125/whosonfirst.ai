@@ -62,11 +62,15 @@ export type Maturity = 'stable' | 'emerging' | 'experimental';
 /**
  * What a flow page needs from a reference it lists.
  * - required: the page names it as what the flow implements, a numbered step shows
- *   something it defines, or the page teaches a security or validation rule it sets
- * - optional: offered as a variant or an addition; no step depends on it
+ *   something it defines, the page teaches a security or validation rule it sets, or
+ *   the page says a conforming implementation must support it, drawn or not
+ * - optional: offered as a variant or an addition; no step depends on it and nothing
+ *   on the page requires it
  * - background: named for context only
  * - unresolved: its role could not be settled from the sources available
- * A flow's maturity is that of its least mature required reference. See /about/.
+ * A flow's maturity is that of its least mature required reference. An unresolved
+ * reference is not counted, and is not assumed to be optional: if requiring it would
+ * lower the rating, the rating is provisional. See data/rating.ts and /about/.
  */
 export type RefRole = 'required' | 'optional' | 'background' | 'unresolved';
 
@@ -78,8 +82,8 @@ export const REF_ROLE_TITLE: Record<RefRole, string> = {
 };
 
 export const REF_ROLE_BLURB: Record<RefRole, string> = {
-  required: 'The flow as drawn depends on these. They decide its maturity rating.',
-  optional: 'Variants and additions the page mentions. No step depends on them.',
+  required: 'What the flow implements, shows in a step, or must support. These decide its maturity rating.',
+  optional: 'Variants and additions the page mentions. No step depends on them, and the flow does not require them.',
   background: 'Related reading. Not what the flow implements, and not used in a step.',
   unresolved: 'Listed, but the sources read so far do not settle what the flow needs from them.',
 };
@@ -238,6 +242,12 @@ export interface Standard {
   status: StdStatus;
   /** Free-text status detail: revision, date, where it is in the process. */
   detail?: string;
+  /**
+   * For a project, a platform or a guidance document, whose status alone shows no
+   * maturity: the level its maintainers' own statements support, with the evidence
+   * in a comment beside it. Leave unset when that evidence has not been found.
+   */
+  level?: Maturity;
   topics: StdTopic[];
   /** What it defines. */
   summary: string;

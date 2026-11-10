@@ -4,10 +4,10 @@ import FlowDiagram from '../../components/FlowDiagram.astro';
 import FlowCard from '../../components/FlowCard.astro';
 import StandardCard from '../../components/StandardCard.astro';
 import DocMeta from '../../components/DocMeta.astro';
-import { flows, related } from '../../data/flows';
+import { flows, maturityLabel, rating, related } from '../../data/flows';
 import { std } from '../../data/standards';
 import { REVIEWED } from '../../data/site';
-import { GROUPS, HUMAN_LABEL, MATURITY_LABEL, REF_ROLE_BLURB, REF_ROLE_TITLE, STATUS_LABEL } from '../../data/types';
+import { GROUPS, HUMAN_LABEL, REF_ROLE_BLURB, REF_ROLE_TITLE, STATUS_LABEL } from '../../data/types';
 import type { Flow, RefRole } from '../../data/types';
 import { block, inline } from '../../lib/md';
 
@@ -56,6 +56,17 @@ const byRole = flow.roles
 const counted = flow.roles ? standards.filter((s) => flow.roles![s.id] === 'required') : standards;
 const others = standards.length - counted.length;
 
+// A reference whose role is not settled is not counted. If requiring it would lower the rating,
+// the rating is provisional, and the page names the references it is waiting on.
+const rated = rating(flow);
+const pending = (rated?.pending ?? []).map(std);
+const pendingNames = new Intl.ListFormat('en', { type: 'conjunction' }).format(pending.map((s) => s.name));
+const unsettled = flow.roles ? standards.filter((s) => flow.roles![s.id] === 'unresolved').length : 0;
+const unsettledNote =
+  pending.length > 0
+    ? `Requiring ${pendingNames} would lower this flow’s rating, so the rating is provisional until ${pending.length === 1 ? 'its role is' : 'their roles are'} settled.`
+    : 'None of them is less mature than the flow’s rating, so none could lower it.';
+
 const nDraft = counted.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
 const nPublished = counted.filter((s) => s.status === 'rfc' || s.status === 'final').length;
 const nOther = counted.length - nDraft - nPublished;
@@ -79,13 +90,22 @@ const details = [
         label: `${counted.length} required references`,
         value: makeup,
         href: '#standards',
-        note: others > 0 ? `${others} more listed as optional or background` : undefined,
+        note:
+          others > 0
+            ? unsettled > 0
+              ? `${others} more listed: ${unsettled} with ${unsettled === 1 ? 'a role' : 'roles'} not settled, the rest optional or background`
+              : `${others} more listed as optional or background`
+            : undefined,
       }
     : { label: `All ${standards.length} specifications`, value: makeup, href: '#standards' },
   {
     label: 'Flow maturity',
-    value: MATURITY_LABEL[flow.maturity],
-    note: flow.roles ? 'From its required references: what the rating means' : 'What the rating means',
+    value: maturityLabel(flow),
+    note: rated?.provisional
+      ? `Provisional until the role of ${pendingNames} is settled: what the rating means`
+      : flow.roles
+        ? 'From its required references: what the rating means'
+        : 'What the rating means',
     noteHref: '/about/#how-flows-are-rated',
   },
   { label: 'Human involvement', value: HUMAN_LABEL[flow.human] },
@@ -157,7 +177,10 @@ const details = [
           byRole.map((g) => (
             <div class="refs">
               <h3>{REF_ROLE_TITLE[g.role]}</h3>
-              <p>{REF_ROLE_BLURB[g.role]}</p>
+              <p>
+                {REF_ROLE_BLURB[g.role]}
+                {g.role === 'unresolved' && ` ${unsettledNote}`}
+              </p>
               <div class="grid">
                 {g.items.map((s) => (
                   <StandardCard standard={s} compact />
