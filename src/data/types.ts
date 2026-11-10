@@ -120,6 +120,29 @@ export interface Flow {
   related: string[];
   /** Optional closing notes rendered after the diagram, md-lite blocks. */
   notes?: { title: string; body: string }[];
+  /**
+   * How the flow appears in different settings, as a table. For a flow that is a
+   * pattern more than a protocol, where the steps have to stay general. Cells are
+   * md-lite; the first column is the row heading.
+   */
+  comparison?: {
+    title: string;
+    intro?: string;
+    columns: string[];
+    rows: string[][];
+    /** Qualifications that apply to the whole table. */
+    after?: string;
+  };
+  /** One setting worked through concretely, kept apart from the general steps. */
+  example?: {
+    title: string;
+    intro: string;
+    parts: {
+      title: string;
+      body: string;
+      code?: { lang: string; text: string };
+    }[];
+  };
 }
 
 export const GROUPS: { id: FlowGroup; title: string; blurb: string }[] = [

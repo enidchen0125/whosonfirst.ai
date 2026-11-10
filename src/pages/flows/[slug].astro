@@ -1,4 +1,5 @@
 ---
+import { Code } from "astro:components";
 import Base from "../../layouts/Base.astro";
 import FlowDiagram from "../../components/FlowDiagram.astro";
 import FlowCard from "../../components/FlowCard.astro";
@@ -15,6 +16,7 @@ import {
   STATUS_LABEL,
 } from "../../data/types";
 import type { Flow, RefRole } from "../../data/types";
+import { codeThemes } from "../../lib/code-themes.mjs";
 import { block, inline } from "../../lib/md";
 import { must } from "../../lib/must";
 
@@ -208,6 +210,71 @@ const details = [
       <FlowDiagram flow={flow} />
     </section>
 
+    {
+      flow.comparison && (
+        <section aria-labelledby="comparison">
+          <div class="section-head">
+            <h2 id="comparison">{flow.comparison.title}</h2>
+          </div>
+          {flow.comparison.intro && <div class="prose" set:html={block(flow.comparison.intro)} />}
+          <div
+            class="table-scroll"
+            tabindex="0"
+            role="region"
+            aria-label={`Table: ${flow.comparison.title}`}
+          >
+            <table class="compare">
+              <thead>
+                <tr>
+                  {flow.comparison.columns.map((c) => (
+                    <th scope="col">{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {flow.comparison.rows.map(([head, ...cells]) => (
+                  <tr>
+                    <th scope="row" set:html={inline(head)} />
+                    {cells.map((c) => (
+                      <td set:html={inline(c)} />
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {flow.comparison.after && <div class="prose after" set:html={block(flow.comparison.after)} />}
+        </section>
+      )
+    }
+
+    {
+      flow.example && (
+        <section aria-labelledby="example">
+          <div class="section-head">
+            <h2 id="example">{flow.example.title}</h2>
+          </div>
+          <div class="prose" set:html={block(flow.example.intro)} />
+          <div class="worked">
+            {flow.example.parts.map((part) => (
+              <div class="part">
+                <h3>{part.title}</h3>
+                <div class="prose" set:html={block(part.body)} />
+                {part.code && (
+                  <Code
+                    code={part.code.text}
+                    lang={part.code.lang as any}
+                    themes={codeThemes as any}
+                    defaultColor={false}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
     <section class="cols" aria-label="Cautions and notes">
       <div>
         <h2>Watch out for</h2>
@@ -365,6 +432,54 @@ const details = [
     border-radius: 3px;
     padding: 0 0.35em;
     background: var(--bg-raised);
+  }
+
+  /* comparison table: column headings are phrases here, so they wrap; the row heading is a
+     label like them, set in the body face so that it reads with its row */
+  .compare {
+    min-width: 54rem;
+  }
+  .compare thead th {
+    white-space: normal;
+    vertical-align: bottom;
+  }
+  .compare th[scope='row'] {
+    white-space: normal;
+    width: 9rem;
+    font-family: var(--font-body);
+    font-size: inherit;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .compare tr:last-child th[scope='row'] {
+    border-bottom: 0;
+  }
+  .after {
+    font-size: 0.96rem;
+    color: var(--fg-muted);
+  }
+
+  /* worked example: parts in reading order, each a heading, a paragraph and perhaps a listing.
+     Not numbered: "a numbered step" means a step of the diagram when references are classified. */
+  .worked {
+    margin: 1.4rem 0 0;
+  }
+  .part {
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--border);
+  }
+  .part + .part {
+    margin-top: 1.3rem;
+  }
+  .part h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+  }
+  .part :global(pre) {
+    max-width: var(--prose);
   }
 
   .cols {
