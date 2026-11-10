@@ -28,7 +28,17 @@ const next = flows[i + 1];
 
 // The first standard a flow lists is the one it follows most closely.
 const primary = standards[0];
-const revision = primary.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '');
+const firstSentence = primary.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '').replace(/\.$/, '');
+// On the one-line summary: a revision or version if the entry leads with one, a date for an RFC.
+const numbered = /^(Revision|Version) ([^\s,.;]+)/.exec(firstSentence ?? '');
+const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? '');
+const based = {
+  ref: primary.ref,
+  href: `/standards/#${primary.id}`,
+  status: primary.status === 'rfc' ? (dated ? `published ${dated[1]}` : 'published') : STATUS_LABEL[primary.status],
+  revision: primary.status !== 'rfc' && numbered ? `${numbered[1].toLowerCase()} ${numbered[2]}` : undefined,
+};
+
 const nDraft = standards.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
 const nPublished = standards.filter((s) => s.status === 'rfc' || s.status === 'final').length;
 const nOther = standards.length - nDraft - nPublished;
@@ -39,24 +49,23 @@ const makeup = [
 ]
   .filter(Boolean)
   .join(', ');
-const meta = [
-  { label: 'Document', value: 'Implementation guide', note: 'An explanation, not a specification' },
+const details = [
+  { label: 'This page', value: 'Implementation guide', note: 'An explanation, not a specification' },
   {
     label: 'Primary specification',
-    wide: true,
-    value: primary.ref,
+    value: primary.name,
     href: `/standards/#${primary.id}`,
-    note: [STATUS_LABEL[primary.status], revision].filter(Boolean).join(' · '),
+    note: [STATUS_LABEL[primary.status], firstSentence].filter(Boolean).join(' · '),
   },
+  { label: `All ${standards.length} specifications`, value: makeup, href: '#standards' },
   {
-    label: `All ${standards.length} specifications`,
-    value: makeup,
-    href: '#standards',
-    note: `Flow rated ${MATURITY_LABEL[flow.maturity].replace(' standards', '').toLowerCase()}: what that means`,
+    label: 'Flow maturity',
+    value: MATURITY_LABEL[flow.maturity],
+    note: 'What the rating means',
     noteHref: '/about/#how-status-is-worded',
   },
   { label: 'Human involvement', value: HUMAN_LABEL[flow.human] },
-  { label: 'Guide last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
 ];
 ---
 
@@ -66,7 +75,7 @@ const meta = [
       <p class="eyebrow"><a href="/flows/">Flows</a> / {group.title}</p>
       <h1>{flow.title}</h1>
       <p class="lede">{flow.tagline}</p>
-      <DocMeta items={meta} />
+      <DocMeta based={based} reviewed={REVIEWED} subject="Guide" details={details} />
     </div>
   </div>
 

@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import LastHopBrief from '../components/LastHopBrief.astro';
+import VerifyBrief from '../components/VerifyBrief.astro';
 import DocMeta from '../components/DocMeta.astro';
 import { byGroup, flows } from '../data/flows';
 import { standards } from '../data/standards';
@@ -16,13 +16,14 @@ const principal = questions.find((q) => q.id === 'principal')!;
 const human = questions.find((q) => q.id === 'human')!;
 const label = (q: typeof principal, value: string) => q.options.find((o) => o.value === value)!.label;
 
+// Two answers, shown together. Each then has its own next question, and that
+// question is not the same thing: software can run unattended on authority a
+// person delegated earlier.
 const authority = [
   {
     id: 'person',
-    tone: 'red',
-    principal: 'The user is the principal',
-    answer: label(principal, 'user'),
-    text: 'The token names that person. The agent is the client acting for them, and their permissions set the limit.',
+    choice: 'Acting for a person',
+    token: 'The token names that person. Their permissions set the limit.',
     then: human.title,
     branches: [
       {
@@ -43,7 +44,7 @@ const authority = [
       },
       {
         when: label(human, 'absent'),
-        note: 'Authority was delegated earlier and the agent runs on it unattended. The arrangement to be most careful with.',
+        note: 'The agent runs unattended on authority the person delegated earlier. The arrangement to be most careful with.',
         links: [
           ['authorization-code-pkce', 'consent once, then run on a refresh token'],
           ['cross-app-access', 'the company identity provider decides'],
@@ -53,10 +54,8 @@ const authority = [
   },
   {
     id: 'agent',
-    tone: 'blue',
-    principal: 'The agent is the principal',
-    answer: label(principal, 'self'),
-    text: 'The token names the agent. Its identity comes from the platform it runs on or from a credential an administrator issued, and policy is the only control.',
+    choice: 'Acting under its own service identity',
+    token: 'The token names the agent. Policy an administrator sets is the only control.',
     then: 'Where does its identity come from?',
     branches: [
       {
@@ -66,16 +65,13 @@ const authority = [
           ['spiffe-workload-identity', 'service to service inside your own platform'],
         ],
       },
-      { when: 'A registered client credential', links: [['client-credentials', 'a client with a key or secret of its own']] },
+      {
+        when: 'A registered client credential',
+        links: [['client-credentials', 'a client with a key or secret of its own']],
+      },
     ],
   },
-];
-
-const meta = [
-  { label: 'Document', value: 'Independent implementation guide', note: 'Not a specification', noteHref: '/about/#independence' },
-  { label: 'Covers', value: `${flows.length} flows, ${standards.length} specifications`, note: `${drafts} are still drafts`, noteHref: '/standards/' },
-  { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
-];
+] as const;
 
 const sections = [
   {
@@ -122,11 +118,11 @@ const news = [
           <ul>
             <li>
               <a href="/guide/">Choose an authorization flow</a>
-              <span>Six questions, starting with whose authority the agent is using.</span>
+              <span>Six questions, starting with whose authority the agent uses.</span>
             </li>
             <li>
               <a href="/concepts/#roles">Understand the roles</a>
-              <span>User, agent, authorization server and resource server: what each holds and what each can verify.</span>
+              <span>User, agent, authorization server, resource server.</span>
             </li>
             <li>
               <a href="/flows/">Browse flows and standards</a>
@@ -138,65 +134,63 @@ const news = [
         </nav>
       </div>
 
-      <LastHopBrief />
+      <VerifyBrief />
 
       <div class="hero-meta">
-        <DocMeta items={meta} />
+        <DocMeta lead="An independent guide, not a specification" reviewed={REVIEWED} />
       </div>
     </div>
   </section>
 
   <section class="section">
-    <div class="wrap">
+    <div class="wrap au">
       <div class="section-head">
         <h2>{principal.title}</h2>
         <p>The first question to settle. It decides whose name is on the token.</p>
       </div>
-      <p class="jump">
-        Two answers:{' '}
-        {authority.map((a, n) => (
-          <>
-            {n > 0 && ' · '}
-            <a href={`#authority-${a.id}`}>{a.answer}</a>
-          </>
-        ))}
-      </p>
-      <div class="grid two authority">
+      <fieldset class="au-choices">
+        <legend class="visually-hidden">{principal.title}</legend>
         {
-          authority.map((a) => (
-            <div class="card" id={`authority-${a.id}`}>
-              <span class="chip" data-tone={a.tone}>
-                {a.principal}
+          authority.map((a, i) => (
+            <label>
+              <input type="radio" name="authority" value={a.id} checked={i === 0} />
+              <span class="au-choice">
+                <strong>{a.choice}</strong>
+                <span>{a.token}</span>
               </span>
-              <h3>{a.answer}</h3>
-              <p>{a.text}</p>
-              <p class="then">{a.then}</p>
-              <dl>
-                {a.branches.map((b) => (
-                  <div>
-                    <dt>{b.when}</dt>
-                    <dd>
-                      {b.note && <span class="note">{b.note}</span>}
-                      <ul>
-                        {b.links.map(([slug, hint]) => (
-                          <li>
-                            <a href={`/flows/${slug}/`}>{short(slug)}</a>
-                            <span class="hint">{hint}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
+            </label>
           ))
         }
-      </div>
+      </fieldset>
+      {
+        authority.map((a) => (
+          <div class="au-branch" data-authority={a.id}>
+            <h3>
+              <span class="au-next">Then</span>
+              {a.then}
+            </h3>
+            <div class="au-paths">
+              {a.branches.map((b) => (
+                <div>
+                  <h4>{b.when}</h4>
+                  {'note' in b && <p class="note">{b.note}</p>}
+                  <ul>
+                    {b.links.map(([slug, hint]) => (
+                      <li>
+                        <a href={`/flows/${slug}/`}>{short(slug)}</a>
+                        <span class="hint">{hint}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      }
       <p class="more">
-        These are the first two of the decision guide’s six questions. The other four cover what the agent calls, who
-        runs that, where the agent runs and what is at stake. Chains of agents and tools have{' '}
-        <a href="/flows/#g-delegation">flows of their own</a>.
+        The decision guide asks four more questions: what the agent calls, who runs that, where the agent runs and
+        what is at stake. Chains of agents and tools have <a href="/flows/#g-delegation">flows of their own</a>.
       </p>
       <p class="cta">
         <a class="btn primary" href="/guide/">Answer all six questions</a>
@@ -331,77 +325,134 @@ const news = [
   .section h2 {
     margin-top: 0;
   }
-  .authority .card h3 {
-    margin: 0.8rem 0 0.35rem;
-    font-size: 1.3rem;
-  }
-  .authority .then {
-    margin: 1rem 0 0;
-    padding-top: 0.8rem;
-    border-top: 1px solid var(--border);
-    font-weight: 600;
-    color: var(--fg);
-  }
-  .authority dl {
-    margin: 0.5rem 0 0;
+  /* both answers are on screen before either one's list of flows */
+  .au-choices {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
     gap: 0.6rem;
-  }
-  .authority dl > div {
-    display: grid;
-    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
-    gap: 0.2rem 1rem;
-  }
-  .authority dt {
-    font-size: 0.93rem;
-    color: var(--fg-muted);
-  }
-  .authority dd {
+    border: 0;
+    padding: 0;
     margin: 0;
-    font-size: 0.95rem;
+    min-width: 0;
   }
-  .authority .note {
+  .au-choices label {
     display: block;
-    font-size: 0.86rem;
-    color: var(--fg-muted);
-    margin-bottom: 0.25rem;
+    cursor: pointer;
   }
-  .authority ul {
+  .au-choices input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .au-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.7rem;
+    height: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+  }
+  .au-choice::before {
+    content: '';
+    grid-row: 1 / span 2;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.25rem;
+    border: 1.5px solid var(--fg);
+    border-radius: 50%;
+    background: var(--bg-raised);
+  }
+  .au-choice strong {
+    font-size: 1.12rem;
+    line-height: 1.3;
+  }
+  .au-choice span {
+    grid-column: 2;
+    font-size: 0.93rem;
+    line-height: 1.4;
+    color: var(--fg-muted);
+  }
+  .au-choices label:hover .au-choice {
+    border-color: var(--fg);
+  }
+  .au-choices input:checked + .au-choice {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--accent-soft);
+  }
+  .au-choices input:checked + .au-choice::before {
+    border-color: var(--accent);
+    background: radial-gradient(var(--accent) 0 45%, var(--bg-raised) 50%);
+  }
+  .au-choices input:focus-visible + .au-choice {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* only the chosen answer's paths are shown; without :has() both are */
+  .au-branch {
+    margin-top: 1.4rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--fg);
+  }
+  @supports selector(:has(*)) {
+    .au-branch {
+      display: none;
+    }
+    .au:has(input[value='person']:checked) [data-authority='person'],
+    .au:has(input[value='agent']:checked) [data-authority='agent'] {
+      display: block;
+    }
+  }
+  .au-branch h3 {
+    margin: 0 0 0.9rem;
+    font-size: 1.14rem;
+  }
+  .au-next {
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-right: 0.6em;
+  }
+  .au-paths {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1.2rem 2rem;
+  }
+  .au-paths h4 {
+    margin: 0 0 0.4rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.98rem;
+  }
+  .au-paths .note {
+    margin: 0 0 0.5rem;
+    font-size: 0.88rem;
+    color: var(--fg-muted);
+  }
+  .au-paths ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  .authority li {
-    margin: 0 0 0.35rem;
+  .au-paths li {
+    margin: 0 0 0.45rem;
     line-height: 1.35;
   }
-  .authority .hint {
+  .au-paths .hint {
     display: block;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     color: var(--fg-muted);
-  }
-  .authority .card {
-    scroll-margin-top: 5rem;
-  }
-  /* on a phone the second answer is a long way down: offer both at the top */
-  .jump {
-    display: none;
-    margin: -0.6rem 0 1.2rem;
-    font-size: 0.95rem;
-  }
-  @media (max-width: 48rem) {
-    .jump {
-      display: block;
-    }
-  }
-  @media (max-width: 30rem) {
-    .authority dl > div {
-      grid-template-columns: 1fr;
-    }
   }
   .more {
-    margin: 1.3rem 0 0;
+    margin: 1.6rem 0 0;
     color: var(--fg-muted);
+    max-width: 44rem;
   }
 
   .what {

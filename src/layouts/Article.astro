@@ -26,10 +26,10 @@ const { frontmatter: fm, headings = [] } = Astro.props;
 const toc = headings.filter((h) => h.depth === 2);
 const KIND: Record<string, string> = { '/deployments/': 'Deployment guide' };
 const kind = fm.section && KIND[fm.section.href];
-const meta = kind
+const details = kind
   ? [
-      { label: 'Document', value: kind, note: 'An explanation, not a specification' },
-      { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+      { label: 'This page', value: kind, note: 'An explanation, not a specification' },
+      { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
     ]
   : [];
 ---
@@ -42,7 +42,7 @@ const meta = kind
       </p>
       <h1>{fm.title}</h1>
       {fm.lede && <p class="lede">{fm.lede}</p>}
-      {meta.length > 0 && <DocMeta items={meta} />}
+      {kind && <DocMeta reviewed={REVIEWED} subject="Guide" details={details} more="Review details" />}
     </div>
   </div>
 

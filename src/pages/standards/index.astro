@@ -17,15 +17,15 @@ const count = (fn: (s: (typeof standards)[number]) => boolean) => standards.filt
 const usedIn = (id: string) => flows.filter((f) => f.standards.includes(id));
 const published = count((x) => x.status === 'rfc' || x.status === 'final');
 const draftCount = count((x) => x.status === 'wg-draft' || x.status === 'draft');
-const meta = [
-  { label: 'Document', value: 'Reference', note: 'Every entry links to its source' },
+const details = [
+  { label: 'This page', value: 'Reference', note: 'Every entry links to its source' },
   {
-    label: 'Entries',
-    value: `${standards.length}`,
-    note: `${published} published, ${draftCount} drafts, ${standards.length - published - draftCount} projects and guidance`,
+    label: `${standards.length} entries`,
+    value: `${published} published, ${draftCount} drafts`,
+    note: `${standards.length - published - draftCount} projects and guidance`,
   },
-  { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
-  { label: 'Process states', value: 'As reported', note: 'From secondary sources; check the source' },
+  { label: 'Process states', value: 'As reported', note: 'How to read status', noteHref: '#reading-status' },
+  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
 ];
 
 const moved = [
@@ -73,41 +73,14 @@ const moved = [
       <p class="eyebrow">Standards</p>
       <h1>Standards and drafts tracker</h1>
       <p class="lede">
-        {standards.length} RFCs, drafts, specifications and projects that shape how agents authenticate and what they
-        are allowed to do. Each entry says what it defines, where it stands, and why it matters for agents.
+        What each specification defines, where it stands, and why it matters for agents.
       </p>
-      <DocMeta items={meta} />
+      <DocMeta lead={`${standards.length} entries`} reviewed={REVIEWED} details={details} />
+      <p class="also">
+        Also on this page: <a href="#moved">what moved in 2026</a> · <a href="#reading-status">how to read status</a>
+      </p>
     </div>
   </div>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>What moved in 2026</h2>
-        <p>The year so far, as of {REVIEWED}.</p>
-      </div>
-      <ol class="moved">
-        {
-          moved.map((m) => (
-            <li>
-              <span class="when">{m.when}</span>
-              <p set:html={inline(m.what)} />
-            </li>
-          ))
-        }
-      </ol>
-      <div class="callout">
-        <p class="callout-title">Reading status correctly</p>
-        <p>
-          An IETF <strong>working group draft</strong> has been adopted by a group that intends to publish it, but can
-          still change in incompatible ways. An <strong>individual draft</strong> is one or more people’s proposal and
-          carries no endorsement. Revision numbers and dates here were taken from the IETF document mirror and
-          specification repositories. Process states, such as “in last call”, come from secondary sources and are
-          worded as reported. Follow the source link before relying on any draft.
-        </p>
-      </div>
-    </div>
-  </section>
 
   <section class="section">
     <div class="wrap">
@@ -118,6 +91,11 @@ const moved = [
             <input type="search" name="q" placeholder="Search name, number or text…" autocomplete="off" />
           </label>
 
+          <details class="sx-facets" open>
+            <summary>
+              <span>Filters</span>
+              <span class="sx-active" aria-live="polite"></span>
+            </summary>
           <fieldset>
             <legend>Status</legend>
             {
@@ -158,6 +136,7 @@ const moved = [
           </fieldset>
 
           <button class="btn small ghost" type="reset">Clear filters</button>
+          </details>
         </form>
 
         <div class="sx-results">
@@ -225,6 +204,36 @@ const moved = [
       </standards-explorer>
     </div>
   </section>
+
+  <section class="section" id="moved">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What moved in 2026</h2>
+        <p>The year so far, as of {REVIEWED}.</p>
+      </div>
+      <ol class="moved">
+        {
+          moved.map((m) => (
+            <li>
+              <span class="when">{m.when}</span>
+              <p set:html={inline(m.what)} />
+            </li>
+          ))
+        }
+      </ol>
+      <div class="callout" id="reading-status">
+        <p class="callout-title">Reading status correctly</p>
+        <p>
+          An IETF <strong>working group draft</strong> has been adopted by a group that intends to publish it, but can
+          still change in incompatible ways. An <strong>individual draft</strong> is one or more people’s proposal and
+          carries no endorsement. Revision numbers and dates here were taken from the IETF document mirror and
+          specification repositories. Process states, such as “in last call”, come from secondary sources and are
+          worded as reported. Follow the source link before relying on any draft.
+        </p>
+      </div>
+    </div>
+  </section>
+
 </Base>
 
 <script>
@@ -236,6 +245,9 @@ const moved = [
       const empty = this.querySelector<HTMLElement>('.sx-empty')!;
       form.hidden = false;
       this.dataset.js = '';
+      const facets = this.querySelector<HTMLDetailsElement>('.sx-facets')!;
+      const active = this.querySelector<HTMLElement>('.sx-active')!;
+      const narrow = window.matchMedia('(max-width: 57.99rem)');
 
       const read = () => {
         const fd = new FormData(form);
@@ -263,6 +275,8 @@ const moved = [
         }
         countEl.textContent =
           shown === items.length ? `${shown} entries` : `${shown} of ${items.length} entries`;
+        const n = f.status.length + f.topic.length + f.body.length;
+        active.textContent = n ? `${n} on` : '';
         empty.hidden = shown !== 0;
         if (push) {
           const p = new URLSearchParams();
@@ -284,6 +298,14 @@ const moved = [
         });
       }
       apply(false);
+
+      // beside the list the facets are always open; on a phone they wait behind "Filters"
+      const hasFacet = () => form.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+      const place = () => {
+        facets.open = !narrow.matches || hasFacet();
+      };
+      narrow.addEventListener('change', place);
+      place();
 
       form.addEventListener('input', () => apply());
       form.addEventListener('submit', (e) => e.preventDefault());
@@ -373,6 +395,55 @@ const moved = [
   }
   .sx-filters[hidden] {
     display: none;
+  }
+  /* "Filters" is a disclosure only where the facets would otherwise push the list down */
+  .sx-facets > summary {
+    display: none;
+  }
+  @media (max-width: 57.99rem) {
+    .sx-facets > summary {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--fg);
+      border-radius: var(--radius);
+      background: var(--bg-raised);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+    }
+    .sx-facets > summary::-webkit-details-marker {
+      display: none;
+    }
+    .sx-facets > summary::after {
+      content: 'Show';
+      margin-left: auto;
+      font-family: var(--font-label);
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .sx-facets[open] > summary::after {
+      content: 'Hide';
+    }
+    .sx-active {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+    .sx {
+      gap: 1rem;
+    }
+  }
+  .also {
+    margin: 0.7rem 0 0;
+    font-size: 0.92rem;
+    color: var(--fg-muted);
   }
   .sx-search input {
     width: 100%;

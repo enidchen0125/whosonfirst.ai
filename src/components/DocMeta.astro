@@ -1,8 +1,10 @@
 ---
 /**
- * Facts about the page itself: what kind of document it is, which
- * specification it follows and when it was last checked. These are real
- * properties of the guide, kept apart from the status of any standard.
+ * Facts about the page itself. Two are worth a reader's first glance and sit
+ * on one line: the specification the page is based on, with its status and
+ * revision, and when the guide was last reviewed. They are different facts
+ * and are labelled as such. Everything else (the kind of document, the count
+ * of sources, how it was checked) is one disclosure away.
  */
 export interface MetaItem {
   label: string;
@@ -11,27 +13,61 @@ export interface MetaItem {
   /** Second line, in smaller type. */
   note?: string;
   noteHref?: string;
-  /** Takes the full row on a phone: for values that should not be squeezed. */
-  wide?: boolean;
 }
 interface Props {
-  items: MetaItem[];
+  /** The specification the page follows most closely. */
+  based?: { ref: string; href: string; status: string; revision?: string };
+  /** A leading fact for pages that follow no single specification, e.g. "83 entries". */
+  lead?: string;
+  reviewed: string;
+  /** What the review date is a review of: "Guide" on a flow page, "Tracker" on the standards page. */
+  subject?: string;
+  details?: MetaItem[];
+  /** The disclosure's label. */
+  more?: string;
 }
-const { items } = Astro.props;
+const { based, lead, reviewed, subject, details = [], more = 'Sources and review details' } = Astro.props;
+// dates such as 2026-07-28 should not break across lines at their hyphens
+const whole = (s: string) => s.replace(/(\d)-(?=\d)/g, '$1\u2011');
 ---
 
-<dl class="doc-meta">
+<div class="doc-meta">
+  <p class="doc-line">
+    {
+      based && (
+        <span class="doc-fact">
+          <span class="doc-key">Based on</span>
+          <a href={based.href} class:list={{ nowrap: based.ref.length <= 32 }}>
+            {based.ref}
+          </a>
+          <span class="doc-status">{[based.status, based.revision].filter(Boolean).join(', ')}</span>
+        </span>
+      )
+    }
+    {lead && <span class="doc-fact">{lead}</span>}
+    <span class="doc-fact">
+      <span class="doc-key">{subject ? `${subject} reviewed` : 'Reviewed'}</span>
+      {reviewed}
+    </span>
+  </p>
   {
-    items.map((it) => (
-      <div class:list={{ wide: it.wide }}>
-        <dt>{it.label}</dt>
-        <dd>
-          {it.href ? <a href={it.href}>{it.value}</a> : it.value}
-          {it.note && (
-            <span class="doc-meta-note">{it.noteHref ? <a href={it.noteHref}>{it.note}</a> : it.note}</span>
-          )}
-        </dd>
-      </div>
-    ))
+    details.length > 0 && (
+      <details class="doc-details">
+        <summary>{more}</summary>
+        <dl>
+          {details.map((it) => (
+            <div>
+              <dt>{it.label}</dt>
+              <dd>
+                {it.href ? <a href={it.href}>{it.value}</a> : it.value}
+                {it.note && (
+                  <span class="doc-note">{it.noteHref ? <a href={it.noteHref}>{it.note}</a> : whole(it.note)}</span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    )
   }
-</dl>
+</div>

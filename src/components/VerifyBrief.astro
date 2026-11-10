@@ -1,0 +1,389 @@
+---
+/**
+ * "What can the API verify?" as a compact demonstration for the home page:
+ * a credential selector, the user → agent → API path, three verdicts, one
+ * consequence and one way on. Everything else (the fourth check, the full
+ * explanations, the assumption behind them) is in VerifyDetail on the
+ * Concepts page, which reads the same data.
+ *
+ * Radio inputs + :has(), so it needs no JavaScript, and the first credential
+ * is a complete picture on its own.
+ */
+import { checks, credentials, VERDICT_LABEL } from '../data/verify';
+import { inline } from '../lib/md';
+
+const shown = checks.filter((c) => c.compact);
+---
+
+<section class="vb" aria-labelledby="vb-title">
+  <h2 id="vb-title">What can the API verify?</h2>
+
+  <fieldset>
+    <legend>The agent presents</legend>
+    <div class="vb-choices">
+      {
+        credentials.map((c, i) => (
+          <label>
+            <input type="radio" name="vb" value={c.id} checked={i === 0} />
+            <span>{c.name}</span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  {
+    credentials.map((c) => (
+      <div class="vb-panel" data-credential={c.id}>
+        <div
+          class="vb-path"
+          role="img"
+          aria-label={`Alice, the user: ${c.askDetail}. The agent then calls the API and presents: ${[c.onWire, ...(c.claims ?? [])].join(' ')}.`}
+        >
+          <div class="vb-node role-human">
+            <strong>User</strong>
+            <span>Alice</span>
+          </div>
+          <div class="vb-hop">
+            <span class="vb-note">{c.ask}</span>
+            <span class="vb-arrow" aria-hidden="true" />
+          </div>
+          <div class="vb-node role-agent">
+            <strong>Agent</strong>
+            <span>Client</span>
+          </div>
+          <div class="vb-hop">
+            <span class="vb-cred">
+              {c.onWire}
+              {c.claims && <span class="vb-claims">{c.claims.map((claim) => <code>{claim}</code>)}</span>}
+            </span>
+            <span class="vb-arrow" aria-hidden="true" />
+          </div>
+          <div class="vb-node role-resource">
+            <strong>API</strong>
+            <span>Resource server</span>
+          </div>
+        </div>
+
+        <table>
+          <caption class="visually-hidden">What the API can verify when the agent presents: {c.name}</caption>
+          <tbody>
+            {shown.map((q) => {
+              const r = c.results[q.id];
+              return (
+                <tr>
+                  <th scope="row">{q.question}</th>
+                  <td class="vb-verdict">
+                    <span class={`vb-mark is-${r.verdict}`}>{VERDICT_LABEL[r.verdict]}</span>
+                  </td>
+                  <td class="vb-why" set:html={inline(r.brief)} />
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <p class="vb-consequence">{c.consequence}</p>
+      </div>
+    ))
+  }
+
+  <p class="vb-more">
+    <a href="/concepts/#verify">What each answer rests on, and a fourth check</a>
+  </p>
+</section>
+
+<style>
+  .vb {
+    background: var(--bg-raised);
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    padding: 1.05rem 1.2rem 1rem;
+    /* this panel is read in place whatever colours the band around it uses */
+    color: var(--fg);
+  }
+  h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.75rem;
+    text-transform: none;
+    letter-spacing: var(--display-tracking);
+  }
+
+  fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.8rem;
+    border: 0;
+    padding: 0;
+    margin: 0 0 0.9rem;
+    min-width: 0;
+  }
+  legend {
+    float: left;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  /* one control with two positions */
+  .vb-choices {
+    display: inline-flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .vb-choices label {
+    cursor: pointer;
+    flex: 1 1 auto;
+  }
+  .vb-choices label + label {
+    border-left: 1px solid var(--fg);
+  }
+  .vb-choices input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .vb-choices span {
+    display: block;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    background: var(--bg-raised);
+  }
+  .vb-choices label:hover span {
+    background: var(--bg-sunken);
+  }
+  .vb-choices input:checked + span {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .vb-choices input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: -4px;
+  }
+
+  .vb-panel {
+    display: none;
+  }
+  .vb:has(input[value='key']:checked) [data-credential='key'],
+  .vb:has(input[value='delegated']:checked) [data-credential='delegated'] {
+    display: block;
+  }
+
+  /* the path: three named parties and what passes between them */
+  .vb-path {
+    display: grid;
+    grid-template-columns: auto minmax(2.2rem, 0.6fr) auto minmax(0, 1.4fr) auto;
+    align-items: center;
+    padding-bottom: 0.9rem;
+  }
+  .vb-node {
+    border: 1.3px solid var(--role);
+    background: var(--role-soft);
+    border-radius: var(--radius);
+    padding: 0.4rem 0.65rem;
+    text-align: center;
+  }
+  .vb-node strong {
+    display: block;
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+  .vb-node span {
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+  .vb-hop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0 0.35rem;
+    min-width: 0;
+  }
+  .vb-note,
+  .vb-cred {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    text-align: center;
+  }
+  .vb-note {
+    color: var(--fg-muted);
+  }
+  /* what is presented, with its literal contents set as literals */
+  .vb-cred {
+    display: grid;
+    justify-items: center;
+    gap: 0.1rem;
+    font-weight: 600;
+  }
+  .vb-cred code {
+    font-size: 0.7rem;
+    font-weight: 400;
+    padding: 0.1em 0.4em;
+    background: var(--bg-sunken);
+    border: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  /* each claim stays whole; they wrap as units when the hop is narrow */
+  .vb-claims {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.15rem 0.25rem;
+  }
+  .vb-arrow {
+    width: 100%;
+    height: 1.5px;
+    background: var(--fg);
+    position: relative;
+  }
+  .vb-arrow::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-top: 1.5px solid var(--fg);
+    border-right: 1.5px solid var(--fg);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  /* on a phone the roles' second names give way so the path stays on one line */
+  @media (max-width: 30rem) {
+    .vb-path {
+      /* the first hop is as wide as its word; the credential takes the rest */
+      grid-template-columns: auto max-content auto minmax(0, 1fr) auto;
+    }
+    .vb-node {
+      padding: 0.35rem 0.45rem;
+    }
+    .vb-node:not(.role-human) span {
+      display: none;
+    }
+    .vb-hop {
+      padding-inline: 0.3rem;
+    }
+    .vb-note,
+    .vb-cred {
+      font-size: 0.76rem;
+    }
+  }
+
+  /* three verdicts: the question, the answer as a word, and what it rests on */
+  table {
+    margin: 0;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--fg);
+  }
+  tbody th {
+    font-family: var(--font-body);
+    font-size: 0.93rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: normal;
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.8rem 0.5rem 0;
+    width: 40%;
+    line-height: 1.3;
+  }
+  td {
+    padding: 0.5rem 0;
+    line-height: 1.35;
+  }
+  .vb-verdict {
+    width: 3.4rem;
+    padding-right: 0.8rem;
+  }
+  .vb-why {
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+  }
+  tr:last-child :is(th, td) {
+    border-bottom: 0;
+  }
+  /* the verdict is a word first; shape and colour repeat it */
+  .vb-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .vb-mark::before {
+    content: '';
+    width: 0.7em;
+    height: 0.7em;
+    flex: none;
+    border-radius: 50%;
+  }
+  .is-yes {
+    color: var(--green);
+  }
+  .is-yes::before {
+    background: currentColor;
+  }
+  .is-no {
+    color: var(--red);
+  }
+  .is-no::before {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  @media (max-width: 30rem) {
+    tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child {
+      border-bottom: 0;
+    }
+    tbody th,
+    td {
+      border: 0;
+      padding: 0;
+      width: auto;
+    }
+    .vb-verdict {
+      width: auto;
+      padding: 0 0 0 0.8rem;
+    }
+    .vb-why {
+      grid-column: 1 / -1;
+      padding-top: 0.15rem;
+    }
+  }
+
+  .vb-consequence {
+    margin: 0.8rem 0 0;
+    font-size: 0.98rem;
+    font-weight: 500;
+  }
+  .vb-more {
+    margin: 0.5rem 0 0;
+    font-size: 0.92rem;
+  }
+  .vb-more a::after {
+    content: ' →';
+  }
+</style>

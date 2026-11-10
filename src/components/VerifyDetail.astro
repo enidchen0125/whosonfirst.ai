@@ -1,0 +1,134 @@
+---
+/**
+ * The full version of the home page demonstration: both credentials side by
+ * side, all four checks, the complete explanation of each verdict and the
+ * assumption they share. Static, so it reads the same with or without scripts.
+ */
+import { assumption, checks, credentials, VERDICT_LABEL } from '../data/verify';
+import { inline } from '../lib/md';
+---
+
+<div class="vd">
+  <div class="table-scroll" tabindex="0" role="region" aria-label="What the API can verify, by credential">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">What the API can verify</th>
+          {credentials.map((c) => <th scope="col">The agent presents: {c.name.toLowerCase()}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          checks.map((q) => (
+            <tr>
+              <th scope="row">
+                <span class="vd-clause">{q.clause}</span>
+                {q.question}
+              </th>
+              {credentials.map((c) => {
+                const r = c.results[q.id];
+                return (
+                  <td>
+                    <span class={`vd-mark is-${r.verdict}`}>{VERDICT_LABEL[r.verdict]}</span>
+                    <span set:html={inline(r.detail)} />
+                  </td>
+                );
+              })}
+            </tr>
+          ))
+        }
+        <tr class="vd-sum">
+          <th scope="row">So the API can</th>
+          {
+            credentials.map((c) => (
+              <td>
+                {c.consequence}{' '}
+                <a href={c.flow.href}>{c.flow.text}</a>
+              </td>
+            ))
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="vd-note">{assumption}</p>
+</div>
+
+<style>
+  table {
+    min-width: 42rem;
+  }
+  thead th {
+    white-space: normal;
+  }
+  tbody th {
+    font-family: var(--font-body);
+    font-size: inherit;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: normal;
+    border-bottom: 1px solid var(--border);
+    width: 26%;
+  }
+  .vd-clause {
+    display: block;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-bottom: 0.15rem;
+  }
+  td {
+    width: 37%;
+  }
+  .vd-mark {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-bottom: 0.15rem;
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .vd-mark::before {
+    content: '';
+    width: 0.7em;
+    height: 0.7em;
+    flex: none;
+    border-radius: 50%;
+  }
+  .is-yes {
+    color: var(--green);
+  }
+  .is-yes::before {
+    background: currentColor;
+  }
+  .is-no {
+    color: var(--red);
+  }
+  .is-no::before {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .is-conditional {
+    color: var(--amber);
+  }
+  .is-conditional::before {
+    background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .vd-sum :is(th, td) {
+    background: var(--bg-sunken);
+  }
+  .vd-note {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--fg-muted);
+    max-width: var(--prose);
+  }
+</style>

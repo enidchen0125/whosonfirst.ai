@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import LastHop from '../../components/LastHop.astro';
+import VerifyDetail from '../../components/VerifyDetail.astro';
 import TokenInspector from '../../components/TokenInspector.astro';
 import DocMeta from '../../components/DocMeta.astro';
 import { REVIEWED } from '../../data/site';
@@ -82,14 +83,15 @@ const asks: { group: string; rows: [string, string][] }[] = [
   },
 ];
 
-const meta = [
-  { label: 'Document', value: 'Explainer', note: 'Background for the flow guides' },
-  { label: 'Last reviewed', value: REVIEWED, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
+const details = [
+  { label: 'This page', value: 'Explainer', note: 'Background for the flow guides' },
+  { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
 ];
 
 const toc = [
   ['roles', 'The roles'],
   ['different', 'Why agents are different'],
+  ['verify', 'What the API can verify'],
   ['delegation', 'Delegation or impersonation'],
   ['human', 'With and without a human'],
   ['tokens', 'What is in a token'],
@@ -113,7 +115,7 @@ const toc = [
       <nav class="toc" aria-label="On this page">
         {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
       </nav>
-      <DocMeta items={meta} />
+      <DocMeta reviewed={REVIEWED} details={details} more="Review details" />
     </div>
   </div>
 
@@ -255,11 +257,24 @@ const toc = [
     </div>
   </section>
 
+  <section class="section" id="verify">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What the API can verify</h2>
+        <p>One user, one agent, one API. The credential the agent presents decides what the API can establish.</p>
+      </div>
+      <VerifyDetail />
+    </div>
+  </section>
+
   <section class="section" id="delegation">
     <div class="wrap">
       <div class="section-head">
         <h2>Delegation or impersonation</h2>
-        <p>What does the last hop know? Pick how authority is passed down and see.</p>
+        <p>
+          Add a tool server between the agent and the API. The API is now the last hop of a chain: what does it know?
+          Pick how authority is passed down and see.
+        </p>
       </div>
       <LastHop />
       <div class="prose after">
