@@ -138,6 +138,33 @@ export const standards: Standard[] = [
     url: rfc(9068),
   },
   {
+    id: 'rfc7662',
+    name: 'Token Introspection',
+    ref: 'RFC 7662',
+    body: 'IETF',
+    status: 'rfc',
+    detail: 'October 2015.',
+    topics: ['core'],
+    summary:
+      'An endpoint where a resource server asks the authorization server whether a token is active and what it stands for. Only `active` is required in the answer; `sub`, `client_id` and `scope` are optional.',
+    agents: 'How an API that cannot read a token, or wants its current state, learns who and what the token is for.',
+    url: rfc(7662),
+  },
+  {
+    id: 'rfc7009',
+    name: 'Token Revocation',
+    ref: 'RFC 7009',
+    body: 'IETF',
+    status: 'rfc',
+    detail: 'August 2013.',
+    topics: ['core'],
+    summary:
+      'An endpoint where a client asks the authorization server to revoke a token. Servers must support revoking refresh tokens and should support revoking access tokens.',
+    agents:
+      'Revocation happens at the authorization server. An API that validates self-contained tokens on its own needs something more to learn of it; the RFC names short token lifetimes and communication between the two servers as options.',
+    url: rfc(7009),
+  },
+  {
     id: 'rfc9126',
     name: 'Pushed Authorization Requests',
     ref: 'RFC 9126',
@@ -737,7 +764,7 @@ export const standards: Standard[] = [
     body: 'MCP',
     status: 'final',
     detail:
-      'Current revision 2026-07-28. Earlier revisions: 2025-03-26, 2025-06-18, 2025-11-25. The next release is planned for March 2027. MCP is a Linux Foundation project hosted by the Agentic AI Foundation.',
+      'Current revision 2026-07-28. It requires OAuth 2.1, citing draft -13, and recommends Client ID Metadata Documents, citing draft -00. Earlier revisions: 2025-03-26, 2025-06-18, 2025-11-25. The next release is planned for March 2027. MCP is a Linux Foundation project hosted by the Agentic AI Foundation.',
     topics: ['agent-protocol', 'discovery', 'core'],
     summary: 'A profile of OAuth 2.1 for HTTP transports. The MCP server is a resource server, discovered through protected resource metadata; clients identify themselves with Client ID Metadata Documents; tokens are bound to one server.',
     agents: 'The most widely implemented authorization profile written specifically for agents and tools.',

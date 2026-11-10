@@ -142,7 +142,15 @@ grants:   role/model-inference`,
       body: `Access logs attribute the call to a role that maps back to one namespace and service account. Deleting the service account, or the trust rule, cuts access without touching a secret store.`,
     },
   ],
-  standards: ['k8s-sa-tokens', 'rfc8693', 'rfc7523', 'oidc-discovery', 'spiffe', 'wimse-arch'],
+  standards: ['k8s-sa-tokens', 'rfc8693', 'oidc-discovery', 'rfc7523', 'spiffe', 'wimse-arch'],
+  roles: {
+    'k8s-sa-tokens': 'required', // projected tokens, their claims and issuer discovery: steps 1, 2, 4
+    rfc8693: 'required', // the exchange as drawn: steps 3 and 6
+    'oidc-discovery': 'required', // fetching the issuer's keys, step 4
+    rfc7523: 'optional', // the client-assertion alternative named in step 3 but not drawn
+    spiffe: 'background', // related; not named or used on this page
+    'wimse-arch': 'background', // related; not named or used on this page
+  },
   related: ['spiffe-workload-identity', 'client-credentials', 'wimse-workload-tokens', 'token-exchange'],
   notes: [
     {

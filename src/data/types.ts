@@ -59,6 +59,31 @@ export type HumanPresence = 'present' | 'reachable' | 'absent' | 'any';
 
 export type Maturity = 'stable' | 'emerging' | 'experimental';
 
+/**
+ * What a flow page needs from a reference it lists.
+ * - required: the page names it as what the flow implements, a numbered step shows
+ *   something it defines, or the page teaches a security or validation rule it sets
+ * - optional: offered as a variant or an addition; no step depends on it
+ * - background: named for context only
+ * - unresolved: its role could not be settled from the sources available
+ * A flow's maturity is that of its least mature required reference. See /about/.
+ */
+export type RefRole = 'required' | 'optional' | 'background' | 'unresolved';
+
+export const REF_ROLE_TITLE: Record<RefRole, string> = {
+  required: 'Required',
+  optional: 'Optional extensions',
+  background: 'Background',
+  unresolved: 'Role not settled',
+};
+
+export const REF_ROLE_BLURB: Record<RefRole, string> = {
+  required: 'The flow as drawn depends on these. They decide its maturity rating.',
+  optional: 'Variants and additions the page mentions. No step depends on them.',
+  background: 'Related reading. Not what the flow implements, and not used in a step.',
+  unresolved: 'Listed, but the sources read so far do not settle what the flow needs from them.',
+};
+
 export interface Flow {
   slug: string;
   title: string;
@@ -75,8 +100,15 @@ export interface Flow {
   watchOut: string[];
   participants: Participant[];
   steps: Step[];
-  /** ids from data/standards.ts */
+  /** ids from data/standards.ts. The first is the page's stated basis unless `basis` says otherwise. */
   standards: string[];
+  /**
+   * The role of each listed standard, for flows reviewed reference by reference.
+   * When present it must name every id in `standards` and no others.
+   */
+  roles?: Record<string, RefRole>;
+  /** The specifications the page says the flow implements, when there is more than one. Each must be required. */
+  basis?: string[];
   related: string[];
   /** Optional closing notes rendered after the diagram, md-lite blocks. */
   notes?: { title: string; body: string }[];

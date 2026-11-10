@@ -23,8 +23,8 @@ import { credentialBroker } from './credential-broker';
 /** Display order: grouped, and within each group from most to least established. */
 export const flows: Flow[] = [
   authorizationCodePkce,
-  mcpAuthorization,
   deviceAuthorization,
+  mcpAuthorization,
   stepUpAuthorization,
   ciba,
   urlElicitation,
@@ -44,6 +44,23 @@ export const flows: Flow[] = [
 ];
 
 const bySlug = new Map(flows.map((f) => [f.slug, f]));
+
+// A flow that classifies its references classifies all of them, and bases itself on required ones.
+for (const f of flows) {
+  if (!f.roles) {
+    if (f.basis) throw new Error(`[${f.slug}] has a basis but no roles`);
+    continue;
+  }
+  const listed = new Set(f.standards);
+  const missing = f.standards.filter((id) => !(id in f.roles!));
+  const extra = Object.keys(f.roles).filter((id) => !listed.has(id));
+  if (missing.length || extra.length) {
+    throw new Error(`[${f.slug}] roles do not match standards: missing ${missing.join(', ') || 'none'}; unknown ${extra.join(', ') || 'none'}`);
+  }
+  for (const id of f.basis ?? [f.standards[0]]) {
+    if (f.roles[id] !== 'required') throw new Error(`[${f.slug}] basis "${id}" must be a required reference`);
+  }
+}
 
 export function flow(slug: string): Flow {
   const f = bySlug.get(slug);

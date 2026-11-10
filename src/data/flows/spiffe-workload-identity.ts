@@ -111,7 +111,14 @@ Validity:
       body: `If the call is on behalf of a user, the request carries an access token as well. Workload identity for the hop, user delegation for the request: the two layers answer different questions and are stronger together.`,
     },
   ],
-  standards: ['spiffe', 'spire', 'rfc8705', 'wimse-arch', 'spiffe-client-auth'],
+  standards: ['spiffe', 'spire', 'rfc8705', 'spiffe-client-auth', 'wimse-arch'],
+  roles: {
+    spiffe: 'required', // SPIFFE ID, X.509-SVID, Workload API, trust bundle: steps 3, 5, 6, 7
+    spire: 'required', // the implementation drawn: attestation and registration in steps 1, 2, 4
+    rfc8705: 'optional', // an SVID authenticating an OAuth client is offered under "Use it when"; no step shows it
+    'spiffe-client-auth': 'optional', // the same use, as an IETF draft
+    'wimse-arch': 'background', // named once in a note about related IETF work
+  },
   related: ['workload-identity-federation', 'wimse-workload-tokens', 'transaction-tokens', 'client-credentials'],
   notes: [
     {

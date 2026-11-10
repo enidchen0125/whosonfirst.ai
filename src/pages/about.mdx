@@ -53,7 +53,41 @@ Every tracker entry links to its canonical source. If the two disagree, the sour
 
 </div>
 
-On flow pages, **stable** means the flow rests on published standards. **Emerging** means it depends on at least one working group draft or a recently released protocol version. **Experimental** means the specifications are early and likely to change.
+## How flows are rated
+
+Each flow page carries a rating: stable, emerging or experimental. The rating describes what the flow depends on.
+
+**What counts.** Each specification a flow page lists has one role.
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Roles of a reference">
+
+| Role | Meaning |
+| --- | --- |
+| Required | The page names it as what the flow implements, a numbered step shows something it defines, or the page teaches a security or validation rule it sets |
+| Optional extension | Offered as a variant or an addition. No step depends on it |
+| Background | Named for context only |
+
+</div>
+
+**How a required reference is judged.**
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Maturity levels">
+
+| Level | Evidence |
+| --- | --- |
+| Stable | An RFC, or another body's final specification. For a project or a platform: its own statement of stability, such as a specification its maintainers mark stable or a feature documented as generally available |
+| Emerging | A draft adopted by a working group. For a project or a platform: a feature its maintainers mark as beta or incubating |
+| Experimental | An individual draft, a specification before its first stable release, or a feature marked alpha or experimental |
+
+</div>
+
+A mechanism is not experimental merely because no standards body owns it. It is judged on what its maintainers publish about its stability. Where that evidence has not been found, the role or the rating is left unsettled and the page says so.
+
+**The rating.** A flow takes the level of its least mature required reference. One working-group draft among them makes the flow emerging; one individual draft makes it experimental. Optional extensions and background references never change it.
+
+**What the rating is not.** It describes the dependencies of the arrangement the page draws. It does not say the flow is secure, or ready for production where you run it. A stable flow can be deployed badly, and an emerging one can be the right choice.
+
+**Coverage.** Five flows have been reviewed reference by reference under this rule: authorization code with PKCE, device authorization, MCP authorization, SPIFFE workload identity and workload identity federation. Their pages group references by role. The other flows carry ratings assigned before the rule and show their references as one list.
 
 ## Examples are illustrative
 

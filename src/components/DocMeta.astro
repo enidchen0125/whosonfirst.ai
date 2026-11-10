@@ -15,8 +15,8 @@ export interface MetaItem {
   noteHref?: string;
 }
 interface Props {
-  /** The specification the page follows most closely. */
-  based?: { ref: string; href: string; status: string; revision?: string };
+  /** The specification, or specifications, the page says the flow implements. */
+  based?: { refs: { ref: string; href: string }[]; status: string; revision?: string };
   /** A leading fact for pages that follow no single specification, e.g. "83 entries". */
   lead?: string;
   reviewed: string;
@@ -37,9 +37,14 @@ const whole = (s: string) => s.replace(/(\d)-(?=\d)/g, '$1\u2011');
       based && (
         <span class="doc-fact">
           <span class="doc-key">Based on</span>
-          <a href={based.href} class:list={{ nowrap: based.ref.length <= 32 }}>
-            {based.ref}
-          </a>
+          {based.refs.map((r, i) => (
+            <>
+              {i > 0 && ' and '}
+              <a href={r.href} class:list={{ nowrap: r.ref.length <= 32 }}>
+                {r.ref}
+              </a>
+            </>
+          ))}
           <span class="doc-status">{[based.status, based.revision].filter(Boolean).join(', ')}</span>
         </span>
       )

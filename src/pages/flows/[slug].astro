@@ -7,8 +7,8 @@ import DocMeta from '../../components/DocMeta.astro';
 import { flows, related } from '../../data/flows';
 import { std } from '../../data/standards';
 import { REVIEWED } from '../../data/site';
-import { GROUPS, HUMAN_LABEL, MATURITY_LABEL, STATUS_LABEL } from '../../data/types';
-import type { Flow } from '../../data/types';
+import { GROUPS, HUMAN_LABEL, MATURITY_LABEL, REF_ROLE_BLURB, REF_ROLE_TITLE, STATUS_LABEL } from '../../data/types';
+import type { Flow, RefRole } from '../../data/types';
 import { block, inline } from '../../lib/md';
 
 export function getStaticPaths() {
@@ -26,22 +26,39 @@ const i = flows.indexOf(flow);
 const prev = flows[i - 1];
 const next = flows[i + 1];
 
-// The first standard a flow lists is the one it follows most closely.
-const primary = standards[0];
+// What the page says the flow implements: `basis` if given, otherwise the first standard listed.
+const basis = (flow.basis ?? [flow.standards[0]]).map(std);
+const primary = basis[0];
 const firstSentence = primary.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '').replace(/\.$/, '');
 // On the one-line summary: a revision or version if the entry leads with one, a date for an RFC.
 const numbered = /^(Revision|Version) ([^\s,.;]+)/.exec(firstSentence ?? '');
 const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? '');
 const based = {
-  ref: primary.ref,
-  href: `/standards/#${primary.id}`,
-  status: primary.status === 'rfc' ? (dated ? `published ${dated[1]}` : 'published') : STATUS_LABEL[primary.status],
-  revision: primary.status !== 'rfc' && numbered ? `${numbered[1].toLowerCase()} ${numbered[2]}` : undefined,
+  refs: basis.map((s) => ({ ref: s.ref, href: `/standards/#${s.id}` })),
+  status:
+    basis.length > 1
+      ? basis.every((s) => s.status === 'rfc')
+        ? 'published RFCs'
+        : basis.map((s) => STATUS_LABEL[s.status]).join(', ')
+      : primary.status === 'rfc'
+        ? dated
+          ? `published ${dated[1]}`
+          : 'published'
+        : STATUS_LABEL[primary.status],
+  revision: basis.length === 1 && primary.status !== 'rfc' && numbered ? `${numbered[1].toLowerCase()} ${numbered[2]}` : undefined,
 };
 
-const nDraft = standards.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
-const nPublished = standards.filter((s) => s.status === 'rfc' || s.status === 'final').length;
-const nOther = standards.length - nDraft - nPublished;
+// Flows reviewed reference by reference show their standards grouped by role.
+const ROLE_ORDER: RefRole[] = ['required', 'optional', 'background', 'unresolved'];
+const byRole = flow.roles
+  ? ROLE_ORDER.map((role) => ({ role, items: standards.filter((s) => flow.roles![s.id] === role) })).filter((g) => g.items.length > 0)
+  : [];
+const counted = flow.roles ? standards.filter((s) => flow.roles![s.id] === 'required') : standards;
+const others = standards.length - counted.length;
+
+const nDraft = counted.filter((s) => s.status === 'wg-draft' || s.status === 'draft').length;
+const nPublished = counted.filter((s) => s.status === 'rfc' || s.status === 'final').length;
+const nOther = counted.length - nDraft - nPublished;
 const makeup = [
   `${nPublished} published`,
   nDraft > 0 && `${nDraft} ${nDraft === 1 ? 'draft' : 'drafts'}`,
@@ -51,18 +68,25 @@ const makeup = [
   .join(', ');
 const details = [
   { label: 'This page', value: 'Implementation guide', note: 'An explanation, not a specification' },
-  {
-    label: 'Primary specification',
-    value: primary.name,
-    href: `/standards/#${primary.id}`,
-    note: [STATUS_LABEL[primary.status], firstSentence].filter(Boolean).join(' · '),
-  },
-  { label: `All ${standards.length} specifications`, value: makeup, href: '#standards' },
+  ...basis.map((s, n) => ({
+    label: basis.length > 1 ? `Basis ${n + 1} of ${basis.length}` : 'Primary specification',
+    value: s.name,
+    href: `/standards/#${s.id}`,
+    note: [STATUS_LABEL[s.status], s.detail?.split(/(?<=\.)\s/)[0].replaceAll('`', '').replace(/\.$/, '')].filter(Boolean).join(' · '),
+  })),
+  flow.roles
+    ? {
+        label: `${counted.length} required references`,
+        value: makeup,
+        href: '#standards',
+        note: others > 0 ? `${others} more listed as optional or background` : undefined,
+      }
+    : { label: `All ${standards.length} specifications`, value: makeup, href: '#standards' },
   {
     label: 'Flow maturity',
     value: MATURITY_LABEL[flow.maturity],
-    note: 'What the rating means',
-    noteHref: '/about/#how-status-is-worded',
+    note: flow.roles ? 'From its required references: what the rating means' : 'What the rating means',
+    noteHref: '/about/#how-flows-are-rated',
   },
   { label: 'Human involvement', value: HUMAN_LABEL[flow.human] },
   { label: 'Review', value: `Checked against sources in ${REVIEWED}`, note: 'How it was checked', noteHref: '/about/#how-facts-were-checked' },
@@ -128,9 +152,27 @@ const details = [
         <h2 id="standards">Standards in play</h2>
         <p><a href="/standards/">See the full tracker</a> for status and links.</p>
       </div>
-      <div class="grid">
-        {standards.map((s) => <StandardCard standard={s} compact />)}
-      </div>
+      {
+        byRole.length > 0 ? (
+          byRole.map((g) => (
+            <div class="refs">
+              <h3>{REF_ROLE_TITLE[g.role]}</h3>
+              <p>{REF_ROLE_BLURB[g.role]}</p>
+              <div class="grid">
+                {g.items.map((s) => (
+                  <StandardCard standard={s} compact />
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div class="grid">
+            {standards.map((s) => (
+              <StandardCard standard={s} compact />
+            ))}
+          </div>
+        )
+      }
     </section>
 
     {
@@ -216,6 +258,20 @@ const details = [
   .fit ul {
     font-size: 0.96rem;
     padding-left: 1.1em;
+  }
+
+  /* references grouped by what the flow needs from them */
+  .refs + .refs {
+    margin-top: 1.6rem;
+  }
+  .refs h3 {
+    margin: 0 0 0.15rem;
+    font-size: 1.1rem;
+  }
+  .refs > p {
+    margin: 0 0 0.7rem;
+    font-size: 0.93rem;
+    color: var(--fg-muted);
   }
 
   .section-head kbd {

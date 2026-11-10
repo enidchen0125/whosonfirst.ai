@@ -63,6 +63,8 @@ Most changes are data changes.
 
 **Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`. The first standard a flow lists is shown at the top of its page as the primary specification, with its status and revision, so list the one the flow follows most closely first.
 
+**Classify a flow's references.** A flow can give each standard it lists a role in `roles`: `required`, `optional`, `background` or `unresolved`. Its rating is then that of its least mature required reference; the rule is on the About page under "How flows are rated". If the flow implements more than one specification, name them in `basis`. A flow with `roles` must classify every standard it lists, and its basis must be required, or the build fails.
+
 **Cross-references are checked at build time.** A flow that names an unknown standard or related flow, or a decision-guide rule that names an unknown flow or answer, fails the build.
 
 **When you re-verify the standards**, update `REVIEWED` in `src/data/site.ts`.
