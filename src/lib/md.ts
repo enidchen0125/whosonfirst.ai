@@ -27,6 +27,7 @@ export function inline(text: string): string {
       const external = /^https?:/.test(href);
       return `<a href="${href}"${external ? ' rel="noopener"' : ""}>${label}</a>`;
     });
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: NUL marks where a code span was lifted out, so the other rules cannot touch it
   return out.replace(/\u0000(\d+)\u0000/g, (_, i: string) => codes[Number(i)]);
 }
 

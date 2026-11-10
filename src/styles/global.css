@@ -136,6 +136,7 @@ samp {
 pre {
   margin: 0 0 1.3em;
   padding: 0.95rem 1.1rem;
+  /* biome-ignore lint/complexity/noImportantStyles: keeps the page's surface colour if the syntax highlighter sets a background inline */
   background: var(--bg-raised) !important;
   border: 1px solid var(--border);
   border-radius: var(--radius);

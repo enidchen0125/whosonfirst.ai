@@ -49,13 +49,18 @@ export function rate(refs: RatedRef[]): Rating {
   const required = refs.filter((r) => r.role === "required");
   if (required.length === 0)
     throw new Error("no required reference to rate from");
-  const unknown = required.filter((r) => r.level === undefined);
+  const ranks: number[] = [];
+  const unknown: string[] = [];
+  for (const r of required) {
+    if (r.level === undefined) unknown.push(r.id);
+    else ranks.push(ORDER.indexOf(r.level));
+  }
   if (unknown.length > 0) {
     throw new Error(
-      `required ${unknown.map((r) => `"${r.id}"`).join(", ")} has no recorded maturity level; state one on its tracker entry, with its evidence`,
+      `required ${unknown.map((id) => `"${id}"`).join(", ")} has no recorded maturity level; state one on its tracker entry, with its evidence`,
     );
   }
-  const rank = Math.min(...required.map((r) => ORDER.indexOf(r.level!)));
+  const rank = Math.min(...ranks);
   const pending = refs
     .filter(
       (r) =>

@@ -16,6 +16,7 @@ import {
 } from "../../data/types";
 import type { Flow, RefRole } from "../../data/types";
 import { block, inline } from "../../lib/md";
+import { must } from "../../lib/must";
 
 export function getStaticPaths() {
   return flows.map((flow) => ({
@@ -28,7 +29,10 @@ interface Props {
   flow: Flow;
 }
 const { flow } = Astro.props;
-const group = GROUPS.find((g) => g.id === flow.group)!;
+const group = must(
+  GROUPS.find((g) => g.id === flow.group),
+  `group "${flow.group}"`,
+);
 const standards = flow.standards.map(std);
 const rel = related(flow);
 const i = flows.indexOf(flow);
@@ -70,14 +74,15 @@ const ROLE_ORDER: RefRole[] = [
   "background",
   "unresolved",
 ];
-const byRole = flow.roles
+const roles = flow.roles;
+const byRole = roles
   ? ROLE_ORDER.map((role) => ({
       role,
-      items: standards.filter((s) => flow.roles![s.id] === role),
+      items: standards.filter((s) => roles[s.id] === role),
     })).filter((g) => g.items.length > 0)
   : [];
-const counted = flow.roles
-  ? standards.filter((s) => flow.roles![s.id] === "required")
+const counted = roles
+  ? standards.filter((s) => roles[s.id] === "required")
   : standards;
 const others = standards.length - counted.length;
 
@@ -88,8 +93,8 @@ const pending = (rated?.pending ?? []).map(std);
 const pendingNames = new Intl.ListFormat("en", { type: "conjunction" }).format(
   pending.map((s) => s.name),
 );
-const unsettled = flow.roles
-  ? standards.filter((s) => flow.roles![s.id] === "unresolved").length
+const unsettled = roles
+  ? standards.filter((s) => roles[s.id] === "unresolved").length
   : 0;
 const unsettledNote =
   pending.length > 0

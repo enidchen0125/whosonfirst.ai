@@ -7,13 +7,21 @@ import { tokens, CAT_LABEL, CAT_TONE } from "../data/tokens";
 import type { ClaimCat } from "../data/tokens";
 import { hasStd, std } from "../data/standards";
 import { inline } from "../lib/md";
+import { must } from "../lib/must";
 
 interface Props {
   /** Limit to these token ids, in this order. */
   only?: string[];
 }
 const { only } = Astro.props;
-const list = only ? only.map((id) => tokens.find((t) => t.id === id)!) : tokens;
+const list = only
+  ? only.map((id) =>
+      must(
+        tokens.find((t) => t.id === id),
+        `token "${id}"`,
+      ),
+    )
+  : tokens;
 const cats = Object.keys(CAT_LABEL).filter((c) => c !== "meta") as ClaimCat[];
 ---
 

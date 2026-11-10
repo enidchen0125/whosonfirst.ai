@@ -243,6 +243,7 @@
 /* ---------- literal syntax stands apart from prose ---------- */
 
 :root[data-direction="draft01"] pre {
+  /* biome-ignore lint/complexity/noImportantStyles: has to outrank the !important on the base pre rule */
   background: var(--bg-sunken) !important;
   border: 0;
   border-left: 2px solid var(--fg);

@@ -65,7 +65,7 @@ const held = new Map<string, string[]>(P.map((p) => [p.id, []]));
 
 const rows = steps.map((s, i) => {
   const y = y0 + i * rowH;
-  const self = !s.to || s.to === s.from;
+  const to = s.to;
   const x1 = xOf(s.from);
 
   const spent = new Map<string, string[]>();
@@ -95,7 +95,8 @@ const rows = steps.map((s, i) => {
   })).filter((p) => p.items.length > 0 || p.spent.length > 0);
   const from = who(s.from);
 
-  if (self) {
+  // A step with no recipient, or addressed to its sender, is a local action.
+  if (!to || to === s.from) {
     const w = Math.min(Math.max(118, s.label.length * CHAR + 54), W - 8);
     const nx = Math.min(Math.max(x1 - w / 2, 4), W - w - 4);
     return {
@@ -113,7 +114,7 @@ const rows = steps.map((s, i) => {
     };
   }
 
-  const x2 = xOf(s.to!);
+  const x2 = xOf(to);
   const dir = x2 > x1 ? 1 : -1;
   const span = Math.abs(x2 - x1);
   // Labels that will not fit on one line are split into two balanced lines.
@@ -163,8 +164,8 @@ const rows = steps.map((s, i) => {
     lines,
     snapshot,
     from,
-    to: who(s.to!),
-    route: `${name(s.from)} → ${name(s.to!)}`,
+    to: who(to),
+    route: `${name(s.from)} → ${name(to)}`,
   };
 });
 

@@ -31,10 +31,30 @@ npm run check
 ```
 
 ```bash
+npm run fmt
+```
+
+```bash
+npm test
+```
+
+```bash
 npm run check:rendered
 ```
 
+`npm run check` runs [Biome](https://biomejs.dev/) over the repository: formatting, lint rules and import order. `npm run fmt` does the same and writes the fixes. `npm test` runs the site's own checks: types (`astro check`), the rating rule and the colour contrast audit. `npm run check:rendered` opens the built site in a browser.
+
 `npm run build` writes a fully static site to `dist/`. There is no server component and no client-side framework: interactive pieces are small custom elements that enhance HTML rendered at build time, so every page reads correctly with JavaScript off.
+
+### Formatting and linting
+
+Biome's settings are in `biome.json`. Three things about this repository shape them:
+
+- **`.astro` files.** Biome reads only the frontmatter script. The template and `<style>` blocks are left as written, and `astro check` covers their types. Biome can format whole `.astro` files behind an experimental flag (`html.experimentalFullSupportEnabled`); it is off because the templates are whitespace-sensitive.
+- **Import order in `.astro` files is not sorted.** Astro emits component styles in the order components are imported, so sorting the imports changes the cascade.
+- **`design-system/components/*/preview.html` is left out.** Those files are templates with `{{PLACEHOLDER}}` tokens, not HTML.
+
+Biome does not handle `.mdx`, so the deployment guides and the About page are not formatted.
 
 ## Where things are
 
@@ -95,7 +115,7 @@ Three rules hold in every direction:
 
 Two checks cover this:
 
-- `npm run check` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing in any direction falls below 4.5:1.
+- `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing in any direction falls below 4.5:1.
 - `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow, accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work: the home page explainer fits one screen and switches, both answers to "whose authority" appear before either list of flows, each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, the phone flow page reads as a narrative with the diagram on demand and easy to leave, and the stepper keeps keyboard focus usable (Left and Right step, Down scrolls, focus moves off a disabled button). It checks Internet-Draft -01 by default; add `--direction=all` for the rest. It needs Chromium: `npx playwright install chromium`.
 
 ```bash

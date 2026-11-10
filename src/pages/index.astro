@@ -2,22 +2,31 @@
 import Base from "../layouts/Base.astro";
 import VerifyBrief from "../components/VerifyBrief.astro";
 import DocMeta from "../components/DocMeta.astro";
-import { byGroup, flows } from "../data/flows";
+import { byGroup, flow, flows } from "../data/flows";
 import { standards } from "../data/standards";
 import { REVIEWED } from "../data/site";
 import { questions } from "../data/guide";
+import { must } from "../lib/must";
 
 const groups = byGroup();
 const drafts = standards.filter(
   (s) => s.status === "wg-draft" || s.status === "draft",
 ).length;
-const short = (slug: string) => flows.find((f) => f.slug === slug)!.short;
+const short = (slug: string) => flow(slug).short;
 
 // The decision guide's first two questions, in its own words.
-const principal = questions.find((q) => q.id === "principal")!;
-const human = questions.find((q) => q.id === "human")!;
+const question = (id: string) =>
+  must(
+    questions.find((q) => q.id === id),
+    `guide question "${id}"`,
+  );
+const principal = question("principal");
+const human = question("human");
 const label = (q: typeof principal, value: string) =>
-  q.options.find((o) => o.value === value)!.label;
+  must(
+    q.options.find((o) => o.value === value),
+    `answer "${value}" to guide question "${q.id}"`,
+  ).label;
 
 // Two answers, shown together. Each then has its own next question, and that
 // question is not the same thing: software can run unattended on authority a
@@ -27,7 +36,7 @@ const authority = [
     id: "person",
     choice: "Acting for a person",
     token: "The token names that person. Their permissions set the limit.",
-    then: human.title,
+    next: human.title,
     branches: [
       {
         when: label(human, "present"),
@@ -69,7 +78,7 @@ const authority = [
     choice: "Acting under its own service identity",
     token:
       "The token names the agent. Policy an administrator sets is the only control.",
-    then: "Where does its identity come from?",
+    next: "Where does its identity come from?",
     branches: [
       {
         when: "The platform it runs on",
@@ -204,7 +213,7 @@ const news = [
           <div class="au-branch" data-authority={a.id}>
             <h3>
               <span class="au-next">Then</span>
-              {a.then}
+              {a.next}
             </h3>
             <div class="au-paths">
               {a.branches.map((b) => (

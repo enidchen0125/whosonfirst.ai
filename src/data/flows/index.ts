@@ -52,20 +52,21 @@ const bySlug = new Map(flows.map((f) => [f.slug, f]));
 // and carries the rating those required references give it.
 const ratings = new Map<string, Rating>();
 for (const f of flows) {
-  if (!f.roles) {
+  const roles = f.roles;
+  if (!roles) {
     if (f.basis) throw new Error(`[${f.slug}] has a basis but no roles`);
     continue;
   }
   const listed = new Set(f.standards);
-  const missing = f.standards.filter((id) => !(id in f.roles!));
-  const extra = Object.keys(f.roles).filter((id) => !listed.has(id));
+  const missing = f.standards.filter((id) => !(id in roles));
+  const extra = Object.keys(roles).filter((id) => !listed.has(id));
   if (missing.length || extra.length) {
     throw new Error(
       `[${f.slug}] roles do not match standards: missing ${missing.join(", ") || "none"}; unknown ${extra.join(", ") || "none"}`,
     );
   }
   for (const id of f.basis ?? [f.standards[0]]) {
-    if (f.roles[id] !== "required")
+    if (roles[id] !== "required")
       throw new Error(`[${f.slug}] basis "${id}" must be a required reference`);
   }
   let rating: Rating;
@@ -73,7 +74,7 @@ for (const f of flows) {
     rating = rate(
       f.standards.map((id) => ({
         id,
-        role: f.roles![id],
+        role: roles[id],
         level: levelOf(std(id)),
       })),
     );

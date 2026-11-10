@@ -117,8 +117,10 @@ const diagramLabels = () => {
     return [0, 1, 2].map((i) => top[i] * a + under[i] * (1 - a)).concat(1);
   };
   const lum = ([r, g, b]) => {
-    const f = (v) =>
-      (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    const f = (v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
   const ratio = (a, b) => {
@@ -417,8 +419,10 @@ for (const direction of directions) {
               let bad = 0;
               const labels = rects(".vb-label");
               labels.forEach((l, i) => {
-                rects(".vb-node").forEach((n) => hit(l, n) && bad++);
-                labels.forEach((o, j) => j > i && hit(l, o) && bad++);
+                for (const n of rects(".vb-node")) if (hit(l, n)) bad++;
+                labels.forEach((o, j) => {
+                  if (j > i && hit(l, o)) bad++;
+                });
                 if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
               });
               const broken = [
