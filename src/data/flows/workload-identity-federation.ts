@@ -27,8 +27,8 @@ What the pattern removes is the need to provision and manage a long-lived applic
     "**Match the exact workload.** Pin the subject, or the claims that stand in for it, to one workload: one service account, one repository and environment, one role. Avoid wildcards and prefix matches, and prefer identifiers that cannot be reassigned, such as IDs over names where the issuer offers them. What a rule can match on differs by receiver.",
     "**Grant the least access that works.** The role or permission behind the trust rule is what a stolen credential is worth.",
     "**Do not share one identity between agents.** Agents that share a service account, a role or a job identity are one principal to every system downstream. They cannot be limited, audited or cut off separately.",
-    "**Short-lived credentials still need protecting.** The identity credential and the credential issued for it both work for anyone holding a copy until they expire. Keep them out of logs, prompts and tool output. Anything that can make requests from inside the workload, including a tool the agent was talked into calling, may be able to ask the platform for the same credentials.",
-    "**Stopping issuance is not revocation.** Deleting the workload, its identity or the trust rule stops new credentials. Those already issued can stay valid until they expire. See the note on stopping access.",
+    "**Short-lived credentials still need protecting.** A bearer token, such as a JWT identity credential or an access token issued for it, can be replayed by whoever holds a copy until it expires. Certificate-based authentication is different: it requires proof of possession of the matching private key, so the key is what has to stay private. Keep tokens and private keys out of logs, prompts and tool output. Limit what can reach the platform’s credential endpoints too: anything that can make requests from inside the workload, including a tool the agent was talked into calling, may be able to ask for the same credentials.",
+    "**Deleting the workload does not cut off its credentials.** It stops the platform issuing or renewing the identity credential. A copy that has not expired can still be exchanged for new access while the receiver’s trust rule stands, and what the receiver already issued has a lifetime of its own. See the note on stopping access.",
     "**The receiver has to reach the issuer’s keys.** A private cluster or an internal identity provider has to publish its discovery document and keys somewhere the receiver can fetch them, or upload the keys where the receiver allows that.",
     "**Workload identity is not a user’s authority.** Federation establishes which workload is calling. It does not carry a person’s identity or consent, and it does not turn the agent’s access into the user’s.",
   ],
@@ -209,7 +209,7 @@ With native workload identity there is less still. A function, virtual machine o
       title: "One exchange, several request formats",
       body: `No single specification defines this pattern. What the implementations share is a signed identity credential, usually a JWT, and a published way to find the issuer’s keys, usually OpenID Connect discovery. The exchange itself is where they differ.
 
-**Google Cloud** follows OAuth token exchange (RFC 8693). The workload posts its credential to the Security Token Service as the subject token and receives a federated access token. The service also accepts credentials that are not JWTs, including a signed AWS request and an X.509 client certificate.
+**Google Cloud** follows OAuth token exchange (RFC 8693). The workload posts its credential to the Security Token Service as the subject token and receives a federated access token. The service also accepts proofs that are not JWTs, including a signed AWS request and an X.509 client certificate presented over mutual TLS.
 
 **Microsoft Entra** uses the client credentials grant. The outside token goes in \`client_assertion\`, with \`client_assertion_type\` set to the JWT bearer type from RFC 7523, in place of an assertion the application would otherwise sign with its own certificate. Its issuer, subject and audience must match the federated identity credential exactly.
 
@@ -221,15 +221,15 @@ Audience values, credential lifetimes, the claims a rule can match on and the wa
     },
     {
       title: "Stopping access",
-      body: `Two different things get called revocation.
+      body: `Cutting off a workload is three separate events. Each has its own control, and none of them brings about the others.
 
-**Stopping future issuance.** Deleting the workload, disabling its platform identity or removing the trust rule means no new credential can be obtained, once the change has taken effect.
+**The platform stops issuing or renewing the identity credential.** Deleting the workload or disabling its platform identity does this. It does not recall a credential already handed out. A copy that has not expired is still a validly signed statement.
 
-**Invalidating what was already issued.** That is a separate matter, and often not possible. A receiver that validates a JWT offline, against cached keys, sees a valid signature and an unexpired token. It cannot see that the pod, service account or job behind the token is gone. Kubernetes binds a token to its pod, and the API server rejects the token once the pod is deleted, but that check is made by the API server. An outside system verifying the signature does not make it. The credential the receiver issued likewise runs to its own expiry unless the receiver offers a way to cut it short.
+**The receiving system stops accepting that credential in new exchanges.** A receiver that validates a JWT offline, against cached keys, sees a valid signature and an unexpired token. It cannot see that the pod, service account or job behind the token is gone. So a copied token can go on obtaining new downstream credentials after its workload is deleted, for as long as it is unexpired and the trust rule is in place. Removing or narrowing the trust rule is what stops further exchanges, once that change has taken effect.
 
-Providers differ here. AWS can revoke the sessions a role issued before a given time, by attaching a policy that denies them. Azure says a managed identity’s token cannot be forced to refresh before it expires, and that changes to the identity’s group or role membership can take several hours to apply.
+**Downstream credentials already issued are invalidated.** These have their own validity and their own revocation rules, set by the receiver. Removing the trust rule does not recall them. Some receivers can cut them short: AWS can revoke the sessions a role issued before a given time, by attaching a policy that denies them. Some cannot: Azure says a managed identity’s token cannot be forced to refresh before it expires, and that changes to the identity’s group or role membership can take several hours to apply.
 
-Plan for the gap. Keep lifetimes short, know which control at the destination takes effect at once, and do not treat deleting a pod, a service account or a trust rule as an instant cut-off.`,
+Short lifetimes on both credentials keep the gaps small. Deleting a pod, a service account or a job is not an instant cut-off, and neither is deleting a trust rule.`,
     },
   ],
   comparison: {
@@ -283,7 +283,7 @@ Plan for the gap. Keep lifetimes short, know which control at the destination ta
   },
   example: {
     title: "Worked example: a Kubernetes pod",
-    intro: `One concrete case of the steps above: an agent in a pod federates from its cluster to a token service outside it. The details are specific to Kubernetes. Other environments do not mount a token file, and their tokens do not carry these claims.`,
+    intro: `One concrete case of the steps above: an agent in a pod federates from its cluster to a token service outside it. The details are specific to Kubernetes. Other environments may deliver credentials differently, and their tokens carry different claims.`,
     parts: [
       {
         title: "The pod asks for a projected token",
@@ -302,7 +302,11 @@ Plan for the gap. Keep lifetimes short, know which control at the destination ta
       },
       {
         title: "The token names the service account and the pod",
-        body: `The token is a JWT signed by the cluster. The subject names the namespace and service account, and the \`kubernetes.io\` claim records the pod and node the token is bound to. Read the file fresh each time, because it rotates on disk.`,
+        body: `The token is a JWT signed by the cluster. The subject names the namespace and service account. The token is bound to the pod named in the \`kubernetes.io\` claim: the API server stops accepting it once that pod is deleted. The node entry is additional metadata. It does not bind the token to the node, and Kubernetes does not check that the node exists when it authenticates the token.
+
+A receiver outside the cluster that validates the signature offline checks none of this. A token whose pod is gone still verifies until it expires. Kubernetes says a client that needs the binding checked must present the token to the API server through the TokenReview API.
+
+Read the file fresh each time, because it rotates on disk.`,
         code: {
           lang: "jsonc",
           text: `// Illustrative claims from a projected
