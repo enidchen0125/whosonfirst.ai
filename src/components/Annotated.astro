@@ -1,0 +1,129 @@
+---
+/**
+ * A listing read line by line: each line of code beside what it says in plain
+ * words and, where it helps, which question it answers. The explanation sits
+ * next to the line it explains, so nothing has to be matched up by eye.
+ * On a phone each line becomes a block: the code, then its explanation.
+ */
+import { inline } from "../lib/md";
+
+interface Props {
+  caption: string;
+  /** Column headings: the code, what it says, and the optional third column. */
+  head: [string, string, string?];
+  rows: { code: string; says: string; tag?: string }[];
+}
+const { caption, head, rows } = Astro.props;
+const third = head[2] !== undefined;
+---
+
+<figure class="an">
+  <table>
+    <caption>{caption}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{head[0]}</th>
+        <th scope="col">{head[1]}</th>
+        {third && <th scope="col">{head[2]}</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((r) => (
+          <tr>
+            <th scope="row">
+              <code>{r.code}</code>
+            </th>
+            <td set:html={inline(r.says)} />
+            {third && <td class="an-tag">{r.tag}</td>}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</figure>
+
+<style>
+  .an {
+    margin: 1.6rem 0 1.8rem;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-raised);
+  }
+  table {
+    margin: 0;
+  }
+  caption {
+    caption-side: top;
+    text-align: left;
+    padding: 0.7rem 0.8rem 0.5rem;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  tbody th {
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-sunken);
+  }
+  tbody th code {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+  }
+  tbody tr:last-child :is(th, td) {
+    border-bottom: 0;
+  }
+  .an-tag {
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    white-space: nowrap;
+    padding-top: 0.8rem;
+  }
+  @media (max-width: 44rem) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    tr {
+      display: block;
+      padding: 0.6rem 0.8rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child {
+      border-bottom: 0;
+    }
+    tbody th,
+    td {
+      display: block;
+      padding: 0;
+      border: 0;
+    }
+    tbody th {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      margin-bottom: 0.3rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .an-tag {
+      padding-top: 0.2rem;
+    }
+  }
+</style>

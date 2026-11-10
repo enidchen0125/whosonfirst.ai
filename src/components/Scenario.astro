@@ -1,0 +1,659 @@
+---
+/**
+ * A figure with a small cast, one thing that varies, and the same questions
+ * asked of every variation: who is on the path, what travels between them,
+ * what the receiver has in front of it, and what it can tell from that.
+ *
+ * The reader picks a variation and the answers change. Radio inputs and
+ * :has(), so it needs no JavaScript. Many readers never click, so the
+ * variation shown first is a complete picture on its own. A browser without
+ * :has() shows every variation in turn, each under its name.
+ *
+ * Up to six variations: the rules that show the chosen one are written out
+ * for six positions at the foot of this file.
+ */
+import { Code } from "astro:components";
+import type { Scenario } from "../data/learn/types";
+import { VERDICT_WORD } from "../data/learn/types";
+import { codeThemes } from "../lib/code-themes.mjs";
+import { block, inline } from "../lib/md";
+
+interface Props {
+  scenario: Scenario;
+  /** A title for the figure, when the text around it does not introduce it. */
+  title?: string;
+  /**
+   * Heading for a table of every variation against every question, drawn under
+   * the figure. It is what a reader who never clicks takes away, so a lesson
+   * that depends on the comparison should set it.
+   */
+  glance?: string;
+}
+const { scenario: s, title, glance } = Astro.props;
+if (s.options.length > 6)
+  throw new Error(`scenario "${s.id}" has more than six options`);
+for (const o of s.options) {
+  const cast = o.cast ?? s.cast;
+  if (o.hops.length !== cast.length - 1)
+    throw new Error(
+      `scenario "${s.id}", option "${o.id}": ${cast.length} actors need ${cast.length - 1} hops, not ${o.hops.length}`,
+    );
+  if (o.findings.length !== s.questions.length)
+    throw new Error(
+      `scenario "${s.id}", option "${o.id}": ${s.questions.length} questions need as many findings`,
+    );
+}
+const initial = s.initial ?? s.options[0].id;
+// One option is a picture with nothing to choose: the chooser and the comparison go.
+const single = s.options.length === 1;
+// Where no answer is a yes or a no, the column for the verdict goes too.
+const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
+---
+
+<figure class="sc" id={s.id}>
+  {title && <p class="sc-title">{title}</p>}
+  <fieldset hidden={single}>
+    <legend>{s.legend}</legend>
+    <div class="sc-choices">
+      {
+        s.options.map((o, i) => (
+          <label>
+            <input type="radio" name={s.id} value={o.id} data-n={i + 1} checked={o.id === initial} />
+            <span>{o.name}</span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  {
+    s.options.map((o, i) => {
+      const cast = o.cast ?? s.cast;
+      return (
+        <div class="sc-panel" data-n={i + 1} data-option={o.id}>
+          <p class="sc-which">
+            {s.legend}: <strong>{o.name}</strong>
+          </p>
+          <div
+            class="sc-chain"
+            data-long={cast.length > 3 ? '' : undefined}
+            style={`--hops:${cast.length - 1}`}
+            role="img"
+            aria-label={cast
+              .map((a, k) => (k < o.hops.length ? `${a.label}, then ${o.hops[k]}, to` : a.label))
+              .join(' ')}
+          >
+            {cast.map((a, k) => (
+              <>
+                <div class={`sc-node role-${a.role}`} style={`--col:${2 * k + 1}`}>
+                  <strong>{a.label}</strong>
+                  {a.sub && <span>{a.sub}</span>}
+                </div>
+                {k < o.hops.length && (
+                  <>
+                    <span class="sc-arrow" style={`--col:${2 * k + 2}`} aria-hidden="true" />
+                    <span class="sc-hop" style={`--from:${2 * k + 1};--to:${2 * k + 4}`}>
+                      {o.hops[k]}
+                    </span>
+                  </>
+                )}
+              </>
+            ))}
+          </div>
+
+          <div class:list={['sc-body', { 'has-exhibits': !!o.exhibits?.length }]}>
+            {o.exhibits && o.exhibits.length > 0 && (
+              <div class="sc-exhibits">
+                {o.exhibits.map((x) => (
+                  <div class="sc-exhibit">
+                    <p class="sc-label">{x.caption}</p>
+                    <Code code={x.text.trim()} lang={x.lang as any} themes={codeThemes as any} defaultColor={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+            <table class="sc-findings">
+              <caption class="sc-label">{s.asks}</caption>
+              <tbody>
+                {s.questions.map((q, k) => {
+                  const f = o.findings[k];
+                  return (
+                    <tr>
+                      <th scope="row">{q}</th>
+                      {judged && (
+                        <td class="sc-verdict">
+                          {f.verdict && <span class={`sc-mark is-${f.verdict}`}>{VERDICT_WORD[f.verdict]}</span>}
+                        </td>
+                      )}
+                      <td class="sc-note" set:html={inline(f.note)} />
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sc-so">
+            <Fragment set:html={block(o.so)} />
+            {o.link && (
+              <p class="sc-link">
+                <a href={o.link.href}>{o.link.text}</a>
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    })
+  }
+  {
+    glance && !single && judged && (
+      <div class="sc-glance">
+        <div class="table-scroll" tabindex="0" role="region" aria-label={glance}>
+          <table>
+            <caption class="sc-label">{glance}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{s.legend}</th>
+                {s.questions.map((q) => (
+                  <th scope="col">{q}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {s.options.map((o) => (
+                <tr>
+                  <th scope="row">{o.name}</th>
+                  {o.findings.map((f) => (
+                    <td>{f.verdict && <span class={`sc-mark is-${f.verdict}`}>{VERDICT_WORD[f.verdict]}</span>}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+</figure>
+
+<style>
+  .sc {
+    margin: 1.8rem 0 2rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem 1.2rem;
+    color: var(--fg);
+  }
+  .sc-title {
+    margin: 0 0 0.8rem;
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    font-weight: 600;
+    letter-spacing: var(--display-tracking);
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.1rem;
+    min-width: 0;
+  }
+  fieldset[hidden] {
+    display: none;
+  }
+  legend,
+  .sc-label {
+    padding: 0;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    text-align: left;
+  }
+  /* the choices are buttons in a row: boxes with a solid edge, as buttons are everywhere */
+  .sc-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .sc-choices label {
+    cursor: pointer;
+  }
+  .sc-choices input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sc-choices span {
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+    min-height: 2.6rem;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.94rem;
+    font-weight: 500;
+    line-height: 1.25;
+    background: var(--bg-raised);
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+  /* a radio's own mark, so the row reads as "pick one" before anything is picked */
+  .sc-choices span::before {
+    content: '';
+    flex: none;
+    width: 0.8em;
+    height: 0.8em;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+  .sc-choices label:hover span {
+    background: var(--bg-sunken);
+  }
+  .sc-choices input:checked + span {
+    background: var(--fg);
+    color: var(--bg);
+    box-shadow: none;
+  }
+  .sc-choices input:checked + span::before {
+    background: radial-gradient(currentColor 0 45%, transparent 50%);
+  }
+  .sc-choices input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* one variation at a time; without :has() each follows the last under its name */
+  .sc-panel + .sc-panel {
+    margin-top: 1.6rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--fg);
+  }
+  .sc-which {
+    margin: 0 0 0.8rem;
+    font-size: 0.94rem;
+  }
+  @supports selector(:has(*)) {
+    .sc-panel {
+      display: none;
+    }
+    .sc-panel + .sc-panel {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+    .sc-which {
+      display: none;
+    }
+    .sc:has(input[data-n='1']:checked) .sc-panel[data-n='1'],
+    .sc:has(input[data-n='2']:checked) .sc-panel[data-n='2'],
+    .sc:has(input[data-n='3']:checked) .sc-panel[data-n='3'],
+    .sc:has(input[data-n='4']:checked) .sc-panel[data-n='4'],
+    .sc:has(input[data-n='5']:checked) .sc-panel[data-n='5'],
+    .sc:has(input[data-n='6']:checked) .sc-panel[data-n='6'] {
+      display: block;
+    }
+  }
+
+  /* The path. On a phone it runs down the page: each party on a line of its own,
+     each arrow beside what it carries. Nothing has to fit between two boxes, so
+     any label fits at any width. */
+  .sc-chain {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+    align-items: center;
+    padding-bottom: 1rem;
+  }
+  .sc-node {
+    grid-column: 1 / -1;
+    justify-self: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.6rem;
+    min-width: min(100%, 12rem);
+    border: 1.3px solid var(--role);
+    background: var(--role-soft);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.7rem;
+  }
+  .sc-node strong {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .sc-node span {
+    font-size: 0.82rem;
+    line-height: 1.3;
+    color: var(--fg-muted);
+  }
+  .sc-arrow {
+    grid-column: 1;
+    justify-self: center;
+    width: 1.5px;
+    height: 2.3rem;
+    background: var(--fg);
+    position: relative;
+  }
+  .sc-arrow::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 7px;
+    height: 7px;
+    border-top: 1.5px solid var(--fg);
+    border-right: 1.5px solid var(--fg);
+    transform: translateX(-50%) rotate(135deg);
+  }
+  .sc-hop {
+    grid-column: 2;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* With room, the path runs across. Boxes and arrows share one row; what
+     travels along each arrow is written beneath it, centered on the arrow, in a
+     row of its own, where it may be wider than the arrow and wrap without
+     touching a box. Boxes are equal widths and so are arrows, which puts the
+     middle of the three columns a label spans exactly under its arrow, and makes
+     62% of that span the widest a label can be without meeting the next one.
+     Two or three parties have that room from 34rem; more need 46rem. The two
+     rules below are the same rule at those two widths. */
+  @media (min-width: 34.01rem) {
+    .sc-chain:not([data-long]) {
+      grid-template-columns: repeat(var(--hops), minmax(0, 1fr) minmax(1.6rem, 0.8fr)) minmax(0, 1fr);
+      row-gap: 0.35rem;
+    }
+    .sc-chain:not([data-long]) .sc-node {
+      grid-row: 1;
+      grid-column: var(--col);
+      align-self: stretch;
+      justify-self: stretch;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      padding: 0.45rem 0.5rem;
+      text-align: center;
+    }
+    .sc-chain:not([data-long]) .sc-arrow {
+      grid-row: 1;
+      grid-column: var(--col);
+      justify-self: stretch;
+      width: auto;
+      height: 1.5px;
+      margin-inline: 0.25rem;
+    }
+    .sc-chain:not([data-long]) .sc-arrow::after {
+      left: auto;
+      right: -1px;
+      top: 50%;
+      bottom: auto;
+      transform: translateY(-50%) rotate(45deg);
+    }
+    .sc-chain:not([data-long]) .sc-hop {
+      grid-row: 2;
+      grid-column: var(--from) / var(--to);
+      justify-self: center;
+      align-self: start;
+      max-width: 62%;
+      font-size: 0.86rem;
+      text-align: center;
+      text-wrap: balance;
+    }
+  }
+  @media (min-width: 46.01rem) {
+    .sc-chain[data-long] {
+      grid-template-columns: repeat(var(--hops), minmax(0, 1fr) minmax(1.6rem, 0.8fr)) minmax(0, 1fr);
+      row-gap: 0.35rem;
+    }
+    .sc-chain[data-long] .sc-node {
+      grid-row: 1;
+      grid-column: var(--col);
+      align-self: stretch;
+      justify-self: stretch;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      padding: 0.45rem 0.5rem;
+      text-align: center;
+    }
+    .sc-chain[data-long] .sc-arrow {
+      grid-row: 1;
+      grid-column: var(--col);
+      justify-self: stretch;
+      width: auto;
+      height: 1.5px;
+      margin-inline: 0.25rem;
+    }
+    .sc-chain[data-long] .sc-arrow::after {
+      left: auto;
+      right: -1px;
+      top: 50%;
+      bottom: auto;
+      transform: translateY(-50%) rotate(45deg);
+    }
+    .sc-chain[data-long] .sc-hop {
+      grid-row: 2;
+      grid-column: var(--from) / var(--to);
+      justify-self: center;
+      align-self: start;
+      max-width: 62%;
+      font-size: 0.86rem;
+      text-align: center;
+      text-wrap: balance;
+    }
+  }
+
+  /* what the receiver has in front of it, beside what it can tell from that */
+  .sc-body {
+    display: grid;
+    gap: 1.1rem 1.6rem;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  @media (min-width: 52rem) {
+    .sc-body.has-exhibits {
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+    }
+  }
+  .sc-exhibits {
+    display: grid;
+    gap: 0.8rem;
+    align-content: start;
+    min-width: 0;
+  }
+  .sc-exhibit :global(pre) {
+    margin: 0;
+    font-size: 0.78rem;
+  }
+
+  table {
+    margin: 0;
+    align-self: start;
+  }
+  caption {
+    caption-side: top;
+  }
+  tbody th {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: normal;
+    border-top: 1px solid var(--fg);
+    border-bottom: 0;
+    padding: 0.55rem 0.8rem 0.55rem 0;
+    width: 32%;
+    line-height: 1.3;
+  }
+  td {
+    border-top: 1px solid var(--fg);
+    border-bottom: 0;
+    padding: 0.55rem 0;
+    line-height: 1.4;
+  }
+  tr + tr :is(th, td) {
+    border-top-color: var(--border);
+  }
+  .sc-verdict {
+    width: 5.6rem;
+    padding-right: 0.8rem;
+  }
+  .sc-note {
+    font-size: 0.92rem;
+    color: var(--fg-muted);
+  }
+  /* the verdict is a word first; shape and color repeat it */
+  .sc-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sc-mark::before {
+    content: '';
+    width: 0.72em;
+    height: 0.72em;
+    flex: none;
+    border-radius: 50%;
+  }
+  .is-yes {
+    color: var(--green);
+  }
+  .is-yes::before {
+    background: currentColor;
+  }
+  .is-no {
+    color: var(--red);
+  }
+  .is-no::before {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .is-partly {
+    color: var(--amber);
+  }
+  .is-partly::before {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+    background: linear-gradient(to right, currentColor 50%, transparent 50%);
+  }
+  .is-skipped {
+    color: var(--fg-muted);
+  }
+  .is-skipped::before {
+    height: 1.5px;
+    border-radius: 0;
+    background: currentColor;
+  }
+  @media (max-width: 34rem) {
+    tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 0.55rem 0;
+      border-top: 1px solid var(--border);
+    }
+    tr:first-child {
+      border-top-color: var(--fg);
+    }
+    tbody th,
+    td {
+      border: 0;
+      padding: 0;
+      width: auto;
+    }
+    .sc-verdict {
+      width: auto;
+      padding: 0 0 0 0.8rem;
+    }
+    .sc-note {
+      grid-column: 1 / -1;
+      padding-top: 0.15rem;
+    }
+  }
+
+  /* every variation against every question, for the reader who does not click */
+  .sc-glance {
+    margin-top: 1.3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .sc-glance .table-scroll {
+    margin: 0;
+    border: 0;
+    background: none;
+  }
+  .sc-glance table {
+    min-width: 30rem;
+  }
+  .sc-glance caption {
+    padding-bottom: 0.2rem;
+  }
+  .sc-glance thead th {
+    white-space: normal;
+    vertical-align: bottom;
+    padding: 0.4rem 0.8rem 0.4rem 0;
+    line-height: 1.3;
+  }
+  .sc-glance tbody th {
+    width: auto;
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+    font-weight: 500;
+  }
+  .sc-glance td {
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+  }
+  .sc-glance tbody tr:last-child :is(th, td) {
+    border-bottom: 0;
+  }
+  /* the table keeps its shape on a phone and scrolls in its own frame */
+  @media (max-width: 34rem) {
+    .sc-glance tr {
+      display: table-row;
+      padding: 0;
+      border: 0;
+    }
+    .sc-glance tbody th,
+    .sc-glance td {
+      display: table-cell;
+      border-bottom: 1px solid var(--border);
+      padding: 0.45rem 0.8rem 0.45rem 0;
+    }
+  }
+
+  /* what follows from it: the sentence to leave with */
+  .sc-so {
+    margin-top: 1.1rem;
+    padding: 0.1rem 0 0.1rem 1rem;
+    border-left: 3px solid var(--fg);
+    max-width: 44rem;
+  }
+  .sc-so :global(p) {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+  .sc-so :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .sc-link a::after {
+    content: ' →';
+  }
+</style>

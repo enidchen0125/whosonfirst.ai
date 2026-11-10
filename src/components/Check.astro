@@ -1,0 +1,181 @@
+---
+/**
+ * "Check yourself": questions the reader answers before moving on. Choosing an
+ * answer shows at once whether it is right and, either way, why. Recalling an
+ * idea just after reading it is what makes it stay; the explanation is what
+ * corrects a wrong first guess.
+ *
+ * Radio inputs and :has(), so it needs no JavaScript and nothing is recorded.
+ * A browser without :has() shows every explanation under its answer.
+ */
+import type { CheckQuestion } from "../data/learn/types";
+import { inline } from "../lib/md";
+
+interface Props {
+  questions: CheckQuestion[];
+  /** Defaults to the set that closes a lesson. An exercise inside a lesson gives its own. */
+  title?: string;
+  intro?: string;
+  /** The heading's anchor. Two sets on one page need different ones. */
+  id?: string;
+}
+const {
+  questions,
+  title = "Check yourself",
+  intro = "Answer before you read on. Nothing is recorded.",
+  id = "check-yourself",
+} = Astro.props;
+for (const q of questions) {
+  if (q.options.filter((o) => o.correct).length !== 1)
+    throw new Error(`check "${q.id}" needs exactly one correct answer`);
+}
+---
+
+<section class:list={['ck', { closing: id === 'check-yourself' }]} aria-labelledby={id}>
+  <h2 id={id}>{title}</h2>
+  <p class="ck-intro">{intro}</p>
+  {
+    questions.map((q, n) => (
+      <fieldset class="ck-q">
+        <legend>
+          <span class="ck-num">{n + 1}</span>
+          <span set:html={inline(q.question)} />
+        </legend>
+        <ul>
+          {q.options.map((o, i) => (
+            <li class={o.correct ? 'is-right' : 'is-wrong'}>
+              <label>
+                <input type="radio" name={q.id} value={i} />
+                <span class="ck-text" set:html={inline(o.text)} />
+              </label>
+              <p class="ck-why">
+                <strong>{o.correct ? 'Right.' : 'Not quite.'}</strong> <Fragment set:html={inline(o.why)} />
+              </p>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+    ))
+  }
+</section>
+
+<style>
+  /* the set that closes a lesson is ruled off from it */
+  .ck.closing {
+    margin-top: clamp(2.2rem, 5vw, 3.2rem);
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--fg);
+  }
+  .ck.closing h2 {
+    margin-top: 0;
+  }
+  .ck h2 {
+    margin-bottom: 0.3rem;
+  }
+  .ck-intro {
+    margin: 0 0 1.2rem;
+    color: var(--fg-muted);
+    font-size: 0.94rem;
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.6rem;
+    min-width: 0;
+    max-width: 40rem;
+  }
+  legend {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: baseline;
+    padding: 0;
+    margin-bottom: 0.6rem;
+    font-size: 1.06rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .ck-num {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 1.5px solid var(--fg);
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 500;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    display: grid;
+    gap: 0.45rem;
+  }
+  li {
+    margin: 0;
+  }
+  label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: baseline;
+    padding: 0.6rem 0.85rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  label:hover {
+    border-color: var(--fg);
+  }
+  input {
+    margin: 0;
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent);
+    translate: 0 0.12rem;
+  }
+  li:has(input:focus-visible) label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .ck-why {
+    margin: 0;
+    padding: 0.55rem 0.85rem 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border: 1px solid var(--tone);
+    border-top: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: var(--tone-soft);
+  }
+  /* the verdict is a word; the color repeats it */
+  .ck-why strong {
+    color: var(--tone);
+  }
+  .is-right {
+    --tone: var(--green);
+    --tone-soft: var(--green-soft);
+  }
+  .is-wrong {
+    --tone: var(--red);
+    --tone-soft: var(--red-soft);
+  }
+  @supports selector(:has(*)) {
+    .ck-why {
+      display: none;
+    }
+    li:has(input:checked) .ck-why {
+      display: block;
+    }
+    li:has(input:checked) label {
+      border-color: var(--tone);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      box-shadow: inset 3px 0 0 var(--tone);
+    }
+  }
+</style>
