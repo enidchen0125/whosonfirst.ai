@@ -17,7 +17,6 @@ import plexMono500 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500
 import plexMono600 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2?url";
 import plexSans400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
 import plexSans600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
-import Logo from "../components/Logo.astro";
 import { REVIEWED } from "../data/site";
 
 interface Props {
@@ -89,7 +88,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     <header class="site-header">
       <div class="wrap bar">
         <a class="brand" href="/" aria-label={`${SITE}, home`}>
-          <Logo />
           <span class="wordmark">{SITE}</span>
         </a>
         <a class="quick" href={QUICK.href} aria-current={path.startsWith(QUICK.href) ? 'page' : undefined}>
@@ -127,7 +125,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       <div class="wrap foot">
         <div>
           <a class="brand" href="/">
-            <Logo size={22} />
             <span class="wordmark">{SITE}</span>
           </a>
           <p>
@@ -229,7 +226,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
     text-decoration: none;
     color: var(--fg);
     margin-right: auto;
@@ -415,14 +411,10 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       display: none;
     }
   }
-  /* on a phone the name drops its suffix and steps down a size to leave room */
+  /* on a phone the name steps down a size to leave room */
   @media (max-width: 30rem) {
     .site-header .wordmark {
       font-size: 0.9rem;
-    }
-    .site-header .brand :global(svg) {
-      width: 24px;
-      height: 24px;
     }
     .site-header[data-js] .bar {
       column-gap: 0.6rem;
