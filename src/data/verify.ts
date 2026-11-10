@@ -1,8 +1,8 @@
 /**
  * "What can the API verify?" — one user, one agent, one API, and two credentials
- * the agent might present. Used by the compact demonstration on the home page
- * (VerifyBrief) and by the full comparison on the Concepts page (VerifyDetail),
- * so the two cannot drift apart.
+ * the agent might present. Used by the full comparison on the Concepts page
+ * (VerifyDetail). The first lesson and the home page tell the same story in
+ * plain words, from data/learn/api-sees.ts, which must not contradict this.
  *
  * Five things are kept apart here, because a credential can settle one without
  * settling the others:
@@ -18,9 +18,7 @@
  * shown abbreviated. Not every token or introspection response carries these
  * fields; `exampleToken` says so on the Concepts page.
  *
- * `brief` is the few words shown beside a verdict in the compact version;
- * `detail` is the full explanation. A verdict only holds under the condition
- * in the credential's `reads`, which the compact version shows beside it.
+ * Every verdict holds only once the credential has been validated as `how` says.
  */
 export type Verdict = "yes" | "no" | "conditional";
 
@@ -35,8 +33,6 @@ export interface Check {
   /** The clause of the site's question this check answers. */
   clause: string;
   question: string;
-  /** Shown in the compact demonstration. The fourth check needs more room than that allows. */
-  compact: boolean;
 }
 
 export const checks: Check[] = [
@@ -44,25 +40,21 @@ export const checks: Check[] = [
     id: "software",
     clause: "Who is acting",
     question: "Which software the credential was issued to",
-    compact: true,
   },
   {
     id: "user",
     clause: "For whom",
     question: "Which user the request is for",
-    compact: true,
   },
   {
     id: "grant",
     clause: "Who said they could",
     question: "What was granted for that user",
-    compact: true,
   },
   {
     id: "sender",
     clause: "Proof",
     question: "That the sender is the party it was issued to",
-    compact: false,
   },
 ];
 
@@ -70,27 +62,12 @@ export interface Credential {
   id: string;
   /** Completes "The agent presents …". */
   name: string;
-  hint: string;
-  /** What passes between the user and the agent. */
-  ask: string;
-  askDetail: string;
-  /** The credential on the wire, as a short label for the arrow. */
+  /** The credential on the wire, in two words. */
   onWire: string;
-  /** What the example shown actually is, when it is more specific than the arrow's label. */
-  sample?: string;
-  /** Claims the API can read from it, if any. */
-  claims?: string[];
-  /** What the API does with it. Every verdict below depends on this. */
-  reads: string;
-  /** How the API verifies it, in full. */
+  /** How the API verifies it. Every verdict below depends on this. */
   how: string;
-  results: Record<
-    Check["id"],
-    { verdict: Verdict; brief: string; detail: string }
-  >;
+  results: Record<Check["id"], { verdict: Verdict; detail: string }>;
   consequence: string;
-  /** What the credential does not settle, however carefully it is checked. */
-  boundary: string;
   /** Refusing and revoking, as three separate things. */
   stop: { policy: string; revoke: string; learns: string };
   flow: { href: string; text: string };
@@ -100,42 +77,31 @@ export const credentials: Credential[] = [
   {
     id: "key",
     name: "Its own API key",
-    hint: "One key for the agent, the same for every user",
-    ask: "asks",
-    askDetail: "Asks the agent to act",
     onWire: "API key",
-    reads: "An opaque secret. The API looks it up in its own records.",
     how: "The API looks the key up in its own records and finds the account it was issued to. Nothing is read from the key itself.",
     results: {
       software: {
         verdict: "yes",
-        brief: "the account the key belongs to",
         detail:
           "The key maps to the account it was issued to. That identifies the agent only if the agent has a key of its own.",
       },
       user: {
         verdict: "no",
-        brief: "a user ID sent by the agent is only its word",
         detail:
           "Nothing the API can verify names Alice. A user ID added by the agent is only the agent’s word.",
       },
       grant: {
         verdict: "no",
-        brief:
-          "the key carries the agent’s own access, the same for every user",
         detail:
           "The key carries the access an administrator gave the agent, the same whichever user it is working for. Nothing in the request records a grant for Alice.",
       },
       sender: {
         verdict: "no",
-        brief: "a bearer secret",
         detail: "A key is a bearer secret. It works for anyone who has a copy.",
       },
     },
     consequence:
       "The API can limit or refuse the agent as a whole. It cannot tell one user’s request from another’s.",
-    boundary:
-      "Not proven: who is sending it. The key works for anyone holding a copy.",
     stop: {
       policy:
         "The API can refuse the key. Every user the agent serves is refused together, because nothing in a request tells them apart.",
@@ -151,45 +117,32 @@ export const credentials: Credential[] = [
   {
     id: "delegated",
     name: "A token Alice delegated",
-    hint: "Issued to the agent by an authorization server after she approved",
-    ask: "approves",
-    askDetail: "Approves access at the authorization server",
     onWire: "Access token",
-    sample: "Example JWT access token",
-    claims: ["sub=alice", "client_id=agent", "scope=calendar.read"],
-    reads:
-      "Abbreviated. The API reads these claims once it has validated the token.",
     how: "The API checks the token’s signature against the issuer’s published keys, and that the issuer, audience and expiry are the ones it expects. An API that cannot read the token itself can ask the authorization server about it instead (token introspection).",
     results: {
       software: {
         verdict: "yes",
-        brief: "named in `client_id`",
         detail:
           "`client_id` names the client the token was issued to. That is the agent’s registration, which may stand for many running copies of it.",
       },
       user: {
         verdict: "yes",
-        brief: "named in `sub`, vouched for by the issuer",
         detail:
           "`sub` names Alice. Where a resource owner is involved, the profile says `sub` should identify them, and the authorization server that signed the token vouches for it.",
       },
       grant: {
         verdict: "yes",
-        brief: "recorded in `scope`: a scope, not each action",
         detail:
           "`scope` and `aud` record what the authorization server granted after Alice approved, and where it applies. The API sees that record, not the approval itself, and it covers a scope, not each action. The profile only recommends `scope`, so a token may carry none.",
       },
       sender: {
         verdict: "conditional",
-        brief: "only for a sender-constrained token",
         detail:
           "Only for a sender-constrained token. A bearer token can be used by anyone holding a copy. A sender-constrained token additionally requires proof of the key it is bound to, with DPoP or mutual TLS. That proof shows the sender holds the key. It does not establish which software is running.",
       },
     },
     consequence:
       "The API can use both identifiers in its access policy: for example, blocking this client while still allowing Alice to use another.",
-    boundary:
-      "Not proven: who is sending it. A bearer token can be used by anyone holding a copy. Sender-constrained tokens additionally require proof of the bound key.",
     stop: {
       policy:
         "The API can use both identifiers: for example, block this client while still allowing Alice to use another, or the reverse. That takes a validated token and a policy that reads both `sub` and `client_id`. Carrying two identifiers does not do it by itself.",

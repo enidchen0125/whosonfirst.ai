@@ -36,12 +36,15 @@ const {
 const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — ${DESCRIPTOR}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-// The task most readers arrive with comes first, and stays in reach on a phone.
-const QUICK = { href: "/guide/", label: "Choose a flow" };
+// In the order a reader new to the subject needs them: learn it, choose with it,
+// then look things up. The first stays in reach on a phone, where the rest wait
+// behind the menu. Concepts, the one-page version of the lessons, is reached
+// from them and from the footer.
+const QUICK = { href: "/learn/", label: "Learn" };
 const nav = [
   QUICK,
+  { href: "/guide/", label: "Choose a flow" },
   { href: "/flows/", label: "Flows" },
-  { href: "/concepts/", label: "Concepts" },
   { href: "/deployments/", label: "Deployments" },
   { href: "/standards/", label: "Standards" },
   { href: "/glossary/", label: "Glossary" },
@@ -133,6 +136,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
         </div>
         <ul>
           {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+          <li><a href="/concepts/">Concepts</a></li>
           <li><a href="/styleguide/">Style guide</a></li>
           <li><a href="/about/">About</a></li>
         </ul>
@@ -427,14 +431,6 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
       padding: 0 0.6rem;
     }
   }
-  /* below this width the three no longer fit on one row: the shortcut gives way,
-     and remains the first item in the menu */
-  @media (max-width: 23.4rem) {
-    .quick {
-      display: none;
-    }
-  }
-
   .site-footer {
     border-top: 1px solid var(--fg);
     background: var(--bg-sunken);

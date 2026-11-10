@@ -28,8 +28,12 @@ interface Props {
    * that depends on the comparison should set it.
    */
   glance?: string;
+  /** Leave out the listings, where the figure has to fit beside other things. */
+  brief?: boolean;
+  /** A way on, at the foot of the figure. */
+  more?: { href: string; text: string };
 }
-const { scenario: s, title, glance } = Astro.props;
+const { scenario: s, title, glance, brief = false, more } = Astro.props;
 if (s.options.length > 6)
   throw new Error(`scenario "${s.id}" has more than six options`);
 for (const o of s.options) {
@@ -50,7 +54,7 @@ const single = s.options.length === 1;
 const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
 ---
 
-<figure class="sc" id={s.id}>
+<figure class:list={['sc', { brief }]} id={s.id}>
   {title && <p class="sc-title">{title}</p>}
   <fieldset hidden={single}>
     <legend>{s.legend}</legend>
@@ -101,8 +105,8 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
             ))}
           </div>
 
-          <div class:list={['sc-body', { 'has-exhibits': !!o.exhibits?.length }]}>
-            {o.exhibits && o.exhibits.length > 0 && (
+          <div class:list={['sc-body', { 'has-exhibits': !brief && !!o.exhibits?.length }]}>
+            {!brief && o.exhibits && o.exhibits.length > 0 && (
               <div class="sc-exhibits">
                 {o.exhibits.map((x) => (
                   <div class="sc-exhibit">
@@ -172,6 +176,13 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
           </table>
         </div>
       </div>
+    )
+  }
+  {
+    more && (
+      <p class="sc-more">
+        <a href={more.href}>{more.text}</a>
+      </p>
     )
   }
 </figure>
@@ -471,6 +482,9 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
     align-content: start;
     min-width: 0;
   }
+  .sc-exhibit {
+    min-width: 0;
+  }
   .sc-exhibit :global(pre) {
     margin: 0;
     font-size: 0.78rem;
@@ -479,6 +493,7 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
   table {
     margin: 0;
     align-self: start;
+    min-width: 0;
   }
   caption {
     caption-side: top;
@@ -653,7 +668,19 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
   .sc-so :global(p:last-child) {
     margin-bottom: 0;
   }
-  .sc-link a::after {
+  .sc-link a::after,
+  .sc-more a::after {
     content: ' →';
+  }
+  .sc-more {
+    margin: 0.9rem 0 0;
+    font-size: 0.94rem;
+  }
+  /* beside other things, the figure sits closer and its last line is shorter */
+  .sc.brief {
+    margin: 0;
+  }
+  .sc.brief .sc-so :global(p) {
+    font-size: 0.96rem;
   }
 </style>

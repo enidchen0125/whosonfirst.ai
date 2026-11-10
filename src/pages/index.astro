@@ -1,8 +1,10 @@
 ---
 import Base from "../layouts/Base.astro";
-import VerifyBrief from "../components/VerifyBrief.astro";
+import Scenario from "../components/Scenario.astro";
 import DocMeta from "../components/DocMeta.astro";
 import { byGroup, flow, flows } from "../data/flows";
+import { apiSees } from "../data/learn/api-sees";
+import { lessons, totalMinutes } from "../data/learn/lessons";
 import { standards } from "../data/standards";
 import { REVIEWED } from "../data/site";
 import { questions } from "../data/guide";
@@ -105,11 +107,6 @@ const authority = [
 
 const sections = [
   {
-    href: "/concepts/",
-    title: "Concepts",
-    text: "Principals, delegation versus impersonation, audience, proof of possession, and an annotated tour of nine tokens.",
-  },
-  {
     href: "/flows/",
     title: `${flows.length} flows`,
     text: "Every flow as a sequence diagram you can step through, with the HTTP on the wire and who holds what at each step.",
@@ -123,6 +120,11 @@ const sections = [
     href: "/standards/",
     title: "Standards tracker",
     text: `${standards.length} RFCs, drafts and specifications with current status. ${drafts} of them are still drafts.`,
+  },
+  {
+    href: "/concepts/",
+    title: "Concepts on one page",
+    text: "The lessons, compressed, with every caveat left in: the roles, what an API can verify, delegation and an annotated tour of nine tokens.",
   },
 ];
 
@@ -157,20 +159,26 @@ const news = [
         <p class="eyebrow">Authentication and authorization for AI agents</p>
         <h1>Who is acting, for whom, and who said they could?</h1>
         <p class="lede">
-          A guide for people building and reviewing agent integrations. For each authorization flow: who holds the
-          credential, whose authority it carries, and what the receiving service can verify.
+          Every API your agent calls needs those three answers, whether it is a calendar, a repository or a
+          customer’s account. An API key gives it one. This guide starts from that key and goes as deep as the
+          specifications.
         </p>
         <nav class="routes" aria-label="Start here">
           <ul>
             <li>
+              <span class="who">New to this?</span>
+              <a href="/learn/">Start with the lessons</a>
+              <span>
+                {lessons.length} short lessons, about {totalMinutes} minutes. No OAuth knowledge needed.
+              </span>
+            </li>
+            <li>
+              <span class="who">Designing an agent?</span>
               <a href="/guide/">Choose an authorization flow</a>
               <span>Six questions, starting with whose authority the agent uses.</span>
             </li>
             <li>
-              <a href="/concepts/#roles">Understand the roles</a>
-              <span>User, agent, authorization server, resource server.</span>
-            </li>
-            <li>
+              <span class="who">Know what you are looking for?</span>
               <a href="/flows/">Browse flows and standards</a>
               <span>
                 {flows.length} flows, step by step, and a <a href="/standards/">tracker of {standards.length} specifications</a>.
@@ -180,7 +188,12 @@ const news = [
         </nav>
       </div>
 
-      <VerifyBrief />
+      <Scenario
+        scenario={apiSees}
+        title="What can the API tell?"
+        brief
+        more={{ href: `/learn/${lessons[0].slug}/`, text: 'Lesson 1: what the API actually sees' }}
+      />
 
       <div class="hero-meta">
         <DocMeta lead="An independent guide, not a specification" reviewed={REVIEWED} />
@@ -189,10 +202,36 @@ const news = [
   </section>
 
   <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Learn it in order</h2>
+        <p>
+          Each lesson answers one question and builds on the one before. <a href="/learn/">How the lessons work →</a>
+        </p>
+      </div>
+      <ol class="path">
+        {
+          lessons.map((l, i) => (
+            <li>
+              <a href={`/learn/${l.slug}/`}>
+                <span class="path-n">{i + 1}</span>
+                <span class="path-body">
+                  <strong>{l.title}</strong>
+                  <span>{l.minutes} min</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
     <div class="wrap au">
       <div class="section-head">
         <h2>{principal.title}</h2>
-        <p>The first question to settle. It decides whose name is on the token.</p>
+        <p>If you know the ground, start here. It is the first question to settle, and it decides whose name is on the token.</p>
       </div>
       <fieldset class="au-choices">
         <legend class="visually-hidden">{principal.title}</legend>
@@ -360,6 +399,14 @@ const news = [
     font-weight: 600;
     justify-self: start;
   }
+  /* which reader each way in is for, said before the link */
+  .routes .who {
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   .routes li > a::after {
     content: ' →';
   }
@@ -371,6 +418,76 @@ const news = [
   .section h2 {
     margin-top: 0;
   }
+
+  /* the lessons, in order: with room, two columns that read down and then across */
+  .path {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 2.5rem;
+    border-top: 1.5px solid var(--fg);
+  }
+  @media (min-width: 56rem) {
+    .path {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(3, auto);
+      grid-auto-flow: column;
+    }
+  }
+  .path li {
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .path a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: center;
+    padding: 0.8rem 0.4rem 0.8rem 0;
+    text-decoration: none;
+  }
+  .path a:hover {
+    background: var(--accent-soft);
+  }
+  .path-n {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 1.5px solid var(--fg);
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .path-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.1rem 1rem;
+  }
+  .path-body strong {
+    font-family: var(--font-heading);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  .path-body span {
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+
   /* both answers are on screen before either one's list of flows */
   .au-choices {
     display: grid;
