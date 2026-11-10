@@ -214,9 +214,29 @@ for (const direction of directions) {
           });
           record(where, 'explainer shows a complete first state', !!first && first.rows === 3, first ? first.marks.join(', ') : 'not visible');
           record(where, 'explainer fits in one screen', !!first && first.height <= vp.height, first ? `${Math.round(first.height)}px of ${vp.height}px` : '');
+          const pathClean = () =>
+            page.evaluate(() => {
+              const panel = [...document.querySelectorAll('.vb-panel')].find((e) => e.offsetParent);
+              const path = panel.querySelector('.vb-path');
+              const box = path.getBoundingClientRect();
+              const rects = (s) => [...path.querySelectorAll(s)].map((e) => e.getBoundingClientRect());
+              const hit = (a, c) => a.left < c.right - 0.5 && c.left < a.right - 0.5 && a.top < c.bottom - 0.5 && c.top < a.bottom - 0.5;
+              let bad = 0;
+              const labels = rects('.vb-label');
+              labels.forEach((l, i) => {
+                rects('.vb-node').forEach((n) => hit(l, n) && bad++);
+                labels.forEach((o, j) => j > i && hit(l, o) && bad++);
+                if (l.left < box.left - 0.5 || l.right > box.right + 0.5) bad++;
+              });
+              const broken = [...panel.querySelectorAll('.vb-reads code')].filter((c) => c.getClientRects().length > 1).length;
+              return { bad, broken };
+            });
+          const keyPath = await pathClean();
           await page.check('.vb input[value="delegated"]', { force: true });
           const second = await page.evaluate(() => [...document.querySelectorAll('.vb-panel')].filter((p) => p.offsetParent).map((p) => p.dataset.credential));
           record(where, 'choosing the other credential changes the panel', second.length === 1 && second[0] === 'delegated', second.join(','));
+          const tokenPath = await pathClean();
+          record(where, 'explainer path: no label overlaps a box or is clipped, no claim is broken, in either state', keyPath.bad + keyPath.broken + tokenPath.bad + tokenPath.broken === 0, JSON.stringify({ keyPath, tokenPath }));
           // both answers to "whose authority" are on screen together, before either list of flows
           const au = await page.evaluate(() => {
             const choices = [...document.querySelectorAll('.au-choices label')].map((l) => l.getBoundingClientRect());
@@ -265,6 +285,17 @@ for (const direction of directions) {
               });
               record(where, `step ${step}: one step shown, with who is talking to whom`, held.shown === 1 && !!held.route, held.route ?? '');
             }
+            // keyboard: Left and Right step, Down is left to scrolling, and focus is never stranded
+            // (the loop above ends on the last step, where Next is disabled and Previous is not)
+            await page.focus('[data-act="prev"]');
+            await page.keyboard.press('ArrowLeft');
+            const afterLeft = await page.evaluate(() => document.querySelector('.flow-count').textContent);
+            await page.keyboard.press('ArrowDown');
+            const afterDown = await page.evaluate(() => document.querySelector('.flow-count').textContent);
+            record(where, 'arrow keys: Left steps back, Down does not change the step', afterLeft.includes(`${count - 1} of`) && afterDown === afterLeft, `${afterLeft} | ${afterDown}`);
+            await page.click('[data-act="next"]');
+            const handed = await page.evaluate(() => ({ disabled: document.querySelector('[data-act="next"]').disabled, onPrev: document.activeElement === document.querySelector('[data-act="prev"]') }));
+            record(where, 'last step: focus moves from the disabled Next to Previous', handed.disabled && handed.onPrev, JSON.stringify(handed));
             const holders = await page.evaluate(() => document.querySelectorAll('.flow-step .held dt').length);
             record(where, 'steps say who holds which credential', holders > 0, `${holders} holder entries`);
           } else {
@@ -285,6 +316,10 @@ for (const direction of directions) {
             record(where, `opened diagram: every label at least ${AA}:1 as drawn`, worst.ratio >= AA, `lowest ${worst.ratio.toFixed(2)} (“${worst.text}”)`);
             const still = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
             record(where, 'opened diagram scrolls inside its own frame', still <= 0, still > 0 ? `${still}px` : '');
+            await page.click('.flow-back button');
+            await page.waitForTimeout(80);
+            const left = await page.evaluate(() => { const s = document.querySelector('.flow-stage > summary'); const r = s.getBoundingClientRect(); return { open: document.querySelector('.flow-stage').open, focus: document.activeElement === s, inView: r.top >= 0 && r.bottom <= innerHeight }; });
+            record(where, 'leaving the diagram closes it and lands on its control, in view', !left.open && left.focus && left.inView, JSON.stringify(left));
           }
         }
         await page.close();
