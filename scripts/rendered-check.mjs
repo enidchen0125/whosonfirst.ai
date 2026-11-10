@@ -101,11 +101,12 @@ const diagramLabels = () => {
     return (hi + 0.05) / (lo + 0.05);
   };
   const canvas = document.querySelector('.flow-canvas');
-  const svg = canvas.querySelector('svg');
-  const scale = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
   const page = over(rgba(getComputedStyle(canvas).backgroundColor), rgba(getComputedStyle(document.body).backgroundColor));
   const out = [];
-  for (const el of svg.querySelectorAll('text')) {
+  // the participant strip and the sequence are separate drawings at the same scale
+  for (const el of canvas.querySelectorAll('svg text')) {
+    const svg = el.ownerSVGElement;
+    const scale = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
     const cs = getComputedStyle(el);
     let alpha = 1;
     for (let n = el; n && n !== canvas; n = n.parentElement) alpha *= Number(getComputedStyle(n).opacity);
@@ -164,6 +165,29 @@ for (const direction of directions) {
         await page.addStyleTag({ content: 'design-switcher{display:none!important}' });
 
         record(where, 'no script errors', errors.length === 0, errors.join('; '));
+        if (pg.name === 'home') {
+          const dest = ['/guide/', '/flows/', '/concepts/', '/deployments/', '/standards/', '/glossary/'];
+          const visibleLinks = () => page.evaluate(() => [...document.querySelectorAll('.site-header a')].filter((a) => { const r = a.getBoundingClientRect(); return r.width > 0 && r.right <= innerWidth && r.left >= 0; }).map((a) => a.getAttribute('href')));
+          if (vp.name === 'phone') {
+            const closed = await visibleLinks();
+            record(where, 'header keeps the flow chooser in view', closed.includes('/guide/'), closed.join(' '));
+            await page.focus('.menu-toggle');
+            await page.keyboard.press('Enter');
+            const open = await visibleLinks();
+            const size = await page.evaluate(() => Math.min(...[...document.querySelectorAll('.site-header nav a, .menu-toggle')].map((el) => el.getBoundingClientRect().height)));
+            record(where, 'menu opens from the keyboard and shows every destination', dest.every((d) => open.includes(d)), open.join(' '));
+            record(where, 'menu targets are at least 44px tall', size >= 44, `smallest ${Math.round(size)}px`);
+            await page.keyboard.press('Tab');
+            const focused = await page.evaluate(() => { const el = document.activeElement; const cs = getComputedStyle(el); return { href: el.getAttribute('href'), outline: cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2 }; });
+            record(where, 'first menu link takes focus next, with a visible ring', focused.href === '/guide/' && focused.outline, JSON.stringify(focused));
+            await page.keyboard.press('Escape');
+            const back = await page.evaluate(() => ({ expanded: document.querySelector('.menu-toggle').getAttribute('aria-expanded'), onToggle: document.activeElement === document.querySelector('.menu-toggle') }));
+            record(where, 'Escape closes the menu and returns focus to its button', back.expanded === 'false' && back.onToggle, JSON.stringify(back));
+          } else {
+            const shown = await visibleLinks();
+            record(where, 'every destination is in the header', dest.every((d) => shown.includes(d)), shown.join(' '));
+          }
+        }
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         record(where, 'no sideways overflow', overflow <= 0, overflow > 0 ? `${overflow}px` : '');
 
@@ -184,24 +208,43 @@ for (const direction of directions) {
 
         if (pg.name === 'home') {
           const first = await page.evaluate(() => {
-            const panel = [...document.querySelectorAll('.lhb-panel')].find((p) => p.offsetParent);
-            return panel ? { rows: panel.querySelectorAll('tbody tr').length, marks: [...panel.querySelectorAll('.lhb-mark')].map((m) => m.textContent.trim()) } : null;
+            const panel = [...document.querySelectorAll('.vb-panel')].find((p) => p.offsetParent);
+            const box = document.querySelector('.vb').getBoundingClientRect();
+            return panel ? { rows: panel.querySelectorAll('tbody tr').length, marks: [...panel.querySelectorAll('.vb-mark')].map((m) => m.textContent.trim()), height: box.height } : null;
           });
-          record(where, 'last-hop explainer shows a complete first state', !!first && first.rows === 4, first ? first.marks.join(', ') : 'not visible');
-          await page.check('.lhb input[value="delegated"]', { force: true });
-          const second = await page.evaluate(() => [...document.querySelectorAll('.lhb-panel')].filter((p) => p.offsetParent).map((p) => p.dataset.arrangement));
+          record(where, 'explainer shows a complete first state', !!first && first.rows === 3, first ? first.marks.join(', ') : 'not visible');
+          record(where, 'explainer fits in one screen', !!first && first.height <= vp.height, first ? `${Math.round(first.height)}px of ${vp.height}px` : '');
+          await page.check('.vb input[value="delegated"]', { force: true });
+          const second = await page.evaluate(() => [...document.querySelectorAll('.vb-panel')].filter((p) => p.offsetParent).map((p) => p.dataset.credential));
           record(where, 'choosing the other credential changes the panel', second.length === 1 && second[0] === 'delegated', second.join(','));
+          // both answers to "whose authority" are on screen together, before either list of flows
+          const au = await page.evaluate(() => {
+            const choices = [...document.querySelectorAll('.au-choices label')].map((l) => l.getBoundingClientRect());
+            const branch = [...document.querySelectorAll('.au-branch')].find((b) => b.offsetParent);
+            return { n: choices.length, lastChoiceBottom: Math.max(...choices.map((r) => r.bottom)), firstChoiceTop: Math.min(...choices.map((r) => r.top)), branchTop: branch?.getBoundingClientRect().top ?? 0, shown: [...document.querySelectorAll('.au-branch')].filter((b) => b.offsetParent).map((b) => b.dataset.authority) };
+          });
+          record(where, 'both authority answers shown before either branch', au.n === 2 && au.lastChoiceBottom <= au.branchTop && au.lastChoiceBottom - au.firstChoiceTop <= vp.height, `${Math.round(au.lastChoiceBottom - au.firstChoiceTop)}px for both`);
+          await page.check('.au-choices input[value="agent"]', { force: true });
+          const after = await page.evaluate(() => [...document.querySelectorAll('.au-branch')].filter((b) => b.offsetParent).map((b) => b.dataset.authority));
+          record(where, 'one branch at a time, switched by the answer', au.shown.join() === 'person' && after.join() === 'agent', `${au.shown} then ${after}`);
           const routes = await page.evaluate(() => [...document.querySelectorAll('.routes li > a')].map((a) => a.getAttribute('href')));
           record(where, 'three ways in: guide, roles, flows', ['/guide/', '/concepts/#roles', '/flows/'].every((h) => routes.includes(h)), routes.join(' '));
         }
 
         if (pg.name === 'flow' || pg.name === 'standards') {
           const facts = await page.evaluate(() => {
-            const dl = document.querySelector('.page-head .doc-meta');
-            return dl ? { text: dl.textContent.replace(/\s+/g, ' '), links: [...dl.querySelectorAll('a')].map((a) => a.getAttribute('href')) } : null;
+            const line = document.querySelector('.page-head .doc-line');
+            const more = document.querySelector('.page-head .doc-details');
+            return line ? { text: line.textContent.replace(/\s+/g, ' '), links: [...line.querySelectorAll('a')].map((a) => a.getAttribute('href')), closed: more ? !more.open : null } : null;
           });
-          record(where, 'page states when it was last reviewed', !!facts && /last reviewed\s*\w+ \d{4}/i.test(facts.text), facts ? '' : 'no page facts');
-          if (pg.name === 'flow') record(where, 'page links its primary specification', !!facts && facts.links.some((h) => h.startsWith('/standards/#')), facts?.links.join(' ') ?? '');
+          record(where, 'review date is on the page\u2019s first line of facts', !!facts && /reviewed\s*\w+ \d{4}/i.test(facts.text), facts ? facts.text.trim() : 'no page facts');
+          record(where, 'supporting details start closed and open on request', !!facts && facts.closed === true && (await page.evaluate(() => { const d = document.querySelector('.page-head .doc-details'); d.querySelector('summary').click(); return d.open && d.querySelector('dl').offsetParent !== null; })));
+          if (pg.name === 'flow') record(where, 'specification is named and linked beside the review date', !!facts && facts.links.some((h) => h.startsWith('/standards/#')) && /based on/i.test(facts.text), facts?.links.join(' ') ?? '');
+          if (pg.name === 'standards') {
+            const lookup = await page.evaluate(() => ({ search: document.querySelector('.sx-search input').getBoundingClientRect().top + scrollY, first: document.querySelector('.sx-item').getBoundingClientRect().top + scrollY, moved: document.querySelector('#moved').getBoundingClientRect().top + scrollY }));
+            record(where, 'search and the first entry are within the first two screens', lookup.first < vp.height * 2 && lookup.search < vp.height * 1.5, `search at ${Math.round(lookup.search)}px, first entry at ${Math.round(lookup.first)}px`);
+            record(where, 'history sits after the lookup', lookup.moved > lookup.first);
+          }
         }
 
         if (pg.name === 'flow') {

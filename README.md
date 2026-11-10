@@ -47,9 +47,11 @@ npm run check:rendered
 | `src/data/glossary.ts` | Glossary terms |
 | `src/data/site.ts` | The "last reviewed" date shown across the site |
 | `src/components/FlowDiagram.astro` | Sequence diagram and step-through panel; a step narrative on a phone |
-| `src/components/LastHopBrief.astro` | “What does the last hop know?” on the home page |
-| `src/components/LastHop.astro` | The longer version of the same comparison, on the Concepts page |
-| `src/components/DocMeta.astro` | Page facts: kind of document, primary specification, review date |
+| `src/data/verify.ts` | “What can the API verify?”: two credentials, four checks, and the wording of each verdict |
+| `src/components/VerifyBrief.astro` | The compact demonstration of that on the home page |
+| `src/components/VerifyDetail.astro` | The full comparison, on the Concepts page |
+| `src/components/LastHop.astro` | The same question across a longer chain, on the Concepts page |
+| `src/components/DocMeta.astro` | Page facts: one line for the specification followed and the review date, the rest in a disclosure |
 | `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram |
 | `src/pages/deployments/*.mdx` | Long-form deployment guides |
 
@@ -79,6 +81,8 @@ The look is under exploration. Five directions share one set of token names and 
 
 Switch with the control at the bottom right of any page, or with `?direction=draft01` (or `draft`, `scorecard`, `scoreboard`, `linemap`) on a URL. `/styleguide/` shows the tokens, type, components and diagrams under whichever direction is active. The switcher is an exploration aid; remove it and the unused files once a direction is chosen.
 
+Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labelled disclosure, and history follows the lookup it belongs to.
+
 Three rules hold in every direction:
 
 - **Colour in a diagram means role.** User, agent, authorization server, resource server and infrastructure each keep one colour. The kind of message (direct call, response, through the browser, out of band) is carried by the line style.
@@ -88,7 +92,7 @@ Three rules hold in every direction:
 Two checks cover this:
 
 - `npm run check` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing in any direction falls below 4.5:1.
-- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow, accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the home page explainer, the phone step narrative and each page's review date and specification link are present. It checks Internet-Draft -01 by default; add `--direction=all` for the rest. It needs Chromium: `npx playwright install chromium`.
+- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow, accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work: the home page explainer fits one screen and switches, both answers to "whose authority" appear before either list of flows, each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, and the phone flow page reads as a narrative with the diagram on demand. It checks Internet-Draft -01 by default; add `--direction=all` for the rest. It needs Chromium: `npx playwright install chromium`.
 
 ```bash
 npm run ds:build
