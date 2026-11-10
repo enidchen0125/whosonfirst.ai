@@ -89,6 +89,16 @@
   color: var(--accent);
   text-decoration-thickness: 1px;
 }
+/* an address set in a monospaced face can be wider than the narrowest phones;
+   there, and only if it does not fit on a line of its own, it may break */
+@media (max-width: 22.49rem) {
+  :root[data-direction="draft"]
+    main
+    :is(p, li, dd, td, figcaption)
+    a:not(.btn, .chip, .card) {
+    overflow-wrap: break-word;
+  }
+}
 :root[data-direction="draft"] h1,
 :root[data-direction="draft"] h2 {
   line-height: 1.2;
