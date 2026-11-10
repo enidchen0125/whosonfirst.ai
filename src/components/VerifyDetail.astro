@@ -1,10 +1,12 @@
 ---
 /**
  * The full version of the home page demonstration: both credentials side by
- * side, all four checks, the complete explanation of each verdict and the
- * assumption they share. Static, so it reads the same with or without scripts.
+ * side, all four checks and the complete explanation of each verdict, then how
+ * the API verifies each credential, what a valid credential still does not
+ * prove, and what refusing and revoking take. Static, so it reads the same
+ * with or without scripts.
  */
-import { assumption, checks, credentials, VERDICT_LABEL } from '../data/verify';
+import { checks, credentials, notProven, VERDICT_LABEL } from '../data/verify';
 import { inline } from '../lib/md';
 ---
 
@@ -51,7 +53,47 @@ import { inline } from '../lib/md';
       </tbody>
     </table>
   </div>
-  <p class="vd-note">{assumption}</p>
+  <div class="vd-more">
+    <div>
+      <h3>How the API verifies</h3>
+      <dl>
+        {
+          credentials.map((c) => (
+            <div>
+              <dt>{c.onWire}</dt>
+              <dd>{c.how}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p>Every verdict in the table assumes this has been done. An unvalidated token proves nothing.</p>
+    </div>
+    <div>
+      <h3>What a valid credential does not prove</h3>
+      <ul>
+        {
+          notProven.map((n) => (
+            <li>
+              <strong>{n.claim}.</strong> <span set:html={inline(n.why)} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div>
+      <h3>Refusing and revoking</h3>
+      <dl>
+        {
+          credentials.map((c) => (
+            <div>
+              <dt>{c.onWire}</dt>
+              <dd set:html={inline(c.stop)} />
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -125,10 +167,41 @@ import { inline } from '../lib/md';
   .vd-sum :is(th, td) {
     background: var(--bg-sunken);
   }
-  .vd-note {
+  /* three short answers the table cannot hold */
+  .vd-more {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: 1.4rem 2.5rem;
+    margin-top: 0.6rem;
+  }
+  .vd-more h3 {
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--fg);
+    font-size: 1.05rem;
+  }
+  .vd-more dl {
     margin: 0;
-    font-size: 0.92rem;
+  }
+  .vd-more dt {
+    font-weight: 600;
+  }
+  .vd-more dd {
+    margin: 0 0 0.7rem;
+  }
+  .vd-more ul {
+    margin: 0;
+    padding-left: 1.1em;
+  }
+  .vd-more li {
+    margin-bottom: 0.55rem;
+  }
+  .vd-more p {
+    margin: 0;
     color: var(--fg-muted);
-    max-width: var(--prose);
+  }
+  .vd-more :is(dd, li, p) {
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 </style>

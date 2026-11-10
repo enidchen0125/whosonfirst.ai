@@ -1,10 +1,14 @@
 ---
 /**
  * "What can the API verify?" as a compact demonstration for the home page:
- * a credential selector, the user → agent → API path, three verdicts, one
- * consequence and one way on. Everything else (the fourth check, the full
- * explanations, the assumption behind them) is in VerifyDetail on the
- * Concepts page, which reads the same data.
+ * a credential selector, the user → agent → API path, what the API does with
+ * the credential, three verdicts, one consequence, what is not proven, and
+ * one way on. The fourth check, the full explanations, and what refusing and
+ * revoking take are in VerifyDetail on the Concepts page, from the same data.
+ *
+ * The path carries one short label under each arrow. What the credential
+ * contains sits on a line of its own beneath the path, so it never has to
+ * fit between two boxes.
  *
  * Radio inputs + :has(), so it needs no JavaScript, and the first credential
  * is a complete picture on its own.
@@ -38,32 +42,31 @@ const shown = checks.filter((c) => c.compact);
         <div
           class="vb-path"
           role="img"
-          aria-label={`Alice, the user: ${c.askDetail}. The agent then calls the API and presents: ${[c.onWire, ...(c.claims ?? [])].join(' ')}.`}
+          aria-label={`Alice, the user, ${c.askDetail.toLowerCase()}. The agent then calls the API and presents: ${c.onWire.toLowerCase()}.`}
         >
           <div class="vb-node role-human">
             <strong>User</strong>
             <span>Alice</span>
           </div>
-          <div class="vb-hop">
-            <span class="vb-note">{c.ask}</span>
-            <span class="vb-arrow" aria-hidden="true" />
-          </div>
+          <span class="vb-arrow" aria-hidden="true" />
           <div class="vb-node role-agent">
             <strong>Agent</strong>
             <span>Client</span>
           </div>
-          <div class="vb-hop">
-            <span class="vb-cred">
-              {c.onWire}
-              {c.claims && <span class="vb-claims">{c.claims.map((claim) => <code>{claim}</code>)}</span>}
-            </span>
-            <span class="vb-arrow" aria-hidden="true" />
-          </div>
+          <span class="vb-arrow" aria-hidden="true" />
           <div class="vb-node role-resource">
             <strong>API</strong>
             <span>Resource server</span>
           </div>
+          <span class="vb-label vb-l1">{c.ask}</span>
+          <span class="vb-label vb-l2">{c.onWire}</span>
         </div>
+
+        <p class="vb-reads">
+          <strong>{c.onWire}{c.claims ? ' carries' : '.'}</strong>{' '}
+          {c.claims && <span class="vb-claims">{c.claims.map((claim) => <code>{claim}</code>)}</span>}
+          {c.reads}
+        </p>
 
         <table>
           <caption class="visually-hidden">What the API can verify when the agent presents: {c.name}</caption>
@@ -84,12 +87,13 @@ const shown = checks.filter((c) => c.compact);
         </table>
 
         <p class="vb-consequence">{c.consequence}</p>
+        <p class="vb-boundary">{c.boundary}</p>
       </div>
     ))
   }
 
   <p class="vb-more">
-    <a href="/concepts/#verify">What each answer rests on, and a fourth check</a>
+    <a href="/concepts/#verify">How verification works, and what it doesn’t prove</a>
   </p>
 </section>
 
@@ -188,14 +192,18 @@ const shown = checks.filter((c) => c.compact);
     }
   }
 
-  /* the path: three named parties and what passes between them */
+  /* The path: three named parties in a row, joined by arrows. Each arrow's
+     label sits in a row of its own beneath, centred under the arrow, where it
+     can be wider than the arrow without touching a box. */
   .vb-path {
     display: grid;
-    grid-template-columns: auto minmax(2.2rem, 0.6fr) auto minmax(0, 1.4fr) auto;
+    grid-template-columns: auto minmax(2.4rem, 1fr) auto minmax(2.4rem, 1.5fr) auto;
     align-items: center;
-    padding-bottom: 0.9rem;
+    row-gap: 0.3rem;
+    padding-bottom: 0.75rem;
   }
   .vb-node {
+    grid-row: 1;
     border: 1.3px solid var(--role);
     background: var(--role-soft);
     border-radius: var(--radius);
@@ -214,49 +222,10 @@ const shown = checks.filter((c) => c.compact);
     color: var(--fg-muted);
     white-space: nowrap;
   }
-  .vb-hop {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0 0.35rem;
-    min-width: 0;
-  }
-  .vb-note,
-  .vb-cred {
-    font-size: 0.8rem;
-    line-height: 1.3;
-    text-align: center;
-  }
-  .vb-note {
-    color: var(--fg-muted);
-  }
-  /* what is presented, with its literal contents set as literals */
-  .vb-cred {
-    display: grid;
-    justify-items: center;
-    gap: 0.1rem;
-    font-weight: 600;
-  }
-  .vb-cred code {
-    font-size: 0.7rem;
-    font-weight: 400;
-    padding: 0.1em 0.4em;
-    background: var(--bg-sunken);
-    border: 0;
-    border-radius: 2px;
-    white-space: nowrap;
-  }
-  /* each claim stays whole; they wrap as units when the hop is narrow */
-  .vb-claims {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.15rem 0.25rem;
-  }
   .vb-arrow {
-    width: 100%;
+    grid-row: 1;
     height: 1.5px;
+    margin-inline: 0.3rem;
     background: var(--fg);
     position: relative;
   }
@@ -271,25 +240,54 @@ const shown = checks.filter((c) => c.compact);
     border-right: 1.5px solid var(--fg);
     transform: translateY(-50%) rotate(45deg);
   }
-  /* on a phone the roles' second names give way so the path stays on one line */
+  .vb-label {
+    grid-row: 2;
+    justify-self: center;
+    white-space: nowrap;
+    font-size: 0.84rem;
+    line-height: 1.3;
+  }
+  .vb-l1 {
+    grid-column: 2;
+    color: var(--fg-muted);
+  }
+  .vb-l2 {
+    grid-column: 4;
+    font-weight: 600;
+  }
+  /* on a phone the roles' second names give way so the three boxes stay on one line */
   @media (max-width: 30rem) {
-    .vb-path {
-      /* the first hop is as wide as its word; the credential takes the rest */
-      grid-template-columns: auto max-content auto minmax(0, 1fr) auto;
-    }
     .vb-node {
-      padding: 0.35rem 0.45rem;
+      padding-inline: 0.5rem;
     }
     .vb-node:not(.role-human) span {
       display: none;
     }
-    .vb-hop {
-      padding-inline: 0.3rem;
-    }
-    .vb-note,
-    .vb-cred {
-      font-size: 0.76rem;
-    }
+  }
+
+  /* what the credential is and how the API reads it: the condition for the verdicts below */
+  .vb-reads {
+    margin: 0 0 0.85rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--bg-sunken);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  /* the claims get a line to themselves; each stays whole and they wrap as units */
+  .vb-claims {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.3rem;
+    margin: 0.25rem 0 0.3rem;
+  }
+  .vb-claims code {
+    padding: 0.05em 0.4em;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 
   /* three verdicts: the question, the answer as a word, and what it rests on */
@@ -387,6 +385,12 @@ const shown = checks.filter((c) => c.compact);
     margin: 0.8rem 0 0;
     font-size: 0.98rem;
     font-weight: 500;
+  }
+  /* the limit of everything above, kept beside it */
+  .vb-boundary {
+    margin: 0.35rem 0 0;
+    font-size: 0.92rem;
+    color: var(--fg-muted);
   }
   .vb-more {
     margin: 0.5rem 0 0;
