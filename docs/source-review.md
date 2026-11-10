@@ -203,6 +203,47 @@ For the person, or the session, that makes the changes. One fact is often stated
 7. **How facts were checked.** `src/pages/about.mdx` and the Accuracy section of `README.md` say which facts came from primary sources and which were reported. If a run read process states from the datatracker itself, that description changes.
 8. Run `npm run check`, `npm test` and `npm run build`.
 
-## Sources a run may not reach
+## Domains a run needs
 
-A cloud session reaches the network through its environment's policy. At the time of writing, the IETF datatracker, the RFC Editor, kubernetes.io, openid.net, modelcontextprotocol.io, vendor documentation sites and `raw.githubusercontent.com` answered; `github.com` pages and the GitHub API for other repositories did not. For a project hosted on GitHub, read a raw file from the repository (a changelog, a version file, the specification source) or the project's own site, and say which. If neither is available, list the item as not checked.
+The hosts a run reads from, one per line, in the form a Claude Code environment's allowed-domains list takes. Add them to the environment the scheduled run uses if its network access is limited.
+
+```text
+datatracker.ietf.org
+author-tools.ietf.org
+www.rfc-editor.org
+openid.net
+www.w3.org
+modelcontextprotocol.io
+a2a-protocol.org
+spiffe.io
+kubernetes.io
+github.com
+api.github.com
+raw.githubusercontent.com
+docs.github.com
+ap2-protocol.org
+verifiableintent.dev
+agenticcommerce.dev
+www.agenticcommerce.dev
+genai.owasp.org
+owasp.org
+www.nccoe.nist.gov
+docs.aws.amazon.com
+aws.amazon.com
+docs.cloud.google.com
+learn.microsoft.com
+developer.okta.com
+help.okta.com
+auth0.com
+www.keycloak.org
+developer.hashicorp.com
+developers.cloudflare.com
+platform.claude.com
+developers.openai.com
+```
+
+Through `aws.amazon.com`, these are the hosts the tracker's `url` fields and the flows' `sources` link to, plus what the checks above read: `author-tools.ietf.org` for diffs between draft revisions, `api.github.com` and `raw.githubusercontent.com` for releases and files of projects hosted on GitHub, and `www.agenticcommerce.dev`, where `agenticcommerce.dev` redirects. From `developer.okta.com` on, they are the documentation sites of the vendors on the agent platforms page, which links to none of them; they are where that review starts, and a vendor may keep the relevant page elsewhere.
+
+When a link is added to the tracker or to a flow's `sources`, add its host here.
+
+Being on the list does not mean a host answers. If one refuses the run, list the items that depend on it as not checked, with what was tried.
