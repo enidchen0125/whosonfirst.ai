@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 /**
  * Rendered checks: what the token audit cannot see.
  *
@@ -92,6 +92,19 @@ const VIEWPORTS = [
   { name: "phone", width: 390, height: 844, isMobile: true, hasTouch: true },
 ];
 const THEMES = ["light", "dark"];
+// The narrowest window the site is held to: a small phone, or a desktop window
+// zoomed to 400%. Only sideways overflow is measured there, on the pages above
+// and on every flow, since each flow brings its own credentials and labels.
+const NARROW = { width: 320, height: 568 };
+const NARROW_PAGES = [
+  ...new Set([
+    ...PAGES.map((p) => p.path),
+    ...readdirSync(join(root, "flows"), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => `/flows/${d.name}/`)
+      .sort(),
+  ]),
+];
 
 const results = []; // { where, check, ok, detail }
 const record = (where, check, ok, detail = "") =>
@@ -195,6 +208,35 @@ const prose = () => {
     });
   }
   return out;
+};
+
+/** How far the page scrolls sideways and, if it does, what reaches furthest past its right edge. */
+const sideways = () => {
+  const doc = document.documentElement;
+  const by = doc.scrollWidth - doc.clientWidth;
+  let far = null;
+  if (by > 0) {
+    for (const el of document.querySelectorAll("body *")) {
+      const right = el.getBoundingClientRect().right;
+      if (right <= doc.clientWidth || (far && right < far.right)) continue;
+      // what sits in a frame that scrolls or clips sideways does not widen the page
+      let framed = false;
+      for (
+        let a = el.parentElement;
+        a && a !== document.body && !framed;
+        a = a.parentElement
+      )
+        framed = getComputedStyle(a).overflowX !== "visible";
+      if (!framed) far = { el, right };
+    }
+  }
+  const name = (el) => [el.localName, ...el.classList].join(".");
+  return {
+    by,
+    what: far
+      ? `${name(far.el)} “${far.el.textContent.trim().replace(/\s+/g, " ").slice(0, 48)}”`
+      : "",
+  };
 };
 
 /* ---------- run ---------- */
@@ -730,6 +772,31 @@ for (const direction of directions) {
       await ctx.close();
     }
   }
+  // the narrowest window: nothing scrolls sideways, on the pages above or on any flow
+  const ctx = await browser.newContext({
+    viewport: NARROW,
+    isMobile: true,
+    hasTouch: true,
+    reducedMotion: "reduce",
+  });
+  const page = await ctx.newPage();
+  for (const path of NARROW_PAGES) {
+    await page.goto(`${origin}${path}?direction=${direction}`, {
+      waitUntil: "networkidle",
+    });
+    await page.evaluate(() => document.fonts.ready);
+    await page.addStyleTag({
+      content: "design-switcher{display:none!important}",
+    });
+    const over = await page.evaluate(sideways);
+    record(
+      `${direction} ${NARROW.width}px ${path}`,
+      `no sideways overflow at ${NARROW.width}px`,
+      over.by <= 0,
+      over.by > 0 ? `${over.by}px: ${over.what}` : "",
+    );
+  }
+  await ctx.close();
 }
 await browser.close();
 server.close();
@@ -754,7 +821,7 @@ else
       `✗ ${r.where.padEnd(44)} ${r.check}${r.detail ? `  — ${r.detail}` : ""}`,
     );
 console.log(
-  `\n${directions.join(", ")}: ${PAGES.length} pages × ${VIEWPORTS.length} viewports × ${THEMES.length} themes`,
+  `\n${directions.join(", ")}: ${PAGES.length} pages × ${VIEWPORTS.length} viewports × ${THEMES.length} themes, and ${NARROW_PAGES.length} pages at ${NARROW.width}px`,
 );
 for (const [check, { pass, fail }] of byCheck)
   console.log(
