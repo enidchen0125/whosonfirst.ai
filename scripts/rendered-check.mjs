@@ -93,12 +93,15 @@ const VIEWPORTS = [
 ];
 const THEMES = ["light", "dark"];
 // The narrowest window the site is held to: a small phone, or a desktop window
-// zoomed to 400%. Only sideways overflow is measured there, on the pages above
-// and on every flow, since each flow brings its own credentials and labels.
+// zoomed to 400%. Only sideways overflow is measured there: on the pages above,
+// on the About page, whose long addresses are the first thing to push a page
+// past the window, and on every flow, since each flow brings its own
+// credentials and labels.
 const NARROW = { width: 320, height: 568 };
 const NARROW_PAGES = [
   ...new Set([
     ...PAGES.map((p) => p.path),
+    "/about/",
     ...readdirSync(join(root, "flows"), { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => `/flows/${d.name}/`)
