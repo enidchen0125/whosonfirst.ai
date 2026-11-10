@@ -237,7 +237,7 @@ Short lifetimes on both credentials keep the gaps small. Deleting a pod, a servi
   ],
   illustrated: {
     steps: `The diagram shows a common JWT-based federation flow using OIDC discovery. Other implementations use different proofs and verification mechanisms, such as an X.509 certificate presented over mutual TLS, a signed request, or keys an administrator uploads.`,
-    references: `These are required by the flow the diagram draws: a JWT identity credential, and OIDC discovery to find the keys that verify it. They are not required of every implementation of workload identity federation. One that proves identity with a certificate or a signed request, or verifies against uploaded keys, depends on neither. The maturity rating describes the diagram’s flow in the same way.`,
+    references: `These are required by the flow the diagram draws: a JWT identity credential, and OIDC discovery to find the keys that verify it. Neither is required of every implementation of workload identity federation, and each can be replaced separately. A certificate or a signed request can take the place of the JWT. Keys an administrator uploads can take the place of OIDC discovery, and a JWT verified against uploaded keys still depends on RFC 7519. The maturity rating describes the diagram’s flow in the same way.`,
   },
   comparison: {
     title: "The same pattern by environment",
