@@ -1,0 +1,430 @@
+---
+import Lesson from "../../layouts/Lesson.astro";
+import Annotated from "../../components/Annotated.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import type {
+  CheckQuestion,
+  Exhibit,
+  Scenario as ScenarioData,
+} from "../../data/learn/types";
+
+// The example token, abbreviated. 1794305400 is 10:10:00 UTC on November 10, 2026.
+const claims = (scope = "calendar.read"): Exhibit => ({
+  caption: "The token’s claims",
+  lang: "json",
+  text: `{
+  "iss": "https://auth.example",
+  "sub": "alice",
+  "client_id": "calendar-assistant",
+  "aud": "https://calendar.example",
+  "scope": "${scope}",
+  "exp": 1794305400
+}`,
+});
+const at = (api: string, time: string, request: string): Exhibit => ({
+  caption: "What the API compares them with",
+  lang: "yaml",
+  text: `this API:  ${api}
+time now:  ${time}
+request:   ${request}`,
+});
+
+const SKIP = {
+  verdict: "skipped",
+  note: "Not reached.",
+} as const;
+
+const checksScenario: ScenarioData = {
+  id: "token-checks",
+  legend: "What happens to the token",
+  cast: [
+    { label: "Agent", sub: "holds the token", role: "agent" },
+    { label: "Calendar API", sub: "checks every token", role: "resource" },
+  ],
+  asks: "The API’s five checks, in order",
+  questions: [
+    "From an issuer I trust?",
+    "Signature intact?",
+    "Addressed to me?",
+    "Still in date?",
+    "Covers this request?",
+  ],
+  options: [
+    {
+      id: "asis",
+      name: "Nothing: sent as issued",
+      hops: ["a request, with the token"],
+      exhibits: [
+        claims(),
+        at("calendar.example", "10:04", "GET /events?day=tomorrow"),
+      ],
+      findings: [
+        {
+          verdict: "yes",
+          note: "`iss` is auth.example, which this API is set up to trust.",
+        },
+        {
+          verdict: "yes",
+          note: "It verifies with auth.example’s public key. Nothing has changed since it was signed.",
+        },
+        {
+          verdict: "yes",
+          note: "`aud` is calendar.example. That is this API.",
+        },
+        { verdict: "yes", note: "`exp` is 10:10. It is 10:04." },
+        {
+          verdict: "yes",
+          note: "The request reads events, and `scope` allows `calendar.read`.",
+        },
+      ],
+      so: `All five pass, so the API believes the claims: these are Alice’s events, for the app she approved. **It did not have to ask anyone, and it did not have to trust the agent.** The signature is the proof.`,
+    },
+    {
+      id: "edited",
+      name: "Someone edits it",
+      hops: ["a request, with the token changed to allow writing"],
+      exhibits: [
+        claims("calendar.write"),
+        at("calendar.example", "10:04", "DELETE /events/42"),
+      ],
+      findings: [
+        { verdict: "yes", note: "`iss` still says auth.example." },
+        {
+          verdict: "no",
+          note: "The claims no longer match the signature. Only auth.example’s private key could sign the new version.",
+        },
+        SKIP,
+        SKIP,
+        SKIP,
+      ],
+      so: `Rejected with \`401\`. **Anyone can read a token. Only the service that signs it can change one.** Nothing in a token that fails this check is believed, so the API stops here.`,
+    },
+    {
+      id: "elsewhere",
+      name: "It is sent to another API",
+      cast: [
+        { label: "Agent", sub: "holds the token", role: "agent" },
+        { label: "Mail API", sub: "a different service", role: "resource" },
+      ],
+      hops: ["a request, with the calendar token"],
+      exhibits: [claims(), at("mail.example", "10:04", "GET /messages")],
+      findings: [
+        { verdict: "yes", note: "The mail API trusts auth.example too." },
+        { verdict: "yes", note: "Unchanged since it was signed." },
+        {
+          verdict: "no",
+          note: "`aud` is calendar.example. This is mail.example.",
+        },
+        SKIP,
+        SKIP,
+      ],
+      so: `Rejected. A token is addressed to one API, and every API has to read the address. **If the mail API skipped this check, any service that was ever handed a token could turn around and use it somewhere else.**`,
+    },
+    {
+      id: "late",
+      name: "It is used an hour later",
+      hops: ["a request, with the token, at 11:04"],
+      exhibits: [
+        claims(),
+        at("calendar.example", "11:04", "GET /events?day=tomorrow"),
+      ],
+      findings: [
+        { verdict: "yes", note: "`iss` is auth.example." },
+        { verdict: "yes", note: "Unchanged since it was signed." },
+        { verdict: "yes", note: "`aud` is calendar.example." },
+        { verdict: "no", note: "`exp` was 10:10. It is 11:04." },
+        SKIP,
+      ],
+      so: `Rejected with \`401\`. Access tokens are short-lived on purpose, often a few minutes. The agent can get a fresh one without sending Alice through sign-in again; the next lesson shows how.`,
+    },
+    {
+      id: "more",
+      name: "The agent asks for more",
+      hops: ["a request to delete an event, with the token"],
+      exhibits: [
+        claims(),
+        at("calendar.example", "10:04", "DELETE /events/42"),
+      ],
+      findings: [
+        { verdict: "yes", note: "`iss` is auth.example." },
+        { verdict: "yes", note: "Unchanged since it was signed." },
+        { verdict: "yes", note: "`aud` is calendar.example." },
+        { verdict: "yes", note: "`exp` is 10:10. It is 10:04." },
+        {
+          verdict: "no",
+          note: "Deleting needs `calendar.write`. Alice approved `calendar.read`.",
+        },
+      ],
+      so: `Refused with \`403\`. The token is genuine, and it does not cover this. **It does not matter why the agent tried**: a bug, a bad instruction, or something it read on a web page. The limit holds.`,
+    },
+    {
+      id: "copied",
+      name: "Someone else sends a copy",
+      cast: [
+        { label: "Someone else", sub: "has a copy", role: "agent" },
+        { label: "Calendar API", sub: "checks every token", role: "resource" },
+      ],
+      hops: ["a request, with the copied token"],
+      exhibits: [
+        claims(),
+        at("calendar.example", "10:04", "GET /events?day=tomorrow"),
+      ],
+      findings: [
+        { verdict: "yes", note: "`iss` is auth.example." },
+        { verdict: "yes", note: "Unchanged since it was signed." },
+        { verdict: "yes", note: "`aud` is calendar.example." },
+        { verdict: "yes", note: "`exp` is 10:10. It is 10:04." },
+        { verdict: "yes", note: "`scope` allows `calendar.read`." },
+      ],
+      so: `All five pass, and the API answers. **Nothing in this token says who is allowed to send it.** A token like this is called a *bearer* token: it works for whoever holds it, like cash. A short life limits how long a stolen copy is useful. The last lesson shows how to make a copy useless.`,
+    },
+  ],
+};
+
+const checks: CheckQuestion[] = [
+  {
+    id: "aud",
+    question:
+      "An API receives a token. The issuer is trusted, the signature is intact and it has not expired, but `aud` names a different API. What should it do?",
+    options: [
+      {
+        text: "Accept it. Everything that matters checked out.",
+        why: "The address matters as much as the signature. An API that accepts tokens meant for other services lets anyone who receives a token reuse it here.",
+      },
+      {
+        text: "Reject it. The token was not issued for this API.",
+        correct: true,
+        why: "A token is addressed to one API. Checking `aud` is what stops a token issued for one service from being replayed at another.",
+      },
+      {
+        text: "Accept it, but only for read requests.",
+        why: "There is no partial credit. A token for a different audience says nothing about what its holder may do here.",
+      },
+    ],
+  },
+  {
+    id: "edit",
+    question:
+      "Before sending the token, the agent changes `calendar.read` to `calendar.write` in the claims. What happens?",
+    options: [
+      {
+        text: "The API accepts it, because the token came from a trusted issuer.",
+        why: "The issuer signed the original claims, not the edited ones. The signature no longer matches.",
+      },
+      {
+        text: "The API rejects it, because the signature no longer matches the claims.",
+        correct: true,
+        why: "The signature covers every claim. Change one character and it fails, and only the issuer holds the key that could sign the new version.",
+      },
+      {
+        text: "The authorization server notices and revokes the token.",
+        why: "The authorization server is not involved at this point. The API detects the change itself, by checking the signature.",
+      },
+    ],
+  },
+  {
+    id: "short",
+    question: "Why do access tokens usually last minutes and not months?",
+    options: [
+      {
+        text: "Because signatures wear out over time.",
+        why: "A signature is just as valid a year later. The expiry is a choice the issuer makes.",
+      },
+      {
+        text: "Because a copied token works for whoever holds it, and a short life limits how long that is.",
+        correct: true,
+        why: "A bearer token cannot tell its rightful holder from a thief. Expiry is the simplest limit on what a stolen copy is worth.",
+      },
+      {
+        text: "To make users sign in more often.",
+        why: "The user is not asked again. The agent renews the token on its own, which the next lesson covers.",
+      },
+    ],
+  },
+];
+---
+
+<Lesson
+  slug="tokens"
+  lede="A few lines of text, signed by a service the API already trusts. The API checks the text. It never has to trust whoever is carrying it."
+  checks={checks}
+  keep={[
+    "A token is a statement signed by an **authorization server**: who it is about, which app it was given to, which API it is for, what it allows, and until when.",
+    "The API checks five things before believing any of it: issuer, signature, audience, expiry and scope.",
+    "**Audience** is the check that gets forgotten. A token is addressed to one API.",
+    "A valid token proves what was granted. It does not prove who is sending it: a plain token is a **bearer token**.",
+  ]}
+  names={[
+    [
+      "The service that checks who people are and issues tokens",
+      "Authorization server",
+    ],
+    ["The token an API accepts", "Access token"],
+    ["One line inside a token", "Claim"],
+    ["Who signed it", "Issuer"],
+    ["Who it is about", "Subject"],
+    ["Which API it is for", "Audience"],
+    ["What it allows", "Scope"],
+    ["Three chunks of text joined by dots", "JWT"],
+    ["A token that works for whoever holds it", "Bearer token"],
+  ]}
+>
+  <h2>A key card, not a passport</h2>
+  <p>
+    A hotel key card is a fair picture of a token. The front desk checks who you are, once, and hands you a card. The
+    card opens your room and the gym, in this hotel, until checkout. The door never asks for your passport. It checks
+    the card.
+  </p>
+  <p>
+    An <strong>access token</strong> is the card. The front desk is called an <strong>authorization server</strong>:
+    the one service that checks who people are, asks what they agree to, and issues tokens. The door is the API.
+  </p>
+  <p>
+    That is as far as the picture needs to go. What makes a token work is not plastic. It is a signature.
+  </p>
+
+  <h2>What is written on it</h2>
+  <p>
+    Many access tokens are <strong>JWTs</strong> (said “jots”): three chunks of text joined by dots. You have
+    probably seen one.
+  </p>
+
+  <div class="jwt wide" role="img" aria-label="A JWT in three parts: a header, the claims, and a signature over both.">
+    <div>
+      <code>eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9</code>
+      <strong>Header</strong>
+      <span>How it was signed</span>
+    </div>
+    <div>
+      <code>eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZSIsInN1YiI6ImFsaWNl…</code>
+      <strong>Claims</strong>
+      <span>The statement itself</span>
+    </div>
+    <div>
+      <code>MEUCIQDm0J8sXv3k…</code>
+      <strong>Signature</strong>
+      <span>The issuer’s seal over the other two parts</span>
+    </div>
+  </div>
+
+  <p>
+    The first two chunks are not encrypted. They are JSON, encoded so that they survive a trip through an HTTP header.
+    Decode the middle one and you get a handful of lines, each called a <strong>claim</strong>:
+  </p>
+
+  <Annotated
+    caption="The claims of an example access token, abbreviated"
+    head={['In the token', 'What it says', 'Which question']}
+    rows={[
+      {
+        code: '"iss": "https://auth.example"',
+        says: 'The **issuer**. The authorization server at auth.example signed this.',
+        tag: 'Who said it could',
+      },
+      { code: '"sub": "alice"', says: 'The **subject**. It is about Alice.', tag: 'For whom' },
+      {
+        code: '"client_id": "calendar-assistant"',
+        says: 'It was issued to this app.',
+        tag: 'Who is acting',
+      },
+      {
+        code: '"aud": "https://calendar.example"',
+        says: 'The **audience**. It is meant for the calendar API and for nothing else.',
+        tag: 'Who said it could',
+      },
+      {
+        code: '"scope": "calendar.read"',
+        says: 'The **scope**. It allows reading the calendar.',
+        tag: 'Who said it could',
+      },
+      {
+        code: '"exp": 1794305400',
+        says: 'It stops working at 10:10, ten minutes after it was issued. The number is seconds since 1970.',
+        tag: 'Who said it could',
+      },
+    ]}
+  />
+
+  <Mixup belief="A token is encrypted, so it is safe to put things in it and safe to leave it lying around.">
+    <p>
+      A JWT is signed, not encrypted. Anyone who holds one can read every claim; paste one into any decoder and
+      see. The signature stops a token being changed. It does nothing to stop it being read, or used.
+    </p>
+  </Mixup>
+
+  <p>
+    The third chunk is the signature. The authorization server computes it from the first two chunks with a private
+    key that never leaves it, and publishes the matching public key. Anyone can check the signature. Only the
+    authorization server can make one.
+  </p>
+
+  <h2>Try to break it</h2>
+  <p>
+    An API believes nothing in a token until it has checked it. There are five checks, and each button below does
+    something to the token. Before you press one, guess which check will catch it. One of the six gets past all five.
+  </p>
+
+  <Scenario scenario={checksScenario} glance="All six at a glance" />
+
+  <h2>What a valid token does not prove</h2>
+  <p>
+    The last button is the uncomfortable one. A token records what was granted. It does not record who is allowed to
+    carry it. A copy taken from a log file, a debugging session or an agent’s memory works exactly as well as the
+    original, until it expires.
+  </p>
+  <p>
+    That is the trade a <strong>bearer token</strong> makes: simple to use, and only as safe as the places it passes
+    through. It is why tokens are short-lived, why each is addressed to one API, and why it matters so much where an
+    agent keeps them.
+  </p>
+  <Mixup belief="If the signature checks out, the token is good.">
+    <p>
+      A valid signature means the token is genuine. It does not mean the token is for this API, still in date, or
+      wide enough for this request, and it says nothing about who is sending it. The signature is the second of five
+      checks, not the last.
+    </p>
+  </Mixup>
+
+  <p>
+    One more thing you will run into. Not every token can be read. Some are random strings that mean nothing by
+    themselves, and the API asks the authorization server what each one stands for. The checks are the same; they
+    just happen somewhere else.
+  </p>
+</Lesson>
+
+<style>
+  /* the three parts of a JWT, side by side with room, stacked without */
+  .jwt {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0.5rem;
+    margin: 1.4rem 0 1.6rem;
+  }
+  .jwt > div {
+    display: grid;
+    align-content: start;
+    gap: 0.1rem;
+    padding: 0.7rem 0.8rem 0.75rem;
+    border: 1px solid var(--border-strong);
+    border-top: 3px solid var(--fg);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    min-width: 0;
+  }
+  .jwt code {
+    display: block;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+  }
+  .jwt strong {
+    font-size: 1rem;
+  }
+  .jwt span {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--fg-muted);
+  }
+</style>

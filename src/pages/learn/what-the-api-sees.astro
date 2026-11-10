@@ -1,0 +1,150 @@
+---
+import Lesson from "../../layouts/Lesson.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import { apiSees } from "../../data/learn/api-sees";
+import type { CheckQuestion } from "../../data/learn/types";
+
+const checks: CheckQuestion[] = [
+  {
+    id: "bob",
+    question:
+      "Bob types “show me Alice’s calendar.” The agent uses its own API key for every user. What stops Bob?",
+    options: [
+      {
+        text: "The calendar API, which can see that Bob is not Alice.",
+        why: "The API sees the agent’s key and a name the agent typed. Nothing in the request tells it that Bob is the one asking.",
+      },
+      {
+        text: "Only the agent’s own logic, if it thinks to check.",
+        correct: true,
+        why: "The key proves which software is calling and nothing about which person asked. Any per-user limit has to be enforced by the agent, which is the part most easily talked out of it.",
+      },
+      {
+        text: "The API key, which is tied to Alice.",
+        why: "The key belongs to the agent, and it is the same key whoever is asking.",
+      },
+    ],
+  },
+  {
+    id: "logs",
+    question:
+      "An agent signs in with Alice’s password. Later a meeting is deleted. What do the API’s logs say?",
+    options: [
+      {
+        text: "That the agent deleted it for Alice.",
+        why: "Nothing in a password sign-in says that software was involved. The API has no record of an agent at all.",
+      },
+      {
+        text: "That Alice deleted it.",
+        correct: true,
+        why: "With her password, the agent cannot be told apart from Alice. Whatever it does is recorded as her doing it.",
+      },
+      {
+        text: "That an unknown program deleted it.",
+        why: "The sign-in was valid, so the API attributes everything that follows to Alice’s account.",
+      },
+    ],
+  },
+  {
+    id: "evidence",
+    question:
+      "Which of these is evidence the API can check, and not a claim it has to take on trust?",
+    options: [
+      {
+        text: "A header the agent adds: `X-User: alice`.",
+        why: "The agent can put any name in that header. So can anyone else who has the agent’s key.",
+      },
+      {
+        text: "A line in the agent’s prompt: “only access the current user’s data.”",
+        why: "A prompt instructs the model. The API never sees it, and text the agent reads later can talk it out of following it.",
+      },
+      {
+        text: "A token that names Alice, signed by a service the API trusts.",
+        correct: true,
+        why: "The agent did not write the token and cannot alter it without breaking the signature. The next lesson shows how that works.",
+      },
+    ],
+  },
+];
+---
+
+<Lesson
+  slug="what-the-api-sees"
+  lede="You can see the whole conversation between Alice and your agent. The API at the other end cannot. Everything about agent authorization follows from what it can see."
+  checks={checks}
+  keep={[
+    "An API sees a request and a **credential**. It does not see the user, the conversation or the intent.",
+    "A credential is worth what it proves: **who is acting, for whom, and who said they could.**",
+    "An API key proves the first. A password proves the second, and hands over far too much. A token that a person approved can carry all three.",
+    "A limit only counts where the agent cannot talk its way around it. That place is the API.",
+  ]}
+  names={[
+    ["What a request carries as evidence", "Credential"],
+    ["The agent’s own secret string", "API key"],
+    ["Your agent, as the software asking for access", "Client"],
+    ["The calendar service", "Resource server"],
+  ]}
+>
+  <h2>Sit where the API sits</h2>
+  <p>
+    Alice types a question into your agent: <em>what’s on my calendar tomorrow?</em> The agent decides to call the
+    calendar API. From where you sit, nothing could be clearer. Alice asked, and the agent is fetching Alice’s events
+    for Alice.
+  </p>
+  <p>
+    Now sit where the calendar API sits. It receives an HTTP request. It cannot see Alice. It cannot see the
+    conversation, the model or your code. It sees the request, and whatever came attached to it.
+  </p>
+  <p>
+    That attachment is called a <strong>credential</strong>, and it is the only evidence the API has. A credential
+    can prove up to three things:
+  </p>
+  <ul>
+    <li><strong>Who is acting?</strong> Which piece of software sent this request.</li>
+    <li><strong>For whom?</strong> Which person it is working for, if any.</li>
+    <li><strong>Who said it could?</strong> What was approved, and by whom.</li>
+  </ul>
+
+  <h2>Try three credentials</h2>
+  <p>
+    Here are three things your agent could attach. Before you try them, make a guess: which of them lets the API tell
+    a request for Alice from a request for Bob?
+  </p>
+
+  <Scenario scenario={apiSees} glance="All three at a glance" />
+
+  <h2>Where the API key falls short</h2>
+  <p>
+    An API key is what most of us reach for first, and for a program with one owner it is fine. The trouble starts
+    when one agent works for many people. One key is one identity, so every request looks the same to the API,
+    whoever asked. The agent can add a name to the request, but a name the sender typed is a claim, not evidence.
+  </p>
+  <p>
+    That matters more for an agent than for an ordinary program, because an agent can be talked into things. It reads
+    web pages, emails and documents, and any of them may contain text written to steer it. If the agent’s key can
+    read everyone’s calendar, one successful trick reads everyone’s calendar.
+  </p>
+  <p>
+    So one rule runs through this whole guide. A limit that lives in the agent, or in its prompt, is a suggestion. A
+    limit the API enforces, using evidence the agent cannot make up, is a control.
+  </p>
+
+  <Mixup belief="The API knows which user this is, because my agent knows.">
+    <p>
+      What your agent knows stays in your agent. The API learns only what the credential proves. If the credential
+      is the same for every user, then to the API every user is the same.
+    </p>
+  </Mixup>
+
+  <h2>What the token changes</h2>
+  <p>
+    The third credential is a different kind of thing. The agent did not write it. A service the API already trusts
+    wrote it and signed it, after asking Alice. It says who it is for, which app it was given to and what it allows,
+    and the API can check all of that without taking the agent’s word for anything.
+  </p>
+  <p>
+    How a few lines of text manage that is the next lesson. One caution to carry with you: a key and a token share a
+    weakness. Each works for whoever holds a copy. The last lesson comes back to that.
+  </p>
+</Lesson>

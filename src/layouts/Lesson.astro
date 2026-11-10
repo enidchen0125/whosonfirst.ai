@@ -1,0 +1,370 @@
+---
+/**
+ * Layout for a lesson under /learn/.
+ *
+ * Every lesson has the same shape, so a reader learns it once: the question,
+ * where this lesson sits among the others, the lesson itself, questions to
+ * answer from memory, what to keep, the specifications' words for what was
+ * just taught, where the same ground is covered in full, and the next lesson.
+ *
+ * The questions come before the summary on purpose. Answering from memory is
+ * what makes an idea stay; answering with the summary still on screen is only
+ * reading it twice.
+ */
+import Base from "./Base.astro";
+import Check from "../components/Check.astro";
+import { glossary } from "../data/glossary";
+import { lesson, lessons } from "../data/learn/lessons";
+import type { CheckQuestion } from "../data/learn/types";
+import { inline } from "../lib/md";
+import { must } from "../lib/must";
+import { termSlug } from "../lib/term";
+
+interface Props {
+  slug: string;
+  /** One or two sentences under the title. md-lite. */
+  lede: string;
+  checks: CheckQuestion[];
+  /** Three or four sentences to leave with. md-lite. */
+  keep: string[];
+  /** [what the lesson called it, the glossary term for it]. */
+  names?: [plain: string, term: string][];
+}
+const { slug, lede, checks, keep, names = [] } = Astro.props;
+const l = lesson(slug);
+const i = lessons.indexOf(l);
+const prev = lessons[i - 1];
+const next = lessons[i + 1];
+const term = (name: string) =>
+  must(
+    glossary.find((t) => t.term.toLowerCase() === name.toLowerCase()),
+    `glossary term "${name}" (named by lesson "${slug}")`,
+  );
+---
+
+<Base title={l.title} description={l.promise}>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">
+        <a href="/learn/">Learn</a> / Lesson {i + 1} of {lessons.length}
+        <span class="mins">{l.minutes} min</span>
+      </p>
+      <h1>{l.title}</h1>
+      <p class="lede" set:html={inline(lede)} />
+      <nav class="path" aria-label="Lessons">
+        <ol>
+          {
+            lessons.map((x, n) => (
+              <li>
+                <a href={`/learn/${x.slug}/`} aria-current={x === l ? 'page' : undefined}>
+                  <span class="path-n">{n + 1}</span>
+                  <span class="path-t">{x.short}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <article class="lesson">
+      <slot />
+
+      <Check questions={checks} />
+
+      <section class="keep" aria-labelledby="keep">
+        <h2 id="keep">What to keep</h2>
+        <ul>
+          {keep.map((k) => <li set:html={inline(k)} />)}
+        </ul>
+      </section>
+
+      {
+        names.length > 0 && (
+          <section class="names" aria-labelledby="names">
+            <h2 id="names">The names for these</h2>
+            <p>
+              The rest of this guide, and every specification, uses these terms. Each links to its entry in the{' '}
+              <a href="/glossary/">glossary</a>.
+            </p>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="The names for these">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">In this lesson</th>
+                    <th scope="col">Its name</th>
+                    <th scope="col">Defined as</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {names.map(([plain, name]) => {
+                    const t = term(name);
+                    return (
+                      <tr>
+                        <td>{plain}</td>
+                        <th scope="row">
+                          <a href={`/glossary/#${termSlug(t.term)}`}>{t.term}</a>
+                        </th>
+                        <td set:html={inline(t.def)} />
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )
+      }
+
+      <section class="deeper" aria-labelledby="deeper">
+        <h2 id="deeper">Go deeper</h2>
+        <p>The same ground at full depth, when you want it. None of it is needed for the next lesson.</p>
+        <ul>
+          {
+            l.deeper.map((d) => (
+              <li>
+                <a href={d.href}>{d.label}</a>
+                <span>{d.note}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </article>
+
+    <nav class="pager" aria-label="Lessons before and after">
+      {
+        prev ? (
+          <a href={`/learn/${prev.slug}/`}>
+            <span>← Lesson {i}</span>
+            {prev.title}
+          </a>
+        ) : (
+          <a href="/learn/">
+            <span>← Back to</span>
+            All lessons
+          </a>
+        )
+      }
+      {
+        next ? (
+          <a class="next" href={`/learn/${next.slug}/`}>
+            <span>Lesson {i + 2} →</span>
+            {next.title}
+          </a>
+        ) : (
+          <a class="next" href="/learn/#next">
+            <span>Finished →</span>
+            Where to go from here
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .mins {
+    color: var(--fg-muted);
+  }
+  .mins::before {
+    content: '·';
+    margin-right: 0.6rem;
+  }
+
+  /* where this lesson sits: every lesson by number, the current one by name too */
+  .path {
+    margin-top: 1.5rem;
+  }
+  .path ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .path li {
+    margin: 0;
+  }
+  .path a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 0.7rem 0 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--fg-muted);
+    font-size: 0.86rem;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+  .path a:hover {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .path-n {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1.5px solid currentColor;
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+  }
+  .path a[aria-current='page'] {
+    border-color: var(--fg);
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .path a[aria-current='page'] .path-n {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+  /* where the six names do not fit on a line, the others keep their numbers only */
+  @media (max-width: 68rem) {
+    .path a:not([aria-current='page']) {
+      padding: 0 0.6rem;
+    }
+    .path a:not([aria-current='page']) .path-t {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  .lesson {
+    padding-top: clamp(1.6rem, 4vw, 2.6rem);
+  }
+  /* slotted content is not scoped, so these are global rules under .lesson */
+  .lesson :global(:where(p, ul, ol, h2, h3, h4, blockquote, dl)) {
+    max-width: var(--prose);
+  }
+  .lesson :global(> p),
+  .lesson :global(> ul),
+  .lesson :global(> ol) {
+    font-size: 1.04rem;
+  }
+  .lesson :global(> :first-child) {
+    margin-top: 0;
+  }
+  .lesson :global(h2) {
+    font-size: clamp(1.35rem, 2.6vw, 1.6rem);
+    margin-top: 2.2em;
+    scroll-margin-top: 5rem;
+  }
+  .lesson :global(figure) {
+    max-width: 60rem;
+  }
+  .lesson :global(.wide) {
+    max-width: 60rem;
+  }
+
+  .keep ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1.5px solid var(--fg);
+  }
+  .keep li {
+    margin: 0;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.04rem;
+  }
+
+  .names > p,
+  .deeper > p {
+    color: var(--fg-muted);
+    font-size: 0.96rem;
+  }
+  .names .table-scroll {
+    max-width: 60rem;
+  }
+  .names table {
+    min-width: 34rem;
+  }
+  .names tbody th {
+    font-family: var(--font-body);
+    font-size: inherit;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .names tbody tr:last-child th {
+    border-bottom: 0;
+  }
+  .names td:first-child {
+    width: 26%;
+    color: var(--fg-muted);
+  }
+
+  .deeper ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--fg);
+    max-width: 44rem;
+  }
+  .deeper li {
+    display: grid;
+    gap: 0.1rem;
+    margin: 0;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .deeper li > a {
+    justify-self: start;
+    font-weight: 600;
+  }
+  .deeper li > a::after {
+    content: ' →';
+  }
+  .deeper span {
+    font-size: 0.93rem;
+    color: var(--fg-muted);
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 3.75rem);
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--fg);
+  }
+  .pager a {
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 560;
+    line-height: 1.25;
+  }
+  .pager a span {
+    display: block;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-bottom: 0.3rem;
+  }
+  .pager .next {
+    text-align: right;
+    grid-column: 2;
+  }
+</style>

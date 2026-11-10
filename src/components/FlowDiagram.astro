@@ -18,7 +18,8 @@ import { block, inline } from "../lib/md";
 import { codeThemes } from "../lib/code-themes.mjs";
 
 interface Props {
-  flow: Flow;
+  /** A flow, or anything with a flow's cast and steps: a lesson draws a shortened one. */
+  flow: Pick<Flow, "slug" | "title" | "participants" | "steps">;
 }
 const { flow } = Astro.props;
 const P = flow.participants;

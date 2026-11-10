@@ -1,0 +1,209 @@
+---
+import Base from "../../layouts/Base.astro";
+import { lessons, totalMinutes } from "../../data/learn/lessons";
+import { flows } from "../../data/flows";
+
+const next = [
+  {
+    href: "/guide/",
+    title: "Choose a flow for your agent",
+    text: "Six questions about your agent, in the words these lessons used. The answer is a short list of flows, with the reason for each.",
+  },
+  {
+    href: "/flows/",
+    title: `Read a flow at full size`,
+    text: `${flows.length} flows as step-by-step diagrams, with the HTTP on the wire. Start with authorization code with PKCE: it is lesson 3 with nothing left out.`,
+  },
+  {
+    href: "/deployments/",
+    title: "See what changes where your agent runs",
+    text: "Kubernetes, managed agent platforms, desktops and command lines, CI and sandboxes: where the first credential comes from in each.",
+  },
+  {
+    href: "/concepts/",
+    title: "Keep the whole model on one page",
+    text: "The same ideas as these lessons, compressed, with the caveats left in. Useful once you know the ground.",
+  },
+];
+---
+
+<Base
+  title="Learn agent authentication and authorization from the start"
+  description={`${lessons.length} short lessons on how AI agents get access: what an API can see, what a token is, how an agent gets one, and what limits the damage. No OAuth knowledge needed.`}
+>
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Learn</p>
+      <h1>Start from an API key. End able to read any flow.</h1>
+      <p class="lede">
+        {lessons.length} short lessons, about {totalMinutes} minutes in all. They assume you have built things that call
+        APIs, and nothing else: no OAuth, no JWTs, no specifications.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap lp">
+    <section aria-labelledby="path">
+      <div class="section-head">
+        <h2 id="path">The lessons</h2>
+        <p>In order. Each builds on the one before, and each ends with questions to check yourself.</p>
+      </div>
+      <ol class="lessons">
+        {
+          lessons.map((l, i) => (
+            <li>
+              <a href={`/learn/${l.slug}/`}>
+                <span class="n">{i + 1}</span>
+                <span class="body">
+                  <strong>{l.title}</strong>
+                  <span class="promise">{l.promise}</span>
+                  <span class="meta">
+                    {l.minutes} min · {l.teaches.slice(0, 4).join(', ')}
+                    {l.teaches.length > 4 && ', and more'}
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="start">
+        <a class="btn primary" href={`/learn/${lessons[0].slug}/`}>Start with lesson 1 →</a>
+      </p>
+    </section>
+
+    <section class="how" aria-labelledby="how">
+      <h2 id="how">How the lessons work</h2>
+      <ul>
+        <li>
+          <strong>One example all the way through.</strong> Alice, an agent, and a calendar API. Each lesson changes
+          one thing about it.
+        </li>
+        <li>
+          <strong>Plain words first.</strong> The specifications’ terms arrive after the idea they name, and each
+          lesson ends with a table of them.
+        </li>
+        <li>
+          <strong>A figure you can change.</strong> Most lessons have one. It shows a complete answer before you touch
+          it, and a table beneath it covers every case, so nothing depends on clicking.
+        </li>
+        <li>
+          <strong>Nothing to install.</strong> These lessons explain the model. They are not a tutorial for one
+          product, and every page they point to says what it was checked against.
+        </li>
+      </ul>
+    </section>
+
+    <section class="after" id="next" aria-labelledby="next-title">
+      <div class="section-head">
+        <h2 id="next-title">Where to go from here</h2>
+        <p>After the lessons, or instead of them if you know this ground already.</p>
+      </div>
+      <div class="grid two">
+        {
+          next.map((n) => (
+            <a class="card" href={n.href}>
+              <h3>{n.title}</h3>
+              <p>{n.text}</p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .lp > section {
+    padding-block: clamp(2rem, 5vw, 3.2rem);
+  }
+  .lp > section + section {
+    border-top: 1px solid var(--border);
+  }
+  .lp h2 {
+    margin-top: 0;
+  }
+
+  /* the path: one row per lesson, the whole row a link */
+  .lessons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1.5px solid var(--fg);
+    max-width: 52rem;
+  }
+  .lessons li {
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lessons a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0.95rem 0.4rem 1rem 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .lessons a:hover {
+    background: var(--accent-soft);
+  }
+  .n {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0.1rem;
+    border: 1.5px solid var(--fg);
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    font-weight: 500;
+  }
+  .body {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .body strong {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  .promise {
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+  .meta {
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+  .start {
+    margin: 1.4rem 0 0;
+  }
+
+  .how ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    max-width: 60rem;
+  }
+  .how li {
+    margin: 0;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--fg);
+    font-size: 0.98rem;
+  }
+  .how strong {
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+</style>

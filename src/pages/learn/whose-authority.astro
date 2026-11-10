@@ -1,0 +1,367 @@
+---
+import Lesson from "../../layouts/Lesson.astro";
+import Check from "../../components/Check.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import type {
+  CheckQuestion,
+  Scenario as ScenarioData,
+} from "../../data/learn/types";
+
+const PERSON = "A person’s";
+const OWN = "Its own";
+
+/** Five agents to sort. The fifth is the arrangement the lesson ends on. */
+const sort: CheckQuestion[] = [
+  {
+    id: "sort-mail",
+    question: "An assistant that summarizes your unread email each morning.",
+    options: [
+      {
+        text: PERSON,
+        correct: true,
+        why: "Yours. It should be able to read your mailbox and nobody else’s, and a token that names you is what makes the mail service enforce that.",
+      },
+      {
+        text: OWN,
+        why: "Then it needs access to every mailbox it might ever summarize, and the only thing keeping it in yours is its own logic.",
+      },
+    ],
+  },
+  {
+    id: "sort-invoices",
+    question:
+      "A nightly job that flags invoices that do not match a purchase order.",
+    options: [
+      {
+        text: PERSON,
+        why: "Nobody in particular asked for tonight’s run, and it should not stop working when one employee leaves. The work belongs to the organization.",
+      },
+      {
+        text: OWN,
+        correct: true,
+        why: "No person is involved. An administrator decides once what this job may read and write, and the job runs as itself.",
+      },
+    ],
+  },
+  {
+    id: "sort-support",
+    question:
+      "A support bot that tells customers the status of their own orders.",
+    options: [
+      {
+        text: PERSON,
+        correct: true,
+        why: "Each customer’s. The answer depends on who is asking, so each request should carry that customer’s authority, and the order system can then refuse anything else.",
+      },
+      {
+        text: OWN,
+        why: "It is often built this way. But then the order system sees one caller for every customer, and the only thing between customer A and customer B’s orders is the bot’s own judgment. That is the API key problem from the first lesson.",
+      },
+    ],
+  },
+  {
+    id: "sort-digest",
+    question:
+      "An agent that posts a digest of yesterday’s deploys to the team channel.",
+    options: [
+      {
+        text: PERSON,
+        why: "The digest is the same whoever is reading it, and it runs on a schedule. There is no one whose access it would be borrowing.",
+      },
+      {
+        text: OWN,
+        correct: true,
+        why: "Scheduled, shared, and the same for everyone. It reads deploy records and posts to one channel, as itself.",
+      },
+    ],
+  },
+  {
+    id: "sort-receipts",
+    question:
+      "Alice asks an agent to watch her inbox while she is on vacation and file her receipts.",
+    options: [
+      {
+        text: PERSON,
+        correct: true,
+        why: "Alice’s. But notice that she will not be there. The agent holds her access, on a refresh token, with nobody watching. Keep reading: this combination has a section of its own.",
+      },
+      {
+        text: OWN,
+        why: "It is her mailbox, so it is her authority. An agent with its own standing access to mailboxes could read anyone’s.",
+      },
+    ],
+  },
+];
+
+const vouch: ScenarioData = {
+  id: "platform-identity",
+  legend: "The agent’s identity",
+  cast: [
+    { label: "Platform", sub: "runs the job", role: "infra" },
+    { label: "Agent", sub: "the invoice job", role: "agent" },
+    { label: "Authorization server", role: "authz" },
+    { label: "Billing API", role: "resource" },
+  ],
+  asks: "The same three questions",
+  questions: ["Who is acting?", "For whom?", "Who said it could?"],
+  options: [
+    {
+      id: "platform",
+      name: "Issued by the platform",
+      hops: [
+        "a signed note: “this is the invoice job”",
+        "trades the note for an access token",
+        "access token",
+      ],
+      exhibits: [
+        {
+          caption: "What the access token says",
+          lang: "yaml",
+          text: `about:      invoice-job
+issued to:  invoice-job
+for:        billing.example
+allows:     read invoices
+expires:    in 10 minutes`,
+        },
+      ],
+      findings: [
+        {
+          note: "The invoice job. The platform that started it vouches for that, so no long-lived secret had to be stored for the job.",
+        },
+        {
+          note: "Nobody. The token is about the agent itself: the same name appears twice.",
+        },
+        {
+          note: "An administrator, in advance, by writing a rule: this job may read invoices. Nobody approved tonight’s run.",
+        },
+      ],
+      so: `Everything from the token lesson still holds: one audience, a narrow scope, a short life. What changes is who the token is about, and that **the only limit on this agent is the rule an administrator wrote.**`,
+    },
+  ],
+};
+
+const checks: CheckQuestion[] = [
+  {
+    id: "identity",
+    question:
+      "Your agent runs as a nightly job and calls an internal billing API. Security asks what identity it runs as. Which is the best answer?",
+    options: [
+      {
+        text: "It uses an API key that we keep in an environment variable.",
+        why: "That is a credential, not an identity. It never expires, it has to be stored and rotated by hand, and anyone who copies it is the job.",
+      },
+      {
+        text: "Its own: an identity our platform issues to that one job, traded for a short-lived token that can reach billing and nothing else.",
+        correct: true,
+        why: "It names one workload, it is issued where the job runs so nothing long-lived has to be stored, and what it can reach is written down in one rule.",
+      },
+      {
+        text: "Mine. I set it up, so it runs under my account.",
+        why: "Then the job can do everything you can, its actions are logged as yours, and it breaks or lingers when you change teams.",
+      },
+    ],
+  },
+  {
+    id: "sub",
+    question:
+      "An agent gets a token as itself, with no user involved. Who does the token say it is about?",
+    options: [
+      {
+        text: "The administrator who set the agent up.",
+        why: "The administrator wrote the rule, but is not named in the token. The token is about whoever is acting on it.",
+      },
+      {
+        text: "The agent itself.",
+        correct: true,
+        why: "With no user, the agent is both the app the token was issued to and the subject it is about.",
+      },
+      {
+        text: "Nobody. That part is left empty.",
+        why: "A token is always about someone or something. Here it is the agent.",
+      },
+    ],
+  },
+  {
+    id: "unattended",
+    question:
+      "Alice connects her mailbox to an agent and leaves for two weeks. The agent keeps working on a refresh token. What is the main risk?",
+    options: [
+      {
+        text: "The refresh token will expire and the agent will stop.",
+        why: "That would be an inconvenience. The risk is in what the agent can do while it keeps working.",
+      },
+      {
+        text: "The agent holds a person’s access with nobody watching. Whatever it is talked into doing, it does as Alice.",
+        correct: true,
+        why: "A person’s authority, and no person present to notice. Narrow the scope, keep a way to reach Alice for anything that cannot be undone, and know how the grant is revoked.",
+      },
+      {
+        text: "The mail service cannot tell that an agent is involved.",
+        why: "It can: the token names the app it was issued to. The trouble is how much that app can do while unsupervised.",
+      },
+    ],
+  },
+];
+---
+
+<Lesson
+  slug="whose-authority"
+  lede="A nightly job has no Alice to click Allow. So whose access does it use? Settle that before you choose a protocol, because everything else follows from it."
+  checks={checks}
+  keep={[
+    "Every request uses somebody’s authority: a person’s, or the agent’s own. Decide which first.",
+    "**Acting for a person:** the token names the person, and what they can do is the ceiling.",
+    "**Acting as itself:** the token names the agent, and the rule an administrator wrote is the only limit.",
+    "An agent’s own identity is best issued by the platform it runs on and short-lived, not stored as a secret.",
+    "A person’s access with no person watching is the arrangement to be most careful with.",
+  ]}
+  names={[
+    ["Whoever’s authority a request uses", "Principal"],
+    ["An account that belongs to software", "Service account"],
+    ["Getting a token as itself, with no user", "Client credentials"],
+    ["A running piece of software, such as the invoice job", "Workload"],
+    ["An identity the platform issues to it", "Workload identity"],
+    ["One system accepting identities that another issued", "Federation"],
+  ]}
+>
+  <h2>Two answers, and only two</h2>
+  <p>Every request an agent makes uses somebody’s authority. There are two possibilities.</p>
+  <ul>
+    <li>
+      <strong>A person’s.</strong> The token names that person. What the agent can do is capped by what the person
+      can do, and by what they approved. This is the last lesson.
+    </li>
+    <li>
+      <strong>Its own.</strong> The token names the agent. Nobody approves anything at the moment it runs. An
+      administrator decided in advance what this agent is allowed to do.
+    </li>
+  </ul>
+  <p>
+    The specifications call whoever’s authority is being used the <strong>principal</strong>. Which of the two it
+    should be is not a matter of taste. It follows from the work.
+  </p>
+
+  <Check
+    id="sort"
+    title="Sort five agents"
+    intro="For each one, whose authority should it use? Choose, then read why."
+    questions={sort}
+  />
+
+  <p>A rule of thumb that covers most cases:</p>
+  <ul>
+    <li>If the right answer depends on who is asking, the agent acts for that person.</li>
+    <li>If the work belongs to a team or a company, and runs on a schedule or a trigger, the agent acts as itself.</li>
+  </ul>
+
+  <h2>How an agent proves it is itself</h2>
+  <p>
+    Acting as itself, the agent still needs a token, and the routine is a shorter version of the last lesson. It
+    proves which software it is to the authorization server, gets a short-lived access token, and sends that to the
+    API. There is no browser and no consent screen, because there is no user. OAuth calls this{' '}
+    <strong>client credentials</strong>.
+  </p>
+  <p>
+    The interesting part is the first step. What does the agent prove itself <em>with</em>? There are three common
+    answers, and they are not equally good.
+  </p>
+
+  <div class="table-scroll wide" tabindex="0" role="region" aria-label="Three ways an agent proves it is itself">
+    <table class="ways">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col">A key it stores</th>
+          <th scope="col">A secret it trades for tokens</th>
+          <th scope="col">An identity from its platform</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">What the agent holds</th>
+          <td>One long-lived API key, sent on every request</td>
+          <td>A long-lived client secret or private key, and short-lived tokens</td>
+          <td>Short-lived credentials only</td>
+        </tr>
+        <tr>
+          <th scope="row">Who issues it</th>
+          <td>Whoever runs the API</td>
+          <td>The authorization server</td>
+          <td>The platform the agent runs on: a cloud, Kubernetes, a CI system</td>
+        </tr>
+        <tr>
+          <th scope="row">If a copy leaks</th>
+          <td>It works until someone notices and replaces it</td>
+          <td>A token stops in minutes. The secret works until it is replaced</td>
+          <td>It stops when it expires, usually within the hour</td>
+        </tr>
+        <tr>
+          <th scope="row">Who replaces it</th>
+          <td>You, by hand</td>
+          <td>You, by hand</td>
+          <td>The platform, on its own</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The third column is called <strong>workload identity</strong>. The platform that started the agent already
+    knows exactly what it started, so it can vouch for it. It hands the job a short, signed note saying what the job
+    is, and replaces the note before it expires. The job trades that note for access.
+  </p>
+
+  <Scenario scenario={vouch} title="An identity the agent never had to be given" />
+
+  <p>
+    When the service accepting the note is not the platform that issued it, such as a cloud accepting a note from
+    your CI system, the arrangement is called <strong>federation</strong>: one system agreeing to trust identities
+    that another one issued.
+  </p>
+
+  <Mixup belief="A service account is the safe choice, because no user’s access is involved.">
+    <p>
+      An agent acting as itself is limited only by what an administrator gave it, and those grants tend to grow. If
+      it serves several people under that one identity, the API cannot tell them apart, which is the first lesson
+      again. Acting as itself is right when the work is the organization’s. It is not a shortcut around sign-in.
+    </p>
+  </Mixup>
+
+  <h2>The trap in the middle</h2>
+  <p>
+    The fifth agent in the exercise was neither one thing nor the other: Alice’s access, and no Alice. It has a
+    person’s full authority and no person watching. Of every arrangement in this guide, it is the one most likely
+    to end badly.
+  </p>
+  <p>Sometimes it is what the job needs. If you find yourself there:</p>
+  <ul>
+    <li>Ask for the narrowest scope that does the work. Filing receipts does not need permission to send mail.</li>
+    <li>Find a way to reach the person for anything that cannot be undone. The last lesson shows how.</li>
+    <li>Know how the access is switched off, and who can do it, before the agent runs for the first time.</li>
+  </ul>
+</Lesson>
+
+<style>
+  .ways {
+    min-width: 44rem;
+  }
+  .ways thead th {
+    white-space: normal;
+    vertical-align: bottom;
+  }
+  .ways tbody th {
+    width: 9.5rem;
+    font-family: var(--font-body);
+    font-size: inherit;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+    white-space: normal;
+    border-bottom: 1px solid var(--border);
+  }
+  .ways tbody tr:last-child th {
+    border-bottom: 0;
+  }
+</style>

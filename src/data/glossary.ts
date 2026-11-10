@@ -42,6 +42,11 @@ export const glossary: Term[] = [
     see: { href: "/standards/#wimse-aims", label: "Standards tracker" },
   },
   {
+    term: "API key",
+    def: "A long-lived secret string that identifies the account it was issued to. It says nothing about which person a request is for, and it works for anyone who holds a copy.",
+    see: { href: "/learn/what-the-api-sees/", label: "What the API sees" },
+  },
+  {
     term: "Audience",
     aka: ["aud"],
     def: "The recipient a token is intended for. A resource must reject tokens whose audience is someone else; this is the main defense against a token being replayed at a different service.",
@@ -80,8 +85,18 @@ export const glossary: Term[] = [
     see: { href: "/flows/ciba/", label: "Backchannel approval" },
   },
   {
+    term: "Claim",
+    def: "One named statement inside a token, such as `sub` (who it is about) or `exp` (when it expires). The issuer’s signature covers all of them.",
+    see: { href: "/learn/tokens/", label: "What a token is" },
+  },
+  {
     term: "Client",
     def: "In OAuth, the application requesting tokens. An agent, or the application hosting it, is the client.",
+  },
+  {
+    term: "Client assertion",
+    def: "A short-lived JWT that a client signs with its own private key and presents to the authorization server in place of a client secret.",
+    see: { href: "/flows/client-credentials/", label: "Client credentials" },
   },
   {
     term: "Client credentials",
@@ -95,6 +110,16 @@ export const glossary: Term[] = [
     see: { href: "/flows/mcp-authorization/", label: "MCP authorization" },
   },
   {
+    term: "Client secret",
+    def: "A password issued to a client application, which it presents to the authorization server to prove which application it is. Only a client that runs on a server can keep one.",
+    see: { href: "/learn/getting-a-token/", label: "Getting a token" },
+  },
+  {
+    term: "Confidential client",
+    def: "A client that can keep a secret, because it runs on a server its operator controls. It proves which application it is with a client secret or a key. Contrast with a public client.",
+    see: { href: "/learn/getting-a-token/", label: "Getting a token" },
+  },
+  {
     term: "Confused deputy",
     def: "A service with legitimate authority that is tricked into using it for a caller who should not have it. Agents that forward tokens or share one identity across users are prone to it.",
     see: {
@@ -105,6 +130,11 @@ export const glossary: Term[] = [
   {
     term: "Consent",
     def: "A user’s recorded approval, at the authorization server, for a client to act with specified scopes.",
+  },
+  {
+    term: "Credential",
+    def: "Whatever a request carries as evidence of who sent it and what it may do: an API key, a password, a token or a certificate. It is all the receiving service has to go on.",
+    see: { href: "/learn/what-the-api-sees/", label: "What the API sees" },
   },
   {
     term: "Cross App Access",
@@ -146,6 +176,10 @@ export const glossary: Term[] = [
       href: "/flows/workload-identity-federation/",
       label: "Workload identity federation",
     },
+  },
+  {
+    term: "Grant",
+    def: "In OAuth, the permission a client has been given, and also the method by which it gets a token. Authorization code, client credentials and token exchange are grant types.",
   },
   {
     term: "ID-JAG",
@@ -206,6 +240,11 @@ export const glossary: Term[] = [
     def: "Any identity that belongs to software: service accounts, API keys, workloads, agents.",
   },
   {
+    term: "OAuth",
+    def: "A framework that lets one program obtain limited access to something, for a person or for itself, without being given a password. OAuth 2.0 is the published standard; OAuth 2.1 is the draft that consolidates it.",
+    see: { href: "/learn/getting-a-token/", label: "Getting a token" },
+  },
+  {
     term: "OAuth 2.1",
     def: "A consolidation of OAuth 2.0 and its security guidance into one framework. Still a draft, and already the baseline MCP builds on.",
     see: { href: "/standards/#oauth-2-1", label: "Standards tracker" },
@@ -215,6 +254,11 @@ export const glossary: Term[] = [
     aka: ["OBO"],
     def: "A general term, and some vendors’ product term, for a service obtaining a token to act for the user whose request it is handling.",
     see: { href: "/flows/token-exchange/", label: "Token exchange" },
+  },
+  {
+    term: "OpenID Connect",
+    aka: ["OIDC"],
+    def: "A layer on top of OAuth that tells an application who signed in, with an ID token. It is what a “Sign in with” button runs.",
   },
   {
     term: "PKCE",
@@ -231,6 +275,11 @@ export const glossary: Term[] = [
     see: { href: "/concepts/#roles", label: "The roles" },
   },
   {
+    term: "Prompt injection",
+    def: "Text an agent reads, in a web page, an email or a tool result, that is written to be taken as instructions. It is why limits belong at the API and credentials belong outside the model’s context.",
+    see: { href: "/learn/limits/", label: "Limiting the damage" },
+  },
+  {
     term: "Proof of possession",
     def: "Evidence, supplied with a request, that the sender holds a particular private key. DPoP, mutual TLS and HTTP message signatures all provide it.",
     see: { href: "/flows/dpop/", label: "Sender-constrained tokens" },
@@ -244,6 +293,10 @@ export const glossary: Term[] = [
     term: "Public client",
     def: "A client that cannot keep a secret, because it runs on a user’s device. Desktop, CLI and browser-based agents are public clients.",
     see: { href: "/deployments/local/", label: "Desktop, IDE and CLI" },
+  },
+  {
+    term: "Redirect URI",
+    def: "The address the authorization server sends the user’s browser back to, carrying the authorization code. It is registered in advance, and the server refuses any other.",
   },
   {
     term: "Refresh token",
@@ -262,9 +315,23 @@ export const glossary: Term[] = [
     def: "A string naming a permission a token carries. Coarse by design.",
   },
   {
+    term: "Security token service",
+    aka: ["STS"],
+    def: "A service that accepts one credential and issues another, usually short-lived. A cloud provider’s token service is the receiving end of workload identity federation.",
+    see: {
+      href: "/flows/workload-identity-federation/",
+      label: "Workload identity federation",
+    },
+  },
+  {
     term: "Sender-constrained token",
     def: "A token that only the holder of a particular key can use. The opposite of a bearer token.",
     see: { href: "/flows/dpop/", label: "DPoP" },
+  },
+  {
+    term: "Service account",
+    def: "An account that belongs to software, not to a person. In OAuth terms, a client acting under its own identity.",
+    see: { href: "/learn/whose-authority/", label: "The agent’s own identity" },
   },
   {
     term: "ServiceAccount token",
@@ -293,6 +360,10 @@ export const glossary: Term[] = [
     term: "SVID",
     aka: ["SPIFFE Verifiable Identity Document"],
     def: "A credential that proves a SPIFFE ID. Comes as an X.509 certificate, a JWT, or a key-bound workload identity token.",
+  },
+  {
+    term: "Token endpoint",
+    def: "The address at an authorization server where a client trades a code, a refresh token or another grant for tokens, over a direct connection.",
   },
   {
     term: "Token exchange",

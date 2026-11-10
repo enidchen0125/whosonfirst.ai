@@ -1,0 +1,280 @@
+---
+import Lesson from "../../layouts/Lesson.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import type {
+  CheckQuestion,
+  Scenario as ScenarioData,
+} from "../../data/learn/types";
+
+/**
+ * Three things that go wrong, and five controls, each asked the same question:
+ * does it help here? No control helps with all three, which is the point.
+ * The controls are the flows DPoP, credential broker, step-up and CIBA;
+ * nothing here may contradict those pages.
+ */
+const failures: ScenarioData = {
+  id: "failures",
+  legend: "What goes wrong",
+  cast: [
+    { label: "Agent", sub: "holds Alice’s token", role: "agent" },
+    { label: "Calendar API", role: "resource" },
+  ],
+  asks: "Does it help?",
+  questions: [
+    "A short-lived token",
+    "A narrow scope",
+    "A token bound to a key",
+    "Credentials kept out of the model’s reach",
+    "Asking a person first",
+  ],
+  options: [
+    {
+      id: "copied",
+      name: "A token is copied from a log",
+      cast: [
+        { label: "Someone else", sub: "has a copy", role: "agent" },
+        { label: "Calendar API", role: "resource" },
+      ],
+      hops: ["a request, with the copied token"],
+      findings: [
+        {
+          verdict: "yes",
+          note: "The copy stops working when the token expires. Minutes, not months.",
+        },
+        {
+          verdict: "partly",
+          note: "It limits the copy to reading one calendar. It does not stop it.",
+        },
+        {
+          verdict: "yes",
+          note: "The copy is refused without the private key, and the key was never in the log.",
+        },
+        {
+          verdict: "partly",
+          note: "It removes one place to leak from. Logs and proxies are others.",
+        },
+        {
+          verdict: "no",
+          note: "Reading a calendar is not a step anyone would be asked about.",
+        },
+      ],
+      so: `A stolen token is a real token. Two things limit what it is worth: **time**, because it expires, and **proof**, because a token bound to a key is useless to someone who has only the token.`,
+    },
+    {
+      id: "misuse",
+      name: "The agent is talked into doing something",
+      cast: [
+        { label: "Agent", sub: "read a poisoned page", role: "agent" },
+        { label: "Mail API", role: "resource" },
+      ],
+      hops: ["a request to send mail, with its calendar token"],
+      findings: [
+        {
+          verdict: "no",
+          note: "The agent is using its own, valid token. Expiry is beside the point.",
+        },
+        {
+          verdict: "yes",
+          note: "The token is for reading a calendar. The mail API refuses it, whatever the agent was told.",
+        },
+        {
+          verdict: "no",
+          note: "The agent holds the key. It is the agent that was fooled.",
+        },
+        {
+          verdict: "no",
+          note: "Nothing is being leaked. The agent is misusing access it really has.",
+        },
+        {
+          verdict: "yes",
+          note: "If sending in Alice’s name needs her approval, she sees the request and says no.",
+        },
+      ],
+      so: `A tricked agent uses real credentials, so neither time nor proof helps. **What holds is what the token cannot do**, and a person standing in front of anything that cannot be undone.`,
+    },
+    {
+      id: "leak",
+      name: "The agent is talked into leaking its credentials",
+      cast: [
+        { label: "Agent", sub: "read a poisoned page", role: "agent" },
+        { label: "Attacker’s server", role: "resource" },
+      ],
+      hops: ["a request carrying whatever it could read"],
+      findings: [
+        {
+          verdict: "partly",
+          note: "An access token is nearly worthless by the time it arrives. A refresh token or an API key is not.",
+        },
+        { verdict: "partly", note: "It limits what the thief gets." },
+        {
+          verdict: "yes",
+          note: "A bound token is refused without its key, as long as the key is somewhere the model cannot read.",
+        },
+        {
+          verdict: "yes",
+          note: "The model cannot repeat what it was never shown.",
+        },
+        { verdict: "no", note: "Nobody is asked before text is sent." },
+      ],
+      so: `**Anything the model can read, text on a web page can ask it to repeat.** So the strongest answer is about where things are kept: the credential never enters the model’s context, and ideally never enters its sandbox.`,
+    },
+  ],
+};
+
+const checks: CheckQuestion[] = [
+  {
+    id: "bound",
+    question:
+      "An attacker copies a token that is bound to a key. They do not have the key. What can they do with the token?",
+    options: [
+      {
+        text: "Use it until it expires.",
+        why: "That is true of a plain bearer token. A bound token has to arrive with a fresh signature made by the private key.",
+      },
+      {
+        text: "Nothing. The API refuses a bound token that arrives without proof of the key.",
+        correct: true,
+        why: "Every request carries a signature made with the private key. The token names the matching public key, so a copy sent alone fails the check.",
+      },
+      {
+        text: "Use it once, since each proof is single-use.",
+        why: "They cannot make a proof at all. That takes the private key, which was never sent anywhere.",
+      },
+    ],
+  },
+  {
+    id: "delete",
+    question:
+      "An agent holding a read-only calendar token is tricked by a web page into trying to delete every event. What stops it?",
+    options: [
+      {
+        text: "Its system prompt, which says never to delete anything.",
+        why: "The page’s text is competing with the prompt, and may win. A prompt is an instruction to the model, not a limit on it.",
+      },
+      {
+        text: "The calendar API. The token’s scope does not cover deleting.",
+        correct: true,
+        why: "The API checks scope on every request and refuses. It makes no difference why the agent tried.",
+      },
+      {
+        text: "The token’s short lifetime.",
+        why: "The token is valid when the agent uses it. A short life limits a thief, not the token’s rightful holder.",
+      },
+    ],
+  },
+  {
+    id: "where",
+    question: "Where should an agent’s long-lived credentials be kept?",
+    options: [
+      {
+        text: "In the system prompt, so the model can use them when it needs to.",
+        why: "Whatever is in the prompt can be repeated by the model, to anyone whose text it reads.",
+      },
+      {
+        text: "In the agent’s memory of the conversation.",
+        why: "That is also something the model reads, and often something that is logged.",
+      },
+      {
+        text: "In the code around the model, or behind a proxy outside it. Never where the model can read them.",
+        correct: true,
+        why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential. The model sees the result and never the secret.",
+      },
+    ],
+  },
+];
+---
+
+<Lesson
+  slug="limits"
+  lede="Sooner or later a token is copied, and sooner or later the agent is talked into something. A good design assumes both, and decides in advance how little each one costs."
+  checks={checks}
+  keep={[
+    "Plan for two failures: a credential leaks, and the agent is talked into something.",
+    "**Time and proof** limit a leak: short lives, and tokens bound to a key.",
+    "**Scope and approval** limit a tricked agent: narrow tokens, and a person asked at the API’s insistence.",
+    "Anything the model can read can be drawn out of it. Keep credentials where it cannot.",
+    "A limit in a prompt is a suggestion. A limit at the API is a control.",
+  ]}
+  names={[
+    ["Text written to be taken as instructions", "Prompt injection"],
+    ["A token only the holder of a key can use", "Sender-constrained token"],
+    ["Showing, on each request, that you hold the key", "Proof of possession"],
+    ["One common way of doing that", "DPoP"],
+    ["The API demanding a fresh, specific approval", "Step-up"],
+  ]}
+>
+  <h2>Two failures to plan for</h2>
+  <p>Every lesson so far has ended on a caution. Here they are, side by side.</p>
+  <ul>
+    <li>
+      <strong>A credential leaks.</strong> Tokens end up in logs, in error reports, in debugging sessions and in
+      the memory of the agent that used them. A plain token works for whoever holds a copy.
+    </li>
+    <li>
+      <strong>The agent is talked into something.</strong> An agent reads web pages, emails, documents and the
+      output of tools, and any of them can contain text written to be taken as instructions. This is called
+      <strong>prompt injection</strong>, and nobody has a way to rule it out.
+    </li>
+  </ul>
+  <p>
+    You cannot prevent either for certain. What you can decide is what each one costs. Five controls do most of
+    that work. Before you look, guess which of them would stop an agent that has been tricked into sending Alice’s
+    calendar to a stranger.
+  </p>
+
+  <Scenario scenario={failures} glance="All three at a glance" />
+
+  <p>
+    Read the table down a column and no control says yes three times. That is why designs use several: each one
+    covers a failure the others miss.
+  </p>
+
+  <h2>The five controls</h2>
+  <p>
+    <strong>Keep tokens short-lived.</strong> Minutes for an access token. The refresh token makes that painless
+    for the agent and limits what a copy is worth. It is the cheapest control here, and the one already built in.
+  </p>
+  <p>
+    <strong>Ask for little, and ask late.</strong> One audience and the narrowest scope that does the job, requested
+    when a task needs it. An agent that holds only <code>calendar.read</code> cannot be talked into sending mail.
+  </p>
+  <p>
+    <strong>Bind the token to a key.</strong> The agent makes a key pair and keeps the private half. The token names
+    the public half, and every request carries a fresh signature made with the private one. A copy of the token is
+    then refused. This is a <strong>sender-constrained token</strong>; the signature is
+    <strong>proof of possession</strong>, and the most common way to do it is called DPoP.
+  </p>
+  <p>
+    <strong>Keep credentials out of the model’s reach.</strong> The model decides which tool to call. Your code makes
+    the call and attaches the token. The model sees the result and never the secret. A stronger version puts the
+    secret outside the agent’s sandbox altogether, behind a proxy that adds it to outgoing requests and only for the
+    hosts it was meant for.
+  </p>
+  <p>
+    <strong>Ask a person when it matters.</strong> For anything that cannot be undone, the API refuses the everyday
+    token and says what it needs. The person approves that one action at the authorization server, and the agent
+    gets a token good for exactly that. This is called <strong>step-up</strong>. If the person is not at the
+    keyboard, the authorization server can reach them on their phone instead.
+  </p>
+
+  <Mixup belief="My agent asks the user to confirm before doing anything risky, so risky actions are covered.">
+    <p>
+      An agent that asks is being polite. An agent that has been tricked may not ask, or may report an approval that
+      was never given. The approval counts when the API demands it and the authorization server records it, because
+      neither of those can be talked out of it.
+    </p>
+  </Mixup>
+
+  <h2>One rule under all of it</h2>
+  <p>
+    The agent is the part of your system that reads untrusted text and acts on it. So nothing that matters should
+    depend on the agent behaving. Put the limit in the token, enforce it at the API, keep the secret out of reach,
+    and leave the agent free to be as helpful as it can within that.
+  </p>
+  <p>
+    That is the whole course. You have the model the rest of this guide is built on: what an API can see, what a
+    token says, how an agent gets one for a person or for itself, what happens down a chain, and what limits the
+    damage. The pages from here on are the same ideas at full size.
+  </p>
+</Lesson>

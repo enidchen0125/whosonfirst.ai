@@ -1,0 +1,296 @@
+---
+import Lesson from "../../layouts/Lesson.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import type {
+  CheckQuestion,
+  Scenario as ScenarioData,
+} from "../../data/learn/types";
+
+/**
+ * Three things a tool in the middle might send to the API behind it. The fuller
+ * comparison (five ways, five questions) is LastHop on the Concepts page, and the
+ * exchange itself is data/flows/token-exchange.ts; nothing here may contradict them.
+ */
+const chain: ScenarioData = {
+  id: "chain",
+  legend: "The tool sends the calendar API",
+  cast: [
+    { label: "Alice", role: "human" },
+    { label: "Agent", sub: "your app", role: "agent" },
+    { label: "Scheduling tool", sub: "in the middle", role: "agent" },
+    { label: "Calendar API", sub: "the last hop", role: "resource" },
+  ],
+  asks: "What the calendar API can tell",
+  questions: [
+    "Is this for Alice?",
+    "Which software is calling?",
+    "Was this issued for me?",
+  ],
+  options: [
+    {
+      id: "forward",
+      name: "The token it was handed",
+      hops: [
+        "“Find a time for us to meet”",
+        "a token for the tool",
+        "the same token again",
+      ],
+      exhibits: [
+        {
+          caption: "What arrives at the calendar API",
+          lang: "json",
+          text: `{
+  "sub": "alice",
+  "client_id": "calendar-assistant",
+  "aud": "https://scheduler.example",
+  "scope": "meetings.schedule"
+}`,
+        },
+      ],
+      findings: [
+        { verdict: "yes", note: "The token names her." },
+        {
+          verdict: "no",
+          note: "The token names the agent’s app. The tool in the middle is invisible.",
+        },
+        {
+          verdict: "no",
+          note: "`aud` is the scheduling tool. The calendar API has to ignore the address to accept it.",
+        },
+      ],
+      so: `This is the tempting one: the tool already holds a token, so why not use it? Because it only works if the calendar API stops checking who a token is for, and then **every service that is ever handed a token can use it anywhere.** It is called token passthrough, and MCP forbids it.`,
+    },
+    {
+      id: "key",
+      name: "Its own API key",
+      hops: [
+        "“Find a time for us to meet”",
+        "a token for the tool",
+        "the tool’s key, and a name",
+      ],
+      exhibits: [
+        {
+          caption: "What arrives at the calendar API",
+          lang: "http",
+          text: `GET /events?day=tomorrow HTTP/1.1
+Host: calendar.example
+X-API-Key: sk_scheduler_41c0…
+X-User: alice`,
+        },
+      ],
+      findings: [
+        {
+          verdict: "no",
+          note: "`alice` is only the tool’s word. The key is the same for every user.",
+        },
+        {
+          verdict: "partly",
+          note: "The tool, by its key. Not the agent behind it.",
+        },
+        { verdict: "yes", note: "The calendar API issued the key itself." },
+      ],
+      so: `The first lesson again, one hop further along. The calendar API sees the tool and nobody else, so the tool needs access to everyone’s calendar, and **the only thing keeping Alice’s request inside Alice’s calendar is the tool’s own code.**`,
+    },
+    {
+      id: "exchange",
+      name: "A new token, made for this hop",
+      hops: [
+        "“Find a time for us to meet”",
+        "a token for the tool",
+        "a new token: for Alice, by the tool",
+      ],
+      exhibits: [
+        {
+          caption: "What arrives at the calendar API",
+          lang: "json",
+          text: `{
+  "sub": "alice",
+  "aud": "https://calendar.example",
+  "scope": "calendar.read",
+  "act": { "sub": "scheduling-tool" }
+}`,
+        },
+      ],
+      findings: [
+        { verdict: "yes", note: "`sub` is still Alice." },
+        {
+          verdict: "yes",
+          note: "A second name has been added: `act`, the tool acting for her.",
+        },
+        { verdict: "yes", note: "`aud` is the calendar API." },
+      ],
+      so: `The tool takes the token it was handed back to the authorization server and asks for a new one, for the next hop. The server decides whether this tool may act for Alice at the calendar API, and if so says exactly that in a fresh token. **Each hop ends up holding a token that works in one place.**`,
+      link: {
+        href: "/flows/token-exchange/",
+        text: "The exchange, step by step",
+      },
+    },
+  ],
+};
+
+const checks: CheckQuestion[] = [
+  {
+    id: "next-hop",
+    question:
+      "A tool receives a token whose audience is the tool. To finish the job it has to call a billing API for the same user. What should it do?",
+    options: [
+      {
+        text: "Send the billing API the token it received.",
+        why: "That token is addressed to the tool. The billing API should refuse it, and if it does not, any service holding a token can reuse it elsewhere.",
+      },
+      {
+        text: "Trade the token for a new one whose audience is the billing API.",
+        correct: true,
+        why: "A new token for each hop: still about the user, addressed to the next API, and no wider than this step needs.",
+      },
+      {
+        text: "Use an administrator key, since the user was already checked.",
+        why: "Then the billing API cannot tell which user the request is for, and the tool can reach everyone’s data.",
+      },
+    ],
+  },
+  {
+    id: "three-am",
+    question:
+      "The calendar API’s log says Alice deleted a meeting at 3 a.m. Alice was asleep. An agent did it. What kind of token produces a log like that?",
+    options: [
+      {
+        text: "One that names only Alice.",
+        correct: true,
+        why: "That is impersonation. The API cannot tell software from the person, so everything is recorded as hers.",
+      },
+      {
+        text: "One that names Alice and the software acting for her.",
+        why: "That is delegation, and the log would show both: Alice’s meeting, deleted by the tool acting for her.",
+      },
+      {
+        text: "The tool’s own API key.",
+        why: "Then the log would show the tool and would not mention Alice at all.",
+      },
+    ],
+  },
+  {
+    id: "shrink",
+    question:
+      "As a request passes down a chain of tools, what should happen to the access each one holds?",
+    options: [
+      {
+        text: "It should stay the same, so that nothing breaks.",
+        why: "Then the last service in the chain can do everything the first could, including things this request never needed.",
+      },
+      {
+        text: "It should grow, since later tools may need more.",
+        why: "A tool that can ask for more than it was handed can be used to get around the limits on the one before it.",
+      },
+      {
+        text: "It should shrink: each hop gets only what its own step needs.",
+        correct: true,
+        why: "One audience and a narrower scope at every exchange. Whatever goes wrong at one hop is then limited to that hop.",
+      },
+    ],
+  },
+];
+---
+
+<Lesson
+  slug="chains"
+  lede="Agents call tools, and tools call other services. Every hop needs a credential, and what gets handed along decides what the last service in the chain can know."
+  checks={checks}
+  keep={[
+    "Each hop gets a token of its own. **Exchange, never forward.**",
+    "A forwarded token only works if the next API stops checking the audience, and then every token works everywhere.",
+    "**Delegation** names the person and the software acting for them. **Impersonation** names only the person. Prefer delegation.",
+    "Access should shrink as it travels down a chain. It should never grow.",
+  ]}
+  names={[
+    ["Forwarding the token you were handed", "Token passthrough"],
+    ["A service talked into misusing access it was lent", "Confused deputy"],
+    ["Trading a token for a new one, for the next hop", "Token exchange"],
+    ["A token that names the person and the software", "Delegation"],
+    ["A token that names only the person", "Impersonation"],
+    ["The software named as acting", "Actor"],
+    ["What some vendors call the exchange", "On-behalf-of"],
+  ]}
+>
+  <h2>One more hop</h2>
+  <p>
+    So far the agent has called the calendar API directly. Often something sits in between. Alice asks the agent to
+    find a time for a meeting. The agent calls a scheduling tool, which in MCP would be a server. The tool needs to
+    see Alice’s calendar, so it calls the calendar API.
+  </p>
+  <p>
+    The agent has a token for the tool: Alice approved it, and its audience is the tool. Now the tool has to call the
+    calendar API. What does it send?
+  </p>
+  <p>
+    There are three things it could reach for. Before you look, guess which of them lets the calendar API answer all
+    three of its questions.
+  </p>
+
+  <Scenario scenario={chain} glance="All three at a glance" />
+
+  <h2>Why forwarding is the dangerous one</h2>
+  <p>
+    Forwarding feels harmless. It is the same user and the same request, and the token is right there. The harm is
+    in what it requires of the calendar API: accepting a token that was addressed to someone else.
+  </p>
+  <p>
+    An API that does that can be used by anyone holding any token from the same authorization server. A tool you
+    connected for one purpose can quietly use your token for another. The tool has become what security people call
+    a <strong>confused deputy</strong>: a service with real access, used for something nobody approved.
+  </p>
+  <p>
+    The audience check from the token lesson is the defense, and it only works if no service ever asks another to
+    skip it. So the rule is short: <strong>exchange, never forward.</strong>
+  </p>
+
+  <h2>Two ways to write “for Alice”</h2>
+  <p>A token made for the next hop can be written two ways.</p>
+  <ul>
+    <li>
+      It can name <strong>only Alice</strong>. The calendar API then believes Alice is calling in person, and its
+      logs will say so. This is <strong>impersonation</strong>.
+    </li>
+    <li>
+      It can name <strong>Alice, and separately the software acting for her</strong>. This is
+      <strong>delegation</strong>, and the second name is called the <strong>actor</strong>. It is the
+      <code>act</code> line in the token above.
+    </li>
+  </ul>
+  <p>
+    Delegation is the one to want. The API can apply Alice’s permissions and the tool’s limits together, block one
+    misbehaving tool without locking Alice out, and say afterward what did what. With impersonation the log shows
+    Alice doing things at three in the morning that Alice never did.
+  </p>
+  <p>
+    One caution. Whether the new token carries an actor depends on the authorization server that issues it, and
+    whether anything is done with it depends on the API. Check what yours actually issue and read before you rely on
+    it.
+  </p>
+
+  <Mixup belief="Token exchange is how a tool gets more access than it was given.">
+    <p>
+      It is the reverse. An exchange should produce a token that does less: one audience, and a scope no wider
+      than the next step needs. The authorization server can also say no. Access shrinks as it travels down a
+      chain, so that whatever goes wrong at one hop stays at that hop.
+    </p>
+  </Mixup>
+
+  <h2>Where you will meet this</h2>
+  <ul>
+    <li>
+      <strong>An MCP server that calls another API.</strong> It may not pass along the token the client sent it.
+      It gets a token of its own for the API behind it, by exchange or by asking the user to connect that account
+      directly.
+    </li>
+    <li>
+      <strong>An agent that hands work to another agent.</strong> The same question one level up: what does the
+      second agent receive, and what can the service behind it tell?
+    </li>
+    <li>
+      <strong>A request that crosses into another company.</strong> Their authorization server does not know your
+      users, so the exchange happens twice: once at home, once there.
+    </li>
+  </ul>
+</Lesson>
