@@ -245,6 +245,8 @@ It writes to `social/`, which is not committed:
 
 Every word in these pictures is read from the pages as built: the home page's question and its ways in, the first lesson's figure, the groups and ratings on the flows page, the tracker's counts, a flow's steps and its diagram as drawn. The script holds the layout and none of the content, so a picture cannot say what the site does not. If a page it reads has changed shape, it stops and names what it could not find, and if a picture has outgrown its frame it says which. Make the pictures again after the content changes. Do not edit them by hand.
 
+The pictures are read on a phone, where a page 1080 pixels wide is shown at about a third of its size. So nothing on one is set smaller than 23 pixels, and most labels are 26. Keep to that when a page is changed: type that looks comfortable at full size is too small to read in a feed.
+
 ## Response headers
 
 `public/_headers` is sent with every page and file the site serves: a content security policy that allows this origin and nothing else, headers that forbid framing, content sniffing and the device features the site never uses, and one that tells a browser to come back over HTTPS only. A `Link` header points a program at `llms.txt` and the sitemap. The Markdown copies and the two files that list them carry `X-Robots-Tag: noindex`, so a search engine sends people to the page. The `.md` and `.txt` files are declared as UTF-8, because the host names no encoding for a `.txt` file and a browser then reads its quotes and dashes as Windows-1252. The build adds its cache rule for `/_astro/` to the same file. Cloudflare does not add these headers to its own “not found” response.

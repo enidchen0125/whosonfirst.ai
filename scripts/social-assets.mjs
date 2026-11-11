@@ -415,16 +415,16 @@ p, h1, h2, h3, ul, ol, table { margin: 0; padding: 0; }
   text-transform: uppercase;
   color: var(--fg-muted);
 }
-.tag { font-size: 21px; }
-.eyebrow { font-size: 23px; line-height: 1.35; margin-bottom: 26px; }
-.label { font-size: 21px; line-height: 1.3; }
+.tag { font-size: 26px; }
+.eyebrow { font-size: 27px; line-height: 1.35; margin-bottom: 18px; }
+.label { font-size: 26px; line-height: 1.3; }
 .main {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 34px 0;
+  padding: 22px 0;
 }
 .main.from-top { justify-content: flex-start; padding-top: 44px; }
 .foot {
@@ -435,10 +435,10 @@ p, h1, h2, h3, ul, ol, table { margin: 0; padding: 0; }
   gap: 32px;
   padding-top: 22px;
   border-top: 1px solid var(--border);
-  font-size: 23px;
+  font-size: 24px;
   color: var(--fg-muted);
 }
-.addr { flex: none; font: 500 24px/1.2 var(--font-mono); color: var(--accent); }
+.addr { flex: none; font: 500 26px/1.2 var(--font-mono); color: var(--accent); }
 h1 { font: 600 82px/1.08 var(--font-display); letter-spacing: -0.03em; }
 h2 { font: 600 58px/1.1 var(--font-display); letter-spacing: -0.03em; }
 .lede { margin-top: 30px; font-size: 35px; line-height: 1.42; color: var(--fg-muted); }
@@ -462,8 +462,8 @@ code {
   background: var(--role-soft);
   text-align: center;
 }
-.node strong { display: block; font-size: 29px; font-weight: 600; line-height: 1.25; }
-.node span { display: block; font-size: 22px; line-height: 1.3; color: var(--fg-muted); }
+.node strong { display: block; font-size: 31px; font-weight: 600; line-height: 1.25; }
+.node span { display: block; font-size: 26px; line-height: 1.3; color: var(--fg-muted); }
 .hop { flex: 1; position: relative; }
 .hop i {
   position: absolute;
@@ -482,15 +482,15 @@ code {
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
 }
-.chain.said { padding-bottom: 66px; }
+.chain.said { padding-bottom: 72px; }
 .hop span {
   position: absolute;
   left: -40px;
   right: -40px;
-  top: calc(100% + 12px);
-  font-size: 22px;
+  top: calc(100% + 10px);
+  font-size: 25px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.2;
   text-align: center;
 }
 
@@ -499,7 +499,7 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.42em;
-  font: 600 25px/1 var(--font-label);
+  font: 600 28px/1 var(--font-label);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -516,32 +516,32 @@ code {
 }
 
 /* one choice: what arrives, and what the API can tell from it */
-.listing { margin-top: 34px; }
+.listing { margin-top: 26px; }
 .listing pre {
   margin: 10px 0 0;
-  padding: 18px 22px;
+  padding: 14px 22px;
   border: 1px solid var(--border);
   border-left: 3px solid var(--fg);
   background: var(--bg-sunken);
-  font: 400 23px/1.5 var(--font-mono);
+  font: 400 26px/1.45 var(--font-mono);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.findings { margin-top: 34px; width: 100%; border-collapse: collapse; }
-.findings caption { text-align: left; padding-bottom: 12px; }
+.findings { margin-top: 26px; width: 100%; border-collapse: collapse; }
+.findings caption { text-align: left; padding-bottom: 8px; }
 .findings tr { border-top: 1px solid var(--border); }
 .findings tr:first-child { border-top: 2px solid var(--fg); }
-.findings th, .findings td { padding: 17px 0; vertical-align: top; text-align: left; }
-.findings th { width: 262px; font-size: 27px; font-weight: 600; line-height: 1.35; }
-.findings td.v { width: 150px; padding-top: 22px; }
+.findings th, .findings td { padding: 13px 0; vertical-align: top; text-align: left; }
+.findings th { width: 250px; font-size: 28px; font-weight: 600; line-height: 1.35; }
+.findings td.v { width: 162px; padding-top: 17px; }
 .findings td.n { font-size: 26px; line-height: 1.4; color: var(--fg-muted); }
 .so {
-  margin-top: 34px;
+  margin-top: 30px;
   padding-left: 22px;
   border-left: 4px solid var(--fg);
-  font-size: 31px;
+  font-size: 30px;
   font-weight: 600;
-  line-height: 1.38;
+  line-height: 1.36;
 }
 
 /* every choice against every question */
@@ -549,8 +549,8 @@ code {
 .grid th, .grid td { padding: 22px 0; text-align: left; vertical-align: middle; }
 .grid thead th {
   padding: 0 0 14px;
-  font: 500 19px/1.3 var(--font-label);
-  letter-spacing: 0.05em;
+  font: 500 24px/1.3 var(--font-label);
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--fg-muted);
   vertical-align: bottom;
@@ -565,22 +565,22 @@ code {
 .flows h2 { font-size: 50px; }
 .flows .lede { font-size: 28px; margin-top: 22px; }
 .groups { margin-top: 30px; columns: 2; column-gap: 56px; }
-.group { break-inside: avoid; padding-bottom: 30px; }
-.group .label { padding-bottom: 8px; border-bottom: 2px solid var(--fg); color: var(--fg); }
+.group { break-inside: avoid; padding-bottom: 26px; }
+.group .label { padding-bottom: 8px; border-bottom: 2px solid var(--fg); color: var(--fg); font-size: 23px; letter-spacing: 0.04em; }
 .group li, .key span {
   display: flex;
   align-items: center;
   gap: 14px;
-  font-size: 25px;
+  font-size: 27px;
   line-height: 1.3;
   list-style: none;
 }
-.group li { padding: 9px 0; border-bottom: 1px solid var(--border); font-weight: 500; }
+.group li { padding: 8px 0; border-bottom: 1px solid var(--border); font-weight: 500; }
 .rating { flex: none; width: 15px; height: 15px; border: 2px solid var(--fg); }
 .rating.r0 { background: var(--fg); }
 .rating.r1 { background: linear-gradient(to right, var(--fg) 50%, transparent 50%); }
 .key { display: flex; gap: 40px; margin-top: 10px; }
-.key span { font-size: 22px; color: var(--fg-muted); }
+.key span { font-size: 25px; color: var(--fg-muted); }
 
 /* the tracker: one bar a status, on one scale. The bars are one color, because
    length is what they say; a status keeps the marker the tracker gives it. */
@@ -627,33 +627,40 @@ code {
 .step { margin-top: 26px; }
 .step .label { display: flex; gap: 18px; }
 .step .label span:first-child { flex: none; color: var(--fg); }
-.route { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; font-size: 27px; font-weight: 600; white-space: nowrap; }
+.route { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; font-size: 30px; font-weight: 600; white-space: nowrap; }
 .route .n {
   flex: none;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--role);
   color: var(--on-accent);
-  font: 600 22px/1 var(--font-mono);
+  font: 600 25px/1 var(--font-mono);
 }
 .route .who { display: inline-flex; align-items: center; gap: 9px; }
 .route .who::before { content: ""; width: 15px; height: 15px; border: 2px solid var(--role); background: var(--role-soft); }
 .route .to { flex: none; width: 30px; height: 2px; background: var(--fg); position: relative; }
 .route .to::after { content: ""; position: absolute; right: -2px; top: -5px; border-left: 9px solid var(--fg); border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
-.route .kind { margin-left: auto; font: 500 19px/1 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); }
+/* how the message travels: a line of its own, under the names it joins */
+.route .kind { flex: 0 0 100%; padding-left: 62px; font: 500 24px/1.2 var(--font-label); letter-spacing: 0.07em; text-transform: uppercase; white-space: normal; color: var(--fg-muted); }
 .step h3 { margin-top: 16px; font-size: 40px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
 
 /* wide: the question beside the answer */
 .wide .main { flex-direction: row; align-items: center; gap: 64px; padding: 30px 0; }
 .wide .main > div { flex: 1; min-width: 0; }
-.wide h1 { font-size: 62px; }
-.wide .lede { font-size: 28px; margin-top: 24px; }
-.wide .grid thead th + th { width: 150px; }
-.wide .grid tbody th { font-size: 26px; }
-.wide .mark { font-size: 22px; }
+/* the table needs the wider half: its names and its arrows both want room */
+.wide .main > div:first-child { flex: 0.9; }
+.wide h1 { font-size: 60px; }
+.wide .lede { font-size: 30px; margin-top: 24px; }
+.wide .grid thead th + th { width: 160px; }
+.wide .grid tbody th { font-size: 28px; }
+.wide .grid tbody th, .wide .grid tbody td { padding: 17px 0; }
+.wide .node { min-width: 0; padding: 12px 16px 13px; }
+.wide .node strong { font-size: 28px; }
+.wide .node span { font-size: 24px; }
+.wide .mark { font-size: 26px; }
 `;
 
 const top = (tag = "") => `
@@ -664,7 +671,7 @@ const top = (tag = "") => `
 // A long address takes the line to itself: both are set in known sizes, so
 // whether they fit side by side can be worked out from their lengths.
 const foot = (path, note, width) => {
-  const fits = (ADDRESS + path).length * 14.5 + note.length * 11 + 40 < width;
+  const fits = (ADDRESS + path).length * 15.7 + note.length * 12.2 + 40 < width;
   return `
   <div class="foot">
     <div class="addr">${ADDRESS}${esc(path)}</div>
