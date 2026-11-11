@@ -48,6 +48,7 @@ const TYPES = {
   ".xml": "application/xml",
   ".txt": "text/plain",
   ".png": "image/png",
+  ".md": "text/markdown",
 };
 /**
  * The headers the host sends with every response: the `/*` block of the built
@@ -351,6 +352,169 @@ record(
     broken.length === 0,
     broken.slice(0, 12).join("; ") +
       (broken.length > 12 ? `; and ${broken.length - 12} more` : ""),
+  );
+}
+
+// The other forms of a page: the card shown where its link is shared, its copy
+// in Markdown, and what it tells a search engine about itself. Each is made
+// from the page when the site is built (src/integrations/), and each is named
+// in the page's own head, so the head is where this starts.
+{
+  const head = (p) => p.html.slice(0, p.html.indexOf("</head>"));
+  const attr = (p, test, name) => {
+    for (const [tag] of head(p).matchAll(/<(?:meta|link)\b[^>]*>/g))
+      if (test.test(tag))
+        return new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1];
+    return undefined;
+  };
+  const indexed = built.filter(
+    (p) => !/<meta name="robots" content="[^"]*noindex/.test(head(p)),
+  );
+
+  // A card: a PNG of the size every service expects, at the address the page gives.
+  const cards = [];
+  for (const p of indexed) {
+    const src = attr(p, /property="og:image"/, "content");
+    const file = src && join(root, new URL(src).pathname);
+    if (!file || !existsSync(file)) {
+      cards.push(`${p.path} (no card at ${src})`);
+      continue;
+    }
+    const png = readFileSync(file);
+    const [w, h] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+    if (png.toString("latin1", 1, 4) !== "PNG" || w !== 1200 || h !== 630)
+      cards.push(`${p.path} (${w} × ${h})`);
+    else if (png.length > 300_000)
+      cards.push(`${p.path} (${Math.round(png.length / 1024)} kB)`);
+    if (attr(p, /name="twitter:card"/, "content") !== "summary_large_image")
+      cards.push(`${p.path} (does not ask for the large card)`);
+  }
+  record(
+    "sharing",
+    "every page has a card: a 1200 × 630 PNG under 300 kB, at the address its head gives",
+    indexed.length > 0 && cards.length === 0,
+    cards.slice(0, 8).join("; "),
+  );
+
+  // Markdown: the page's own title and sections, and none of its markup.
+  const copies = [];
+  const withCopy = built.filter((p) =>
+    attr(p, /type="text\/markdown"/, "href"),
+  );
+  const plain = (h) =>
+    h
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
+  for (const p of withCopy) {
+    const href = attr(p, /type="text\/markdown"/, "href");
+    const file = join(root, href);
+    if (!existsSync(file)) {
+      copies.push(`${p.path} (no file at ${href})`);
+      continue;
+    }
+    const md = readFileSync(file, "utf8");
+    const main = p.html.slice(
+      p.html.indexOf("<main"),
+      p.html.indexOf("</main>"),
+    );
+    const h1 = plain(/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(main)?.[1] ?? "");
+    if (!md.startsWith(`# ${h1}\n`))
+      copies.push(`${p.path} (does not open with the page's title)`);
+    // outside code samples, nothing of the page's markup comes through
+    const prose = md
+      .replace(/^\s*```[\s\S]*?^\s*```/gm, "")
+      .replace(/`[^`\n]*`/g, "");
+    const tag =
+      /<\/?(div|span|p|a|svg|button|script|style|table|li|ul|ol|h[1-6])\b[^>]*>/.exec(
+        prose,
+      );
+    if (tag) copies.push(`${p.path} (markup in the text: ${tag[0]})`);
+    // every section of the page is a section of the copy
+    const sections = [...main.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) =>
+      plain(m[1]),
+    );
+    const lines = new Set(md.split("\n"));
+    const lost = sections.filter(
+      (t) =>
+        ![...lines].some(
+          (l) =>
+            /^#{2,4} /.test(l) &&
+            l.replace(/[\\*_`]/g, "").includes(t.replace(/[*_`]/g, "")),
+        ),
+    );
+    if (lost.length)
+      copies.push(
+        `${p.path} (sections missing: ${lost.slice(0, 3).join(", ")})`,
+      );
+    if (!md.includes(`https://whosonfirst.ai${p.path}`))
+      copies.push(`${p.path} (does not give the page's address)`);
+  }
+  record(
+    "markdown",
+    "every page's Markdown copy opens with its title, has each of its sections, carries no markup and gives its address",
+    withCopy.length > 0 && copies.length === 0,
+    copies.slice(0, 8).join("; ") +
+      (copies.length > 8 ? `; and ${copies.length - 8} more` : ""),
+  );
+
+  // llms.txt lists exactly the pages that have a copy, and each link is a file.
+  {
+    const file = join(root, "llms.txt");
+    const llms = existsSync(file) ? readFileSync(file, "utf8") : "";
+    const listed = [
+      ...llms.matchAll(/\]\(https:\/\/whosonfirst\.ai(\/[^)]*)\)/g),
+    ].map((m) => m[1]);
+    const expected = withCopy.map((p) =>
+      attr(p, /type="text\/markdown"/, "href"),
+    );
+    const wrong = [
+      ...expected
+        .filter((e) => !listed.includes(e))
+        .map((e) => `${e} not listed`),
+      ...listed
+        .filter((l) => !existsSync(join(root, l)))
+        .map((l) => `${l} listed, not built`),
+    ];
+    record(
+      "markdown",
+      "llms.txt lists every page's Markdown copy, and every link in it leads to a file",
+      llms.startsWith("# ") &&
+        wrong.length === 0 &&
+        existsSync(join(root, "llms-full.txt")),
+      wrong.slice(0, 8).join("; "),
+    );
+  }
+
+  // What a page tells a search engine: data that parses, about this page.
+  const data = [];
+  for (const p of indexed) {
+    const m = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(
+      head(p),
+    );
+    try {
+      const graph = JSON.parse(m[1])["@graph"];
+      const page = graph.find((n) => n["@type"] === "WebPage");
+      if (page?.url !== `https://whosonfirst.ai${p.path}`)
+        data.push(`${p.path} (describes ${page?.url})`);
+      if (!graph.some((n) => n["@type"] === "Person" && n.name))
+        data.push(`${p.path} (does not say who makes the site)`);
+    } catch {
+      data.push(`${p.path} (no data, or data that does not parse)`);
+    }
+    if (
+      attr(p, /rel="canonical"/, "href") !== `https://whosonfirst.ai${p.path}`
+    )
+      data.push(`${p.path} (canonical address is not its own)`);
+  }
+  record(
+    "search",
+    "every page gives its own address as canonical and describes itself in structured data that parses",
+    indexed.length > 0 && data.length === 0,
+    data.slice(0, 8).join("; "),
   );
 }
 
