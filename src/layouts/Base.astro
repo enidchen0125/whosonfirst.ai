@@ -18,7 +18,7 @@ import plexMono600 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600
 import plexSans400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
 import plexSans600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
 import Here from "../components/Here.astro";
-import { REVIEWED } from "../data/site";
+import { AUTHOR, REVIEWED, REVIEWED_ISO } from "../data/site";
 
 interface Props {
   title?: string;
@@ -28,6 +28,14 @@ interface Props {
     trail?: { label: string; short?: string; href?: string }[];
     current: string;
   };
+  /** A page that explains one thing at length: a lesson, a flow, a guide. */
+  article?: boolean;
+  /** Keep the page out of search results. For the "not found" page. */
+  noindex?: boolean;
+  /** Whether the page has a copy in Markdown beside it. Off where there is nothing to read as text. */
+  markdown?: boolean;
+  /** Further schema.org nodes about this page, added to the ones every page carries. */
+  schema?: Record<string, unknown>[];
 }
 
 // The publication's name is "Who’s on First". whosonfirst.ai is its address, and
@@ -37,11 +45,112 @@ const DESCRIPTOR = "A field guide to agent authentication and authorization";
 const {
   title,
   here,
+  article = false,
+  noindex = false,
+  markdown = !noindex,
+  schema = [],
   description = `${DESCRIPTOR}: the flows, the deployments and the standards, with and without a human in the loop.`,
 } = Astro.props;
 // Seen outside the site, a title has to say what the page is about and where it is from.
 const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — ${DESCRIPTOR}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Two files are written for every page when the site is built, both named
+// after its address: /flows/dpop/ has /og/flows/dpop.png, the card shown where a
+// link to it is shared, and /flows/dpop/index.md, the page as Markdown for a
+// program that reads. src/integrations/ makes them from the built page.
+const slug = Astro.url.pathname.replace(/^\/|\/$/g, "") || "index";
+const card = new URL(`/og/${noindex ? "index" : slug}.png`, Astro.site);
+const cardAlt = `${title ?? SITE}. ${SITE}: ${DESCRIPTOR.toLowerCase()}.`;
+const markdownHref = `${Astro.url.pathname}index.md`;
+
+// What the page is, for a search engine or an answer engine: the site, who makes
+// it, this page and when it was last checked, and the trail to it.
+const home = new URL("/", Astro.site).href;
+const siteId = `${home}#website`;
+const authorId = `${new URL("/about/", Astro.site).href}#who-makes-it`;
+const crumbs = here
+  ? [
+      { label: SITE, href: "/" },
+      ...(here.trail ?? []).filter((t) => t.href),
+      { label: title ?? here.current, href: Astro.url.pathname },
+    ]
+  : [];
+const graph = [
+  {
+    "@type": "WebSite",
+    "@id": siteId,
+    url: home,
+    name: SITE,
+    alternateName: "whosonfirst.ai",
+    description: `${DESCRIPTOR}.`,
+    inLanguage: "en",
+    publisher: { "@id": authorId },
+  },
+  {
+    "@type": "Person",
+    "@id": authorId,
+    name: AUTHOR.name,
+    url: AUTHOR.url,
+    sameAs: AUTHOR.profiles.map((p) => p.href),
+  },
+  {
+    "@type": "WebPage",
+    "@id": canonical.href,
+    url: canonical.href,
+    name: title ?? SITE,
+    description,
+    inLanguage: "en",
+    isPartOf: { "@id": siteId },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: card.href,
+      width: 1200,
+      height: 630,
+    },
+    lastReviewed: REVIEWED_ISO,
+    reviewedBy: { "@id": authorId },
+    ...(crumbs.length
+      ? { breadcrumb: { "@id": `${canonical.href}#breadcrumb` } }
+      : {}),
+  },
+  ...(article
+    ? [
+        {
+          "@type": "TechArticle",
+          "@id": `${canonical.href}#article`,
+          headline: title,
+          description,
+          inLanguage: "en",
+          image: card.href,
+          author: { "@id": authorId },
+          publisher: { "@id": authorId },
+          isPartOf: { "@id": siteId },
+          mainEntityOfPage: { "@id": canonical.href },
+        },
+      ]
+    : []),
+  ...(crumbs.length
+    ? [
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${canonical.href}#breadcrumb`,
+          itemListElement: crumbs.map((c, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: c.label,
+            item: new URL(c.href ?? "/", Astro.site).href,
+          })),
+        },
+      ]
+    : []),
+  ...schema,
+];
+// "<" is written as an escape so that nothing in the data can close the script element.
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": graph,
+}).replace(/</g, "\\u003c");
 
 // In the order a reader new to the subject needs them: learn it, choose with it,
 // then look things up. The first stays in reach on a phone, where the rest wait
@@ -68,14 +177,28 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     {preloadFonts.map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    <meta name="author" content={AUTHOR.name} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {!noindex && <meta name="robots" content="max-image-preview:large" />}
+    {markdown && <link rel="alternate" type="text/markdown" href={markdownHref} title="This page as Markdown" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:site_name" content={SITE} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={card} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={cardAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={card} />
+    <meta name="twitter:image:alt" content={cardAlt} />
+    <meta name="twitter:creator" content={AUTHOR.x} />
+    {!noindex && <script is:inline type="application/ld+json" set:html={jsonLd} />}
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
     <script is:inline>
@@ -148,6 +271,10 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
           </a>
           <p>
             {DESCRIPTOR}. Who is acting, for whom, and who said they could?
+          </p>
+          <p class="by">
+            Made by <a href={AUTHOR.url} rel="author">{AUTHOR.name}</a>. Found something wrong or out of date?{' '}
+            <a href="/about/#corrections">Say so</a>.
           </p>
         </div>
         <ul>
@@ -637,6 +764,9 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
   .foot p {
     max-width: 30rem;
     margin: 0.4rem 0 0;
+  }
+  .foot .by {
+    margin-top: 0.9rem;
   }
   .foot ul {
     list-style: none;

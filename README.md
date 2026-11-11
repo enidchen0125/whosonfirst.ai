@@ -46,6 +46,8 @@ npm run check:rendered
 
 `npm run build` writes a fully static site to `dist/client/`. There is no server component and no client-side framework: interactive pieces are small custom elements that enhance HTML rendered at build time, so every page reads correctly with JavaScript off.
 
+Once the pages are written, the build makes two more forms of each one from the page itself: a card for where its link is shared, and a copy in Markdown. See [Other forms of a page](#other-forms-of-a-page).
+
 ### Formatting and linting
 
 Biome's settings are in `biome.json`. Two things about this repository shape them:
@@ -73,7 +75,9 @@ Biome does not handle `.mdx`, so the deployment guides and the About page are no
 | `src/data/tokens.ts`                  | Annotated example tokens for the token inspector                                                   |
 | `src/data/guide.ts`                   | Questions and rules for the decision guide                                                         |
 | `src/data/glossary.ts`                | Glossary terms                                                                                     |
-| `src/data/site.ts`                    | The "last reviewed" date shown across the site                                                     |
+| `src/data/site.ts`                    | The "last reviewed" date shown across the site, and who makes it                                   |
+| `src/integrations/social-cards.mjs`   | Draws each page's card for where its link is shared, and the home-screen icon                      |
+| `src/integrations/markdown-pages.mjs` | Writes each page again as Markdown, and `llms.txt` and `llms-full.txt` from those                  |
 | `src/components/FlowDiagram.astro`    | Sequence diagram and step-through panel; a step narrative on a phone                               |
 | `src/data/verify.ts`                  | “What can the API verify?”: two credentials, four checks, and the wording of each verdict          |
 | `src/components/VerifyDetail.astro`   | The full comparison, on the Concepts page                                                          |
@@ -156,7 +160,7 @@ Three rules hold throughout:
 Two checks cover this:
 
 - `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing falls below 4.5:1 in either theme.
-- `npm run check:rendered` (after `npm run build`, `scripts/rendered-check.mjs`) first reads every built page: each internal link leads to a page and each anchor to something on it, no word runs into the inline element after it, every lesson is listed, the right answer to a lesson's questions cannot be guessed from its place or its length, a figure choice that must not be built is marked on its button, in its panel and in its table, and the response headers are in place. Then it loads every page under those headers and fails if one breaks its own content security policy. Then it opens the site in a browser and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow and every lesson), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work:
+- `npm run check:rendered` (after `npm run build`, `scripts/rendered-check.mjs`) first reads every built page: each internal link leads to a page and each anchor to something on it, no word runs into the inline element after it, every lesson is listed, every page has its card, its Markdown copy and structured data that parses, `llms.txt` lists every copy, the right answer to a lesson's questions cannot be guessed from its place or its length, a figure choice that must not be built is marked on its button, in its panel and in its table, and the response headers are in place. Then it loads every page under those headers and fails if one breaks its own content security policy. Then it opens the site in a browser and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow and every lesson), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work:
   - halfway down a long page the header still says which page it is and, on a wide screen, which section; a short page has no such line
   - the home page's figure makes its point before a click, fits about one screen and switches; there are three ways in; every lesson is listed in order; both answers to "whose authority" appear before either list of flows
   - a lesson's figure shows one complete variation, the table beneath covers them all, a choice changes what is shown, no explanation appears before an answer is chosen, each question has one right answer, and the page runs in the order every lesson shares
@@ -165,9 +169,43 @@ Two checks cover this:
 
   It needs Chromium: `npx playwright install chromium`.
 
+## Other forms of a page
+
+A page is read in three places besides a browser: where a link to it is shared, by a search engine, and by a program working for someone, such as a coding agent or an assistant answering a question. Each gets a form of the page made for it. All of them are made from the page as built, so none can say what the page does not.
+
+**Where a link is shared.** `src/integrations/social-cards.mjs` draws a 1200 × 630 PNG for every page at `/og/<address>.png`, from the page's title and description, in the site's type and its light colors. `src/layouts/Base.astro` names it in `og:image` and `twitter:image` and asks for the large card. A page's card changes when its title or description does; nothing is edited by hand. The same step writes `/apple-touch-icon.png` from the site's mark.
+
+**For a search engine.** Every page carries schema.org data in its head: the site, who makes it, the page with the month it was last reviewed, and the trail to it. Lessons, flows and deployment guides also say they are articles. A layout passes `article` to the base layout for that, and `schema` to add nodes of its own. The “not found” page passes `noindex`.
+
+**For a program that reads.** `src/integrations/markdown-pages.mjs` writes each page again as Markdown beside it: `/flows/dpop/` has `/flows/dpop/index.md`. The page names it in a `<link rel="alternate" type="text/markdown">`. The copy leaves out the header, the footer, controls and drawings, and keeps what the page says in words: a flow's steps, a figure's every variation and its table, the decision guide's rules. Two files are made from the copies:
+
+- `/llms.txt` says what the site is and links to every page's Markdown, in reading order.
+- `/llms-full.txt` is all of the pages in one file.
+
+A page with nothing to read as text, as the style guide is, passes `markdown={false}` to the base layout. A new section of the site has to be added to `SECTIONS` in the integration, or the build stops and says so.
+
+The conversion knows the site's components by class name: which are controls (`CHROME`), which are facts set side by side (`ROW`), and a few that need rearranging to read well. A new interactive component should be checked in its page's `index.md` after a build. The test is the one the pages already meet: what a drawing or a control shows must also be on the page in words.
+
+`public/robots.txt` allows every crawler and states, in the terms of [contentsignals.org](https://contentsignals.org/), that the site may be indexed, used to answer questions, and used for training.
+
+### Markdown at the page's own address
+
+Some agents ask for Markdown with `Accept: text/markdown`. The site has no server code to answer that, and putting a Worker in front of every page to do it would make page views count against the Workers request limit. The host can do it with a rule instead. In the Cloudflare dashboard, under Rules, a URL rewrite rule:
+
+- **When:** `any(http.request.headers["accept"][*] contains "text/markdown") and ends_with(http.request.uri.path, "/") and not starts_with(http.request.uri.path, "/styleguide/")`
+- **Rewrite the path to (dynamic):** `concat(http.request.uri.path, "index.md")`
+
+To see whether it is in place:
+
+```bash
+curl -sI -H "Accept: text/markdown" https://whosonfirst.ai/flows/dpop/ | grep -i content-type
+```
+
+The rule is not kept in this repository. Until it exists, a request that asks for Markdown gets the page, which is still a correct answer.
+
 ## Response headers
 
-`public/_headers` is sent with every page and file the site serves: a content security policy that allows this origin and nothing else, and headers that forbid framing, content sniffing and the device features the site never uses. The build adds its cache rule for `/_astro/` to the same file. Cloudflare does not add these headers to its own “not found” response.
+`public/_headers` is sent with every page and file the site serves: a content security policy that allows this origin and nothing else, and headers that forbid framing, content sniffing and the device features the site never uses. A `Link` header points a program at `llms.txt` and the sitemap. The Markdown copies and the two files that list them carry `X-Robots-Tag: noindex`, so a search engine sends people to the page. The build adds its cache rule for `/_astro/` to the same file. Cloudflare does not add these headers to its own “not found” response.
 
 The policy allows inline scripts and styles, because the theme switch runs before the first paint and code samples and diagrams carry style attributes. It does not allow anything from another origin. Analytics, an embed or a hosted font would be refused until it is added there, and `npm run check:rendered` fails on any page that breaks the policy.
 

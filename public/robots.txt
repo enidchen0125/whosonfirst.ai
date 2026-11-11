@@ -1,4 +1,13 @@
+# Who’s on First is written to be read, by people and by programs.
+#
+# What may be done with it, in the terms of https://contentsignals.org/ :
+#   search    index it, link to it, quote short excerpts
+#   ai-input  use it to answer someone's question, with a link back
+#   ai-train  train or fine-tune a model on it
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 Sitemap: https://whosonfirst.ai/sitemap.xml
+
+# Every page is also served as Markdown. The list is at https://whosonfirst.ai/llms.txt
