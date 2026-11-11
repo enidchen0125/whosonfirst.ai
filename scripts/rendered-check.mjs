@@ -49,6 +49,27 @@ const TYPES = {
   ".txt": "text/plain",
   ".png": "image/png",
 };
+/**
+ * The headers the host sends with every response: the `/*` block of the built
+ * `_headers` file. This server sends them too, so a page that breaks the site's
+ * own Content-Security-Policy fails here and not after it is deployed.
+ */
+const SITE_HEADERS = {};
+{
+  const file = join(root, "_headers");
+  let everywhere = false;
+  for (const line of existsSync(file)
+    ? readFileSync(file, "utf8").split("\n")
+    : []) {
+    if (!line.trim() || line.trimStart().startsWith("#")) continue;
+    if (!/^\s/.test(line)) {
+      everywhere = line.trim() === "/*";
+      continue;
+    }
+    const m = /^\s+([^:]+):\s*(.+)$/.exec(line);
+    if (everywhere && m) SITE_HEADERS[m[1].toLowerCase()] = m[2].trim();
+  }
+}
 const server = createServer((req, res) => {
   let file = normalize(
     join(root, decodeURIComponent(new URL(req.url, "http://x").pathname)),
@@ -59,6 +80,7 @@ const server = createServer((req, res) => {
   if (!existsSync(file)) return res.writeHead(404).end("not found");
   res
     .writeHead(200, {
+      ...SITE_HEADERS,
       "content-type": TYPES[extname(file)] ?? "application/octet-stream",
     })
     .end(readFileSync(file));
@@ -404,8 +426,80 @@ record(
   );
 }
 
+// The headers every response carries. The browser pass below then holds every
+// page to them.
+{
+  const csp = SITE_HEADERS["content-security-policy"] ?? "";
+  const missing = [
+    [/default-src 'self'/.test(csp), "a default of this origin only"],
+    [/object-src 'none'/.test(csp), "no plugins"],
+    [/base-uri 'self'/.test(csp), "a fixed base address"],
+    [/frame-ancestors 'none'/.test(csp), "no framing"],
+    [SITE_HEADERS["x-content-type-options"] === "nosniff", "nosniff"],
+    [!!SITE_HEADERS["referrer-policy"], "a referrer policy"],
+  ]
+    .filter(([ok]) => !ok)
+    .map(([, what]) => what);
+  record(
+    "headers",
+    "every response carries a content security policy and the headers beside it",
+    missing.length === 0,
+    missing.length ? `missing: ${missing.join(", ")}` : "",
+  );
+}
+
+// A figure that shows an agent being handed a password is a comparison, and a
+// reader can take a comparison for a menu. Wherever that figure appears, the
+// choice itself and its panel say not to build it.
+{
+  const shown = built.filter((p) => p.html.includes('data-option="password"'));
+  const unmarked = shown
+    .filter(
+      (p) =>
+        !/value="password"[^>]*>\s*<span[^>]*>[\s\S]{0,240}?class="[^"]*\bsc-flag\b/.test(
+          p.html,
+        ) ||
+        !/data-option="password"[^>]*>[\s\S]{0,600}?class="[^"]*\bsc-avoid\b/.test(
+          p.html,
+        ),
+    )
+    .map((p) => p.path);
+  record(
+    "lessons",
+    "handing an agent a password is marked “do not build” wherever it is shown",
+    shown.length > 0 && unmarked.length === 0,
+    shown.length ? unmarked.join(" ") : "the figure was not found on any page",
+  );
+}
+
 /* ---------- run ---------- */
 const browser = await chromium.launch();
+
+// Every built page, loaded once under the site's own headers.
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  const refused = [];
+  let at = "";
+  page.on("console", (m) => {
+    if (m.type() === "error" && /Content Security Policy/i.test(m.text()))
+      refused.push(`${at} ${m.text().slice(0, 140)}`);
+  });
+  for (const p of built) {
+    at = p.path;
+    await page.goto(`${origin}${p.path}`, { waitUntil: "networkidle" });
+  }
+  record(
+    "headers",
+    "no page loads or runs anything its content security policy refuses",
+    refused.length === 0,
+    `${built.length} pages` +
+      (refused.length
+        ? `; ${refused.slice(0, 4).join("; ")}${refused.length > 4 ? `; and ${refused.length - 4} more` : ""}`
+        : ""),
+  );
+  await ctx.close();
+}
 for (const theme of THEMES) {
   for (const vp of VIEWPORTS) {
     const ctx = await browser.newContext({
@@ -420,6 +514,10 @@ for (const theme of THEMES) {
       const page = await ctx.newPage();
       const errors = [];
       page.on("pageerror", (e) => errors.push(String(e)));
+      page.on("console", (m) => {
+        if (m.type() === "error" && /Content Security Policy/i.test(m.text()))
+          errors.push(m.text().slice(0, 140));
+      });
       await page.goto(`${origin}${pg.path}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
 
