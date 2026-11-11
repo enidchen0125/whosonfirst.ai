@@ -31,11 +31,11 @@ The site is written at three depths, and each is a complete account at its own l
 
 **[The lessons](/learn/)** build one model in plain words, with one example. They leave things out on purpose: a lesson draws authorization code with PKCE in eight steps, and the flow page draws eleven. Where a lesson and a flow page differ in detail, the flow page is the fuller account.
 
-**The flow pages, the [decision guide](/guide/) and the deployment pages** are for choosing and building. A flow page opens with what happens in a few parts and who has to do what, and a glossary term can be pressed for its definition. Those overviews restate the page's own steps and add nothing to them.
+**The flow pages, the [decision guide](/guide/) and the deployment pages** are for choosing and building. A flow page opens with what happens in a few parts and who has to do what, and a glossary term can be pressed for its definition. Those overviews restate the page and add no facts to it.
 
 **The [standards tracker](/standards/)** is for looking things up, and for seeing how settled each piece is.
 
-The design of the lessons follows what is known about learning from text and diagrams. A figure makes its point in the state it first shows and repeats every variation in a table, because most readers do not click. Steps are advanced by the reader and never play by themselves. Common mistakes are stated and corrected by name. Questions come with an explanation of why each answer is right or wrong. None of it has been tested with readers yet, and the About page will say so until it has.
+The design of the lessons follows what is known about learning from text and diagrams. A figure makes its point in the state it first shows and repeats every variation in a table, because most readers do not click. Steps are advanced by the reader, and nothing plays until the reader asks for it. Common mistakes are stated and corrected by name. Questions come with an explanation of why each answer is right or wrong. None of it has been tested with readers yet, and the About page will say so until it has.
 
 ## How facts were checked
 
@@ -43,7 +43,7 @@ The standards in this area change monthly, and a reference that is confidently o
 
 **Specifications read at source.** The MCP authorization specification and its extensions, the A2A specification, the AP2 specification, and the OAuth and WIMSE working group draft sources were read from their public repositories. Kubernetes feature stages were taken from the project's versioned feature list and documentation source. How AWS, Google Cloud, Microsoft Entra and GitHub Actions handle workload identity was read from each provider's own documentation. Examples on flow pages follow those documents.
 
-**The lessons and the overviews** restate the flow pages in plain words, and were then read against the specifications they lean on: the OAuth framework and its security best current practice, the JWT profile for access tokens, token exchange, DPoP, the step-up challenge, the MCP authorization specification and the Kubernetes documentation. So were the pages on hosted apps and the short answer on Kubernetes.
+**The lessons** restate the flow pages and the Concepts page in plain words, and were then read against the specifications they lean on: the OAuth framework and its security best current practice, the JWT profile for access tokens, token exchange, DPoP, the step-up challenge, the MCP authorization specification and the Kubernetes documentation. So were the page on hosted apps and the short answer on Kubernetes. **The overviews** on flow pages were checked against the page each one opens.
 
 **IETF revision numbers and dates** come from the IETF's document metadata mirror.
 

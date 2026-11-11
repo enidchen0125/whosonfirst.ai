@@ -176,7 +176,7 @@ const checks: CheckQuestion[] = [
         why: "A tool’s description is part of what the model reads, so it can be repeated to anyone whose text the model reads.",
       },
       {
-        text: "In the code around the model, or behind a proxy outside it, where the model cannot read them.",
+        text: "Held by the code around the model, or behind a proxy outside it, where the model cannot read them.",
         correct: true,
         why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential. The model sees the result and never the secret.",
       },
@@ -244,8 +244,8 @@ const checks: CheckQuestion[] = [
     <strong>Bind the token to a key.</strong> The agent makes a key pair and keeps the private half. The token names
     the public half, and every request carries a fresh signature made with the private one. A copy of the token is
     then refused. This is a <strong>sender-constrained token</strong>. The signature is called{' '}
-    <strong>proof of possession</strong>, and one common way to do it is DPoP. The private key stays in your code or
-    in the platform’s key store, never where the model can read it: a key the model could repeat would be no better
+    <strong>proof of possession</strong>, and one common way to do it is DPoP. The private key is held by your code or
+    by the platform’s key store, never where the model can read it: a key the model could repeat would be no better
     than a token it could repeat.
   </p>
   <p>

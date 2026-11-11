@@ -229,11 +229,11 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
     {
       id: "hosted",
       title: "If the agent is a hosted app",
-      intro: `The diagram draws an agent on the user’s machine: a public client, with a redirect to \`127.0.0.1\` and nothing to prove itself with but PKCE. An agent that runs on your own servers follows the same eleven steps with two differences.`,
+      intro: `The diagram draws an agent on the user’s machine: a public client, with a redirect to \`127.0.0.1\` and no credential of its own. PKCE shows only that the app finishing the sign-in is the one that started it. An agent that runs on your own servers follows the same eleven steps with two differences.`,
       parts: [
         {
           title: "The browser comes back to your server",
-          body: `The redirect address in steps 3 and 6 is an HTTPS address on your backend, registered in advance. The code arrives there, never in the user’s browser storage and never in the page.`,
+          body: `The redirect address in steps 3, 6 and 7 is an HTTPS address on your backend, registered in advance. The code still passes through the browser’s address bar, and is handed to your server there. No script in the page handles it, and the tokens it is traded for never reach the browser.`,
         },
         {
           title: "The token request says which app is asking",
@@ -250,6 +250,20 @@ grant_type=authorization_code
 &redirect_uri=https://assistant.example/callback
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 &resource=https://calendar.example/api`,
+          },
+        },
+        {
+          title: "When the access token runs out",
+          body: `The backend sends the refresh token to the same endpoint, authenticating the same way, and gets a new access token without the user. If a new refresh token comes back with it, that one replaces the old: save it before doing anything else.`,
+          code: {
+            lang: "http",
+            text: `POST /token HTTP/1.1
+Host: auth.example
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&refresh_token=8xLOxBtZp8`,
           },
         },
         {

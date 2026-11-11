@@ -328,8 +328,9 @@ const checks: CheckQuestion[] = [
   <p>Where the app runs changes one detail:</p>
   <ul>
     <li>
-      <strong>A hosted app with a backend</strong> can keep a secret. It is given a client secret or a key at
-      registration, and proves which app it is when it trades the code. OAuth calls this a{' '}
+      <strong>A hosted app with a backend</strong> can keep a secret. It is given a client secret at
+      registration, or registers the public half of a key of its own, and proves which app it is when it trades the
+      code. OAuth calls this a{' '}
       <strong>confidential client</strong>. Each user’s refresh token stays on the server, filed under that user.
     </li>
     <li>

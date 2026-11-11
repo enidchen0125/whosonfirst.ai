@@ -215,7 +215,7 @@ export const glossary: Term[] = [
   {
     term: "JWT",
     aka: ["JSON Web Token"],
-    def: "A compact, signed set of claims, written as three chunks of text joined by dots. The common format for access tokens and ID tokens.",
+    def: "A compact set of claims, usually signed and written as three chunks of text joined by dots. The common format for access tokens and ID tokens.",
   },
   {
     term: "Mandate",
@@ -246,7 +246,7 @@ export const glossary: Term[] = [
   },
   {
     term: "OAuth",
-    def: "A framework that lets one program obtain limited access to something, for a person or for itself. When it acts for a person, it never handles that person’s password. OAuth 2.0 is the published standard; OAuth 2.1 is the draft that consolidates it.",
+    def: "A framework that lets one program obtain limited access to something, for a person or for itself. When it acts for a person, it does not need that person’s password. OAuth 2.0 is the published standard; OAuth 2.1 is the draft that consolidates it.",
     see: { href: "/learn/getting-a-token/", label: "Getting a token" },
   },
   {

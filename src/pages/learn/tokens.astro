@@ -368,7 +368,7 @@ const checks: CheckQuestion[] = [
   <Scenario scenario={checksScenario} glance="All six at a glance" />
 
   <h2>When the API says no</h2>
-  <p>The two refusals in the figure are worth telling apart, because they send you to different places.</p>
+  <p>The refusals in the figure are of two kinds, worth telling apart because they send you to different places.</p>
   <ul>
     <li>
       <strong>401</strong> means the API did not accept the token at all. One of the first four checks failed, or no
@@ -405,7 +405,7 @@ const checks: CheckQuestion[] = [
     One more thing you will run into. Not every token can be read. Some are random strings that mean nothing by
     themselves, and the API asks the authorization server what each one stands for. Most of the checks then happen
     there, and comparing the scope with the request stays with the API. Asking is also how an API learns that a
-    token was withdrawn early: one that only checks the signature goes on accepting a withdrawn token until it
+    token was withdrawn early: one that only checks the token itself goes on accepting a withdrawn token until it
     expires.
   </p>
 </Lesson>

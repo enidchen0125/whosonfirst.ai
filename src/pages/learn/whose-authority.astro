@@ -274,8 +274,8 @@ const checks: CheckQuestion[] = [
   <p>
     Which service plays the authorization server depends on where the agent runs. Inside a company it is usually
     the sign-in system its services already trust. In a cloud it is the cloud’s own token service. On Kubernetes
-    the cluster can play the part itself: it issues each pod a token, and an API in the cluster can check that token
-    directly.
+    the cluster can play the part itself: it issues each pod a token, and an API in the cluster can accept that token as
+    it is, and ask the cluster whether it is good.
   </p>
   <p>
     The interesting part is the first step. What does the agent prove itself <em>with</em>? There are three common
