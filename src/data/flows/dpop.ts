@@ -11,7 +11,7 @@ export const dpop: Flow = {
     "Bind a token to a key so that stealing the token is not enough to use it.",
   summary: `A bearer token works like cash: whoever holds it can spend it. That was an acceptable trade when tokens lived in a server’s memory. Agents put tokens in riskier places. They pass through tool calls, logs, traces, proxies and sometimes the model’s own context, and an agent that reads untrusted content can be talked into revealing what it holds.
 
-Demonstrating Proof of Possession fixes the cash problem at the application layer. The agent generates a key pair, and the authorization server binds each token to the public key. Every request then carries a small signed proof made with the private key. A stolen token without the key is rejected.
+Demonstrating Proof of Possession (DPoP) fixes the cash problem at the application layer. The agent generates a key pair, and the authorization server binds each token to the public key. Every request then carries a small signed proof made with the private key. A stolen token without the key is rejected.
 
 Mutual TLS does the same job at the transport layer and is a good fit where a service mesh or workload identity system already manages certificates. DPoP works where the agent cannot control TLS: public clients, desktop apps, anything behind a proxy that terminates connections.`,
   fits: [
@@ -110,7 +110,7 @@ grant_type=authorization_code&code=…&code_verifier=…`,
   "htm": "GET",
   "htu": "https://calendar.example/api/events",
   "iat": 1794268830,
-  "ath": "fUHyO2r2Z3DZ53EsNrWBb0xWXoaNy59IiKCAqksmQEo"
+  "ath": "…"
 }`,
       },
     },
@@ -120,7 +120,7 @@ grant_type=authorization_code&code=…&code_verifier=…`,
       kind: "back",
       label: "Request + token + proof",
       title: "The agent sends token and proof together",
-      body: `Note the \`DPoP\` authorization scheme. A resource server that sees a DPoP-bound token presented as \`Bearer\` must reject it.`,
+      body: `Note the \`DPoP\` authorization scheme. A resource server that supports both schemes must reject a DPoP-bound token presented as \`Bearer\`.`,
       code: {
         lang: "http",
         text: `GET /api/events HTTP/1.1
@@ -155,7 +155,7 @@ DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7…`,
   notes: [
     {
       title: "DPoP, mutual TLS, or message signatures",
-      body: `All three prove that the caller holds a key. **Mutual TLS** (RFC 8705) binds the token to a client certificate; it is strong and invisible to application code, but breaks when something in the path terminates TLS. **DPoP** signs a small proof per request and survives proxies. **HTTP Message Signatures** (RFC 9421) sign chosen parts of the request itself, including the body, and are the basis for newer work such as [Web Bot Auth](/flows/web-bot-auth/), [workload proof tokens](/flows/wimse-workload-tokens/) and [AAuth](/flows/aauth/).`,
+      body: `All three prove that the caller holds a key. **Mutual TLS** (RFC 8705) binds the token to a client certificate; it is strong and invisible to application code, but breaks when something in the path terminates TLS. **DPoP** signs a small proof per request and survives proxies. **HTTP Message Signatures** (RFC 9421) sign chosen parts of the request itself, and cover the body when a digest of it is one of them. They are the basis for newer work such as [Web Bot Auth](/flows/web-bot-auth/), the WIMSE HTTP signature profile and [AAuth](/flows/aauth/). WIMSE’s other application-layer proof, the [workload proof token](/flows/wimse-workload-tokens/), is inspired by DPoP.`,
     },
   ],
 };
