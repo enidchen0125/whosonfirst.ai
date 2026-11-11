@@ -25,6 +25,7 @@ import {
 } from "../../data/types";
 import type { Flow, RefRole } from "../../data/types";
 import { codeThemes } from "../../lib/code-themes.mjs";
+import { gloss } from "../../lib/gloss";
 import { block, inline } from "../../lib/md";
 import { must } from "../../lib/must";
 
@@ -39,6 +40,8 @@ interface Props {
   flow: Flow;
 }
 const { flow } = Astro.props;
+// One reading of the page's own text: a glossary term is marked the first time it appears in it.
+const g = gloss(Astro.url.pathname);
 const group = must(
   GROUPS.find((g) => g.id === flow.group),
   `group "${flow.group}"`,
@@ -220,7 +223,7 @@ const details = [
   <div class="wrap body">
     <div class="intro">
       <div class="prose">
-        <Fragment set:html={block(flow.summary)} />
+        <Fragment set:html={block(flow.summary, g)} />
         {
           (taught || likened) && (
             <ul class="ways-in">
@@ -246,7 +249,7 @@ const details = [
       <aside class="fit">
         <h2>Use it when</h2>
         <ul>
-          {flow.fits.map((x) => <li set:html={inline(x)} />)}
+          {flow.fits.map((x) => <li set:html={inline(x, g)} />)}
         </ul>
       </aside>
     </div>
@@ -254,7 +257,7 @@ const details = [
     {
       (flow.phases || flow.parts) && (
         <div class="overview">
-          <FlowOverview flow={flow} />
+          <FlowOverview flow={flow} gloss={g} />
         </div>
       )
     }
@@ -268,7 +271,7 @@ const details = [
           <kbd>→</kbd> or select any arrow.</span>
         </p>
       </div>
-      {flow.illustrated && <div class="prose drawn" set:html={block(flow.illustrated.steps)} />}
+      {flow.illustrated && <div class="prose drawn" set:html={block(flow.illustrated.steps, g)} />}
       <FlowDiagram flow={flow} />
     </section>
 
@@ -278,7 +281,7 @@ const details = [
           <div class="section-head">
             <h2 id="comparison">{flow.comparison.title}</h2>
           </div>
-          {flow.comparison.intro && <div class="prose" set:html={block(flow.comparison.intro)} />}
+          {flow.comparison.intro && <div class="prose" set:html={block(flow.comparison.intro, g)} />}
           {/* Two presentations of the same rows. CSS shows one and removes the other with
               display: none, which also takes it out of the accessibility tree and the tab order. */}
           <div
@@ -334,7 +337,7 @@ const details = [
           <div class="section-head">
             <h2 id={sec.id}>{sec.title}</h2>
           </div>
-          <div class="prose" set:html={block(sec.intro)} />
+          <div class="prose" set:html={block(sec.intro, g)} />
           <div class="worked">
             {sec.parts.map((part) => (
               <div class="part">
@@ -348,7 +351,7 @@ const details = [
                     ))}
                   </p>
                 )}
-                <div class="prose" set:html={block(part.body)} />
+                <div class="prose" set:html={block(part.body, g)} />
                 {part.code && (
                   <Code
                     code={part.code.text}
@@ -383,7 +386,7 @@ const details = [
       <div>
         <h2>Watch out for</h2>
         <ul class="watch">
-          {flow.watchOut.map((x) => <li set:html={inline(x)} />)}
+          {flow.watchOut.map((x) => <li set:html={inline(x, g)} />)}
         </ul>
       </div>
       {
@@ -392,7 +395,7 @@ const details = [
             {flow.notes.map((note) => (
               <>
                 <h2>{note.title}</h2>
-                <div set:html={block(note.body)} />
+                <div set:html={block(note.body, g)} />
               </>
             ))}
           </div>

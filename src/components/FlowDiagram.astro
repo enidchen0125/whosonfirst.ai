@@ -14,12 +14,14 @@
  */
 import { Code } from "astro:components";
 import type { Flow, StepKind } from "../data/types";
+import { gloss } from "../lib/gloss";
 import { block, inline } from "../lib/md";
 import { codeThemes } from "../lib/code-themes.mjs";
 
 interface Props {
   /** A flow, or anything with a flow's cast and steps: a lesson draws a shortened one. */
-  flow: Pick<Flow, "slug" | "title" | "participants" | "steps">;
+  flow: Pick<Flow, "slug" | "title" | "participants" | "steps"> &
+    Pick<Partial<Flow>, "phases">;
 }
 const { flow } = Astro.props;
 const P = flow.participants;
@@ -383,7 +385,8 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
               <span class="step-kind">{KIND_LABEL[r.s.kind]}</span>
             </p>
             <h3 set:html={inline(r.s.title)} />
-            <div class="step-body" set:html={block(r.s.body)} />
+            {/* steps are read one at a time, so each marks its glossary terms afresh */}
+            <div class="step-body" set:html={block(r.s.body, gloss(Astro.url.pathname))} />
             {r.s.code && (
               <Code
                 code={r.s.code.text.trim()}

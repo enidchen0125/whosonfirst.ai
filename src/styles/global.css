@@ -123,12 +123,69 @@ a:hover {
   color: var(--accent);
 }
 /* links are blue and underlined wherever they sit in text */
-main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card) {
+main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card, .term) {
   color: var(--accent);
   text-decoration-thickness: 1px;
 }
-main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card):hover {
+main
+  :is(p, li, dd, td, figcaption, .eyebrow, h4)
+  a:not(.btn, .card, .term):hover {
   text-decoration-thickness: 2px;
+}
+
+/* A glossary term where it is used. It is a link to its entry; with the script
+   running it shows the definition in place instead. The dotted line says "there
+   is a definition here" without claiming to be a link to somewhere else. */
+a.term {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--fg-muted);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  cursor: help;
+}
+a.term:hover,
+a.term[aria-expanded="true"] {
+  color: inherit;
+  text-decoration-style: solid;
+  text-decoration-color: var(--accent);
+}
+.term-tip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(22rem, calc(100vw - 1.5rem));
+  padding: 0.7rem 0.9rem 0.75rem;
+  border: 1px solid var(--fg);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--fg);
+  box-shadow: 3px 3px 0 var(--border);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.term-tip:not(:popover-open) {
+  display: none;
+}
+.term-tip-name {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-weight: 600;
+}
+.term-tip-def {
+  display: block;
+}
+.term-tip-more {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: var(--accent);
+  text-decoration-thickness: 1px;
 }
 
 :focus-visible {

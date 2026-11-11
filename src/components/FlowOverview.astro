@@ -7,12 +7,15 @@
 import { phaseSpan, stepsOf } from "../data/flows";
 import type { Flow } from "../data/types";
 import { ROLE_PART } from "../data/types";
+import type { Gloss } from "../lib/gloss";
 import { inline } from "../lib/md";
 
 interface Props {
   flow: Flow;
+  /** The page's reading, so a term already marked above is not marked again here. */
+  gloss?: Gloss;
 }
-const { flow } = Astro.props;
+const { flow, gloss } = Astro.props;
 const phases = (flow.phases ?? []).map((p, i) => {
   const [first, last] = phaseSpan(flow, i);
   return {
@@ -65,7 +68,7 @@ const parts = flow.participants
             <div class={`role-${p.role}`}>
               <dt>{p.heading}</dt>
               <dd>
-                <span set:html={inline(p.text)} />
+                <span set:html={inline(p.text, gloss)} />
                 {p.steps.length > 0 && (
                   <span class="ov-steps">
                     {p.steps.length === 1 ? 'Step' : 'Steps'}{' '}

@@ -194,6 +194,101 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
         } catch {}
       });
       dark.addEventListener('change', follow);
+
+      // Glossary terms in running text. Each is a link to its entry that carries the
+      // definition with it. Where the browser can show a popover, activating one
+      // shows the definition in place; otherwise it stays a link. Click, tap, Enter
+      // or Space: a definition that needs a hover is no use on a phone.
+      const tip = document.createElement('span');
+      if ('showPopover' in tip) {
+        tip.className = 'term-tip';
+        tip.id = 'term-tip';
+        tip.setAttribute('popover', 'auto');
+        tip.setAttribute('role', 'note');
+        let from: HTMLElement | null = null;
+        // the term that was showing its definition when a press on it began
+        let pressed: HTMLElement | null = null;
+        // the term whose definition is showing now, if any
+        const showing = () => (tip.matches(':popover-open') ? from : null);
+        const shut = () => {
+          from?.setAttribute('aria-expanded', 'false');
+          if (tip.matches(':popover-open')) tip.hidePopover();
+          from = null;
+        };
+        // it now opens something in place, which is what a button does
+        document.querySelectorAll<HTMLElement>('a.term').forEach((a) => {
+          a.setAttribute('role', 'button');
+          a.setAttribute('aria-expanded', 'false');
+        });
+        // closed by Escape or by a press elsewhere: the browser does that, and says so here
+        tip.addEventListener('toggle', (e) => {
+          if ((e as ToggleEvent).newState === 'closed' && !tip.matches(':popover-open')) shut();
+        });
+        const place = (a: HTMLElement) => {
+          const r = a.getBoundingClientRect();
+          const box = tip.getBoundingClientRect();
+          const left = Math.max(12, Math.min(r.left, innerWidth - box.width - 12));
+          const below = r.bottom + 8;
+          const top = below + box.height > innerHeight - 8 && r.top - box.height - 8 > 8 ? r.top - box.height - 8 : below;
+          tip.style.left = `${left}px`;
+          tip.style.top = `${top}px`;
+        };
+        const open = (a: HTMLElement) => {
+          shut();
+          tip.replaceChildren();
+          const name = document.createElement('span');
+          name.className = 'term-tip-name';
+          name.textContent = a.dataset.term ?? '';
+          const def = document.createElement('span');
+          def.className = 'term-tip-def';
+          def.textContent = a.dataset.def ?? '';
+          const more = document.createElement('a');
+          more.className = 'term-tip-more';
+          more.href = a.getAttribute('href') ?? '/glossary/';
+          more.textContent = 'In the glossary →';
+          tip.append(name, def, more);
+          // straight after the term, so that Tab goes from the term to the link in its definition
+          a.after(tip);
+          tip.showPopover();
+          from = a;
+          a.setAttribute('aria-expanded', 'true');
+          place(a);
+        };
+        // A press outside an open definition closes it, and the term itself is outside.
+        // Note whether this press began on the term whose definition was open, so
+        // that the click it ends in is taken as closing it and does not open it again.
+        document.addEventListener(
+          'pointerdown',
+          (e) => {
+            const a = (e.target as Element).closest<HTMLElement>('a.term');
+            pressed = a && a === showing() ? a : null;
+          },
+          true,
+        );
+        document.addEventListener('click', (e) => {
+          const a = (e.target as Element).closest<HTMLElement>('a.term');
+          // a modified click is a request to open the glossary itself
+          if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          const closing = pressed === a || showing() === a;
+          pressed = null;
+          if (closing) shut();
+          else open(a);
+        });
+        document.addEventListener('keydown', (e) => {
+          const a = (e.target as Element).closest?.<HTMLElement>('a.term');
+          if (a && e.key === ' ') {
+            e.preventDefault();
+            a.click();
+          }
+        });
+        // it is placed against the term once; if the page moves, it goes
+        const away = () => {
+          if (showing()) shut();
+        };
+        window.addEventListener('scroll', away, { passive: true, capture: true });
+        window.addEventListener('resize', away);
+      }
     </script>
   </body>
 </html>
