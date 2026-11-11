@@ -24,6 +24,7 @@ For agent systems this gives you a per-workload identity that works the same acr
     "Authentication is not authorization. Mutual TLS with no policy means every workload in the trust domain can call every other.",
     "Registration entries decide which workloads get which IDs. Loose selectors (a whole namespace) hand the same identity to things that should differ.",
     "An LLM agent that spawns sub-agents in one process shares one SVID among them. Workload identity stops at the process boundary.",
+    "Anything running in the agent’s container can ask for the agent’s certificate and key, including code the agent was asked to run. Run untrusted code in a separate pod that cannot reach the socket.",
   ],
   lesson: "whose-authority",
   phases: [
@@ -115,7 +116,7 @@ Validity:
       kind: "back",
       label: "mTLS handshake",
       title: "Both sides present certificates",
-      body: `The agent presents its SVID as a client certificate. The tool service presents its own. Each verifies the other against the trust bundle. The connection is authenticated in both directions before any application data flows.`,
+      body: `The agent presents its SVID as a client certificate. The tool service presents its own. Each verifies the other against the trust bundle, and each checks the other’s SPIFFE ID against the one it expects. A valid certificate from the trust domain is not enough: every workload has one. The connection is authenticated in both directions before any application data flows.`,
       gain: [["tool", "X.509-SVID + key"]],
     },
     {

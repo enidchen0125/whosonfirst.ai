@@ -66,7 +66,7 @@ All three converge on the same model: a workload identity for the agent, exchang
 
 **OpenAI.** For remote MCP servers and connectors used through the API, the developer's application obtains the OAuth access token and supplies it with each request. When ChatGPT itself is the MCP client, it runs the authorization code flow with PKCE on the user's first use of a tool.
 
-Two models, then. In one, the platform holds credentials and injects them. In the other, your application holds them and passes them in. The first keeps secrets out of the agent's reach; the second keeps them out of the platform's. See [sandboxes](/deployments/sandboxes/) for the first in detail.
+Two models, then. In one, the platform holds credentials and injects them. In the other, your application holds them and passes them in. The first keeps secrets out of the agent's reach. The second keeps the long-lived grant out of the platform's: the access token you pass in is still in its hands, so keep it short-lived and narrow. See [sandboxes](/deployments/sandboxes/) for the first in detail.
 
 ## Questions to ask
 

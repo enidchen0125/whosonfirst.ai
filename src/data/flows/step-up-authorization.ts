@@ -171,8 +171,10 @@ WWW-Authenticate: Bearer error="insufficient_user_authentication",
   "acr": "urn:example:acr:phishing-resistant",
   "auth_time": 1794268790,
   "exp": 1794269090,
+  "jti": "b7c1f0e2-58a4-4d0e-9c3b-2f6a1d7e4a90",
   "authorization_details": [
-    { "type": "transfer", "to": { "iban": "DE89 3704 0044 0532 0130 00" },
+    { "type": "transfer", "from_account": "…4411",
+      "to": { "iban": "DE89 3704 0044 0532 0130 00" },
       "amount": { "currency": "EUR", "value": "480.00" } }
   ]
 }`,
@@ -185,7 +187,7 @@ WWW-Authenticate: Bearer error="insufficient_user_authentication",
       kind: "back",
       label: "Retry POST /transfers",
       title: "The agent retries with the stronger token",
-      body: `The API compares the request body with the authorization details in the token. They must match.`,
+      body: `The API compares the request body with the authorization details in the token. They must match, and the API accepts the approval once: it records the token’s \`jti\`, or a payment reference carried in \`authorization_details\`, and refuses a second transfer on it. A body that matches once would otherwise match every time until the token expires.`,
     },
     {
       from: "api",

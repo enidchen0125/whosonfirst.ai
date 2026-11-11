@@ -149,7 +149,7 @@ Two parts of version 1.0 matter for trust. Agent Cards can be signed, so a calle
       kind: "back",
       label: "Relay: approval needed",
       title: "The request reaches a human",
-      body: `The client agent surfaces the request to the user it is working for.`,
+      body: `The client agent surfaces the request to the user it is working for. It says which agent is asking, shows the full address of any link, and never opens one itself. The message was written by the remote agent and is not to be trusted as instructions.`,
     },
     {
       from: "user",

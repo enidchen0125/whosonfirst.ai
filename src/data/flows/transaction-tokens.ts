@@ -81,7 +81,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &scope=trade.stocks
 &subject_token=<external access token>
 &subject_token_type=urn:ietf:params:oauth:token-type:access_token
-&request_context={"req_ip":"69.151.72.123","authn":"face"}
+&request_context={"req_ip":"203.0.113.7","authn":"face"}
 &request_details={"action":"BUY","ticker":"MSFT","quantity":"100"}`,
       },
     },
@@ -108,7 +108,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "txn": "97053963-771d-49cc-a4e3-20aad399c312",
   "sub": "d084sdrt234fsaw34tr23t",
   "req_wl": "apigateway.trust-domain.example",
-  "rctx": { "req_ip": "69.151.72.123", "authn": "face" },
+  "rctx": { "req_ip": "203.0.113.7", "authn": "face" },
   "scope": "trade.stocks",
   "tctx": { "action": "BUY", "ticker": "MSFT", "quantity": "100" }
 }`,
@@ -146,7 +146,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "self",
       label: "Verify; authorize on context",
       title: "The tool enforces the original intent",
-      body: `The tool can refuse anything that does not match \`tctx\`. If a prompt injection has convinced the agent to sell instead of buy, the tool sees a request that contradicts the signed transaction and rejects it.`,
+      body: `The tool can refuse anything that does not match \`tctx\`. If a prompt injection has convinced the agent to sell instead of buy, the tool sees a request that contradicts the signed transaction and rejects it. For an action that should happen once, the tool also treats \`txn\` as its record that it has already been done.`,
     },
     {
       from: "tool",

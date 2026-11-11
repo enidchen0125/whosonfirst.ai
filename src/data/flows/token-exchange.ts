@@ -102,7 +102,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "self",
       label: "Policy: may tool act for user?",
       title: "The authorization server decides",
-      body: `This is the control point. The server checks that token A is valid, that this client is allowed to exchange tokens, that the requested audience is permitted for it, and that the requested scope does not exceed what the user originally granted.`,
+      body: `This is the control point. The server checks that token A is valid, that this client is allowed to exchange tokens, that the requested audience is permitted for it, and that policy lets this tool obtain the requested scope under the user’s grant. Here an administrator has said that generating a report includes reading sales data.`,
     },
     {
       from: "as",
@@ -155,7 +155,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "resp",
       label: "Tool result",
       title: "The tool returns its result",
-      body: `The agent never held a credential for the warehouse. If the agent’s context is compromised, the attacker gets token A, which is good only at the tool.`,
+      body: `The agent never held a credential for the warehouse. If the agent is compromised, the attacker gets token A. It works only at the tool server, though that includes whatever the tool server will fetch with it.`,
     },
   ],
   standards: ["rfc8693", "rfc8707", "rfc9068", "mcp-authorization"],
