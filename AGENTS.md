@@ -67,7 +67,7 @@ Do not weaken, skip or delete a check to get it to pass. When a check fails, its
 
 ## Branches, commits and pull requests
 
-- **Branches** follow [Conventional Branch](https://conventional-branch.github.io/): a type, a slash and a short description in lowercase with hyphens, such as `feat/aauth-flow`, `fix/dpop-step-labels` or `chore/update-actions`.
+- **Branches** follow [Conventional Branch](https://conventional-branch.github.io/): a type, a slash and a short description in lowercase with hyphens, such as `feat/aauth-flow`, `fix/dpop-step-labels` or `chore/update-actions`. The types are `feat`, `fix`, `hotfix`, `release` and `chore`. There is no `docs` or `ci` branch type as there is for commits: that work goes on a `chore` branch. Name a branch for what it is for, not for the tool that made it.
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/), with no scope: `fix: say which key the proof is signed with`, never `fix(dpop): …`. The types in use are `feat` for something a reader gains, `fix` for something that was wrong or unclear, `docs` for the repository’s own documents, `test` for the checks, `ci` for the workflows, and `chore` for the rest.
 - **The subject says what the site now does,** in the imperative and in plain words, not which file changed: `feat: add a flow for AAuth, drawn with a person server`.
 - **One change to a pull request,** titled as a commit would be. Pull requests are merged, not squashed, so every commit in one lands on `main` under its own subject and has to follow the rule. Say in the pull request which source the change follows.
