@@ -372,6 +372,9 @@ const checks: CheckQuestion[] = [
     <strong>Do not write the signature check yourself.</strong> Use a maintained library, and tell it in your own
     configuration which issuer, which audience, which keys and which signing method to accept. Never take those from
     the token: one that brings its own key, says where to fetch one, or says it needs no signature must be refused.
+    Tell it which kind of token to accept as well. The same service signs other things, such as the ID token an app
+    gets at sign-in, and a check that passes anything it signed would let one of those be used as an access token.
+    A token in this format says what it is in its header, <code>at+jwt</code>, and the API must require that.
     The last of the five, whether the token covers this request, is yours to write: only your code knows what each
     request needs. Decoding a token is not checking it.
   </p>
