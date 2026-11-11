@@ -2,6 +2,11 @@
 export const REVIEWED = "November 2026";
 export const REVIEWED_ISO = "2026-11";
 
+/** Where the site's source is kept, and where a correction is filed. */
+export const SOURCE = "https://github.com/kevinswiber/whosonfirst.ai";
+/** The license the site's text, diagrams and data are under. The code's is in LICENSE. */
+export const CONTENT_LICENSE = "https://creativecommons.org/licenses/by/4.0/";
+
 /**
  * Who makes the site, and where to find them. The first address is the one a
  * reader is sent to: the footer, the About page and the page metadata all use it.

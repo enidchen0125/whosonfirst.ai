@@ -75,7 +75,7 @@ Biome does not handle `.mdx`, so the deployment guides and the About page are no
 | `src/data/tokens.ts`                  | Annotated example tokens for the token inspector                                                   |
 | `src/data/guide.ts`                   | Questions and rules for the decision guide                                                         |
 | `src/data/glossary.ts`                | Glossary terms                                                                                     |
-| `src/data/site.ts`                    | The "last reviewed" date shown across the site, and who makes it                                   |
+| `src/data/site.ts`                    | The "last reviewed" date shown across the site, who makes it, and where the source is              |
 | `src/integrations/social-cards.mjs`   | Draws each page's card for where its link is shared, and the home-screen icon                      |
 | `src/integrations/markdown-pages.mjs` | Writes each page again as Markdown, and `llms.txt` and `llms-full.txt` from those                  |
 | `src/components/FlowDiagram.astro`    | Sequence diagram and step-through panel; a step narrative on a phone                               |
@@ -215,4 +215,12 @@ Drafts in this area change monthly. Revision numbers and dates in the tracker we
 
 `docs/source-review.md` is the checklist for keeping it that way: what to re-check, against which source, and what a periodic review reports.
 
-Corrections are welcome as issues or pull requests.
+Corrections are welcome as issues or pull requests. [CONTRIBUTING.md](CONTRIBUTING.md) says what a correction needs and which checks to run.
+
+## License
+
+The code is under the [MIT license](LICENSE): the layouts, components, scripts, styles and build steps.
+
+The site's content is under [Creative Commons Attribution 4.0](LICENSE-CONTENT): the text of the pages, the diagrams, the data in `src/data/`, the documents in `docs/`, and what the build makes from them. Use it and adapt it, and credit “Who’s on First” with a link to [whosonfirst.ai](https://whosonfirst.ai).
+
+The fonts are IBM Plex, from the `@fontsource` packages, under the SIL Open Font License.
