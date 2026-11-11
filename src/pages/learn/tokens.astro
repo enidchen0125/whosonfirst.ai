@@ -287,7 +287,8 @@ const checks: CheckQuestion[] = [
   <h2>What is written on it</h2>
   <p>
     Many access tokens are <strong>JWTs</strong> (said “jots”): three chunks of text joined by dots. You have
-    probably seen one.
+    probably seen one. Not every token is one, and the end of this lesson comes back to that. This lesson uses a JWT
+    because you can read what it says.
   </p>
 
   <div class="jwt wide" role="img" aria-label="A JWT in three parts: a header, the claims, and a signature over both.">
@@ -422,6 +423,10 @@ const checks: CheckQuestion[] = [
     there, and comparing the scope with the request stays with the API. Asking is also how an API learns that a
     token was withdrawn early: one that only checks the token itself goes on accepting a withdrawn token until it
     expires.
+  </p>
+  <p>
+    Which kind a token is lies between the authorization server and the API, and they can change it at any time. So
+    your agent sends a token on as it received it, and never depends on reading one.
   </p>
 </Lesson>
 
