@@ -33,6 +33,8 @@ const chain: ScenarioData = {
     {
       id: "forward",
       name: "The token it was handed",
+      avoid:
+        "The token was issued for the tool, not for the calendar API. Sending it on is called token passthrough, and MCP forbids it.",
       hops: [
         "“Find a time for us to meet”",
         "a token for the tool",
@@ -61,7 +63,7 @@ const chain: ScenarioData = {
           note: "`aud` is the scheduling tool. The calendar API has to ignore the address to accept it.",
         },
       ],
-      so: `This is the tempting one: the tool already holds a token, so why not use it? Because it only works if the calendar API stops checking who a token is for, and then **any service that is ever handed a token from that issuer can use it there.** It is called token passthrough, and MCP forbids it.`,
+      so: `This is the tempting one: the tool already holds a token, so why not use it? Because it only works if the calendar API stops checking who a token is for, and then **any service that is ever handed a token from that issuer can use it there.**`,
     },
     {
       id: "key",
