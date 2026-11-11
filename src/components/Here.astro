@@ -170,6 +170,14 @@ const { trail = [], current } = Astro.props;
     text-transform: none;
     white-space: normal;
   }
+  /* A browser without popovers would draw the closed list as an open box over
+     the top of the page, with nothing to close it. There the line stays the
+     trail and the name, as it is without the script. */
+  @supports not selector(:popover-open) {
+    .here-menu {
+      display: none;
+    }
+  }
   .here-menu p {
     margin: 0 0 0.4rem;
     font-family: var(--font-label);
