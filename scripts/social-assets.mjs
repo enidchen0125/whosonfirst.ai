@@ -32,6 +32,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -40,7 +41,7 @@ import {
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
@@ -86,6 +87,28 @@ if (!existsSync(join(root, "flows", FLOW, "index.html"))) {
       : "dist/client/ is missing. Run `npm run build` first.",
   );
   process.exit(1);
+}
+// The pictures are read from the built site, so a build made before the last
+// change draws the site as it was: a flow added since is missing from the list
+// and from the count. Nothing in the picture would say so, so stop here.
+{
+  const here = fileURLToPath(new URL("../", import.meta.url));
+  const built = statSync(join(root, "index.html")).mtimeMs;
+  const newer = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const file = join(dir, entry.name);
+      if (entry.isDirectory()) walk(file);
+      else if (statSync(file).mtimeMs > built) newer.push(relative(here, file));
+    }
+  };
+  for (const dir of ["src", "public"]) walk(join(here, dir));
+  if (newer.length) {
+    console.error(
+      `The built site is older than its sources: ${newer[0]}${newer.length > 1 ? ` and ${newer.length - 1} more` : ""} changed after the last build.\nThe pictures would show the site as it was then. Run \`npm run build\` first.`,
+    );
+    process.exit(1);
+  }
 }
 mkdirSync(out, { recursive: true });
 
