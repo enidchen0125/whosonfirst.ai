@@ -13,7 +13,7 @@ export const ciba: Flow = {
 
 Client-Initiated Backchannel Authentication turns the flow around. The agent calls the authorization server directly and says which user it needs and why. The server contacts that user on a device it already knows, typically a phone, and shows them a message describing the request. When the user approves, the agent receives a token. Nothing is typed, nothing is redirected, and the user can be anywhere.
 
-CIBA came out of banking, where a call-center agent or a point-of-sale terminal needs a customer’s approval on the customer’s own phone. That is the same shape as an AI agent asking its principal for permission.`,
+CIBA came out of the OpenID Foundation’s MODRNA working group, which works on OpenID Connect for mobile network operators. The Foundation’s FAPI working group has profiled it for financial services, in an implementer’s draft. The specification’s own examples include a call-center agent who needs to authenticate a caller and a customer who approves a point-of-sale payment on their own phone. That is the same shape as an AI agent asking its principal for permission.`,
   fits: [
     "Long-running or background agents that need occasional human approval.",
     "The user is known in advance and has an enrolled device.",
