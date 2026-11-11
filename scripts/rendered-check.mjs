@@ -442,6 +442,29 @@ record(
     cards.slice(0, 8).join("; "),
   );
 
+  // Icons: the ones a page names, and the one that is asked for by its address
+  // alone, by a browser that does not read the SVG or by a service drawing a
+  // link to the site.
+  const icons = new Set();
+  for (const p of built)
+    for (const [tag] of head(p).matchAll(
+      /<link\b[^>]*\brel="(?:icon|apple-touch-icon)"[^>]*>/g,
+    )) {
+      const href = /\shref="([^"]*)"/.exec(tag)?.[1];
+      if (!href || !existsSync(join(root, href)))
+        icons.add(`${p.path} names ${href}, which is not in the build`);
+    }
+  const ico = join(root, "favicon.ico");
+  // an .ico file opens with two zero bytes and the number 1
+  if (!existsSync(ico) || readFileSync(ico).readUInt32LE(0) !== 0x00010000)
+    icons.add("there is no /favicon.ico");
+  record(
+    "sharing",
+    "every icon a page names is in the build, and /favicon.ico with it",
+    icons.size === 0,
+    [...icons].slice(0, 8).join("; "),
+  );
+
   // Markdown: the page's own title and sections, and none of its markup.
   const copies = [];
   const withCopy = built.filter((p) =>
