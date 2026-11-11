@@ -26,6 +26,31 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
     "A Client ID Metadata Document proves control of a URL, not that the software on the user’s machine is the genuine client. Authorization servers must show the redirect host on the consent screen for this reason.",
     "Scopes are whatever the server defines. The core specification has no per-tool permission model; fine-grained control is left to the server, a gateway, or an external policy engine.",
   ],
+  lesson: "getting-a-token",
+  like: {
+    flow: "authorization-code-pkce",
+    except:
+      "the client has never seen the server before. So discovery comes first, and the client can identify itself by a URL instead of a client ID registered in advance.",
+  },
+  phases: [
+    { title: "The client finds out where to sign in", from: 1 },
+    { title: "The client says who it is", from: 5 },
+    {
+      title: "The user signs in, and the client gets a token for this one server",
+      from: 8,
+    },
+    {
+      title: "The client calls the server, and the server checks the token",
+      from: 13,
+    },
+  ],
+  parts: {
+    user: "Signs in and approves, as in any OAuth sign-in.",
+    client:
+      "Follows the server’s pointers to its authorization server, identifies itself, runs the sign-in with PKCE, checks who answered, and keeps each token for the one server it was issued for. An MCP client library does this.",
+    as: "Publishes its metadata, looks the client up, signs the user in, and issues a token whose audience is this MCP server. It is a separate service: the MCP server does not have to be one.",
+    mcp: "Answers a request that has no token with a 401 that points to its metadata, publishes that metadata, and validates every token: issued for this server, by its authorization server, with the scope the tool needs. It never passes the token on.",
+  },
   participants: [
     { id: "user", label: "User", role: "human" },
     { id: "client", label: "MCP client", sub: "Agent host", role: "agent" },

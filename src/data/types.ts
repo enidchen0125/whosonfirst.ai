@@ -118,6 +118,26 @@ export interface Flow {
   /** The specifications the page says the flow implements, when there is more than one. Each must be required. */
   basis?: string[];
   related: string[];
+  /**
+   * The steps in a few plain parts: what a reader sees before the diagram, and the
+   * bands the diagram is divided into. Each says which step it starts at, counting
+   * from 1. The first starts at step 1, and together they cover every step in order.
+   */
+  phases?: Phase[];
+  /**
+   * What each party has to do in this flow, by participant id: what it builds,
+   * configures or decides, in a sentence or two of plain words. md-lite. It is what
+   * lets a reader find their own part in a protocol that mostly describes other
+   * people's. A participant with nothing to do beyond being there can be left out.
+   */
+  parts?: Record<string, string>;
+  /** The lesson under /learn/ that teaches this flow's idea in plain words first. */
+  lesson?: string;
+  /**
+   * For a flow that is another flow with a difference: the flow it resembles, and
+   * what is different, completing "the same, except that …". md-lite.
+   */
+  like?: { flow: string; except: string };
   /** Optional closing notes rendered after the diagram, md-lite blocks. */
   notes?: { title: string; body: string }[];
   /**
@@ -151,6 +171,26 @@ export interface Flow {
    */
   sections?: FlowSection[];
 }
+
+/** One of the few parts a flow's steps fall into. */
+export interface Phase {
+  /** A plain sentence fragment: what happens, and who does it. */
+  title: string;
+  /** The number of the step it starts at, counting from 1. */
+  from: number;
+}
+
+/**
+ * How a participant's part is introduced to the reader who has that job.
+ * `{label}` is the participant's name in the diagram.
+ */
+export const ROLE_PART: Record<Role, string> = {
+  human: "{label}",
+  agent: "If you build the {label}",
+  authz: "{label}",
+  resource: "If you run the {label}",
+  infra: "{label}",
+};
 
 /** A section of a flow page made of parts in reading order, between the steps and the cautions. */
 export interface FlowSection {

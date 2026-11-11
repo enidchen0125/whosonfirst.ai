@@ -1,3 +1,4 @@
+import { lessons } from "../learn/lessons";
 import type { Rating } from "../rating";
 import { levelOf, rate } from "../rating";
 import { std } from "../standards";
@@ -47,6 +48,32 @@ export const flows: Flow[] = [
 ];
 
 const bySlug = new Map(flows.map((f) => [f.slug, f]));
+
+// A flow's overview has to agree with its steps: phases that start at step 1 and
+// run in order, parts that name real participants, and pointers that lead somewhere.
+for (const f of flows) {
+  const fail = (what: string) => {
+    throw new Error(`[${f.slug}] ${what}`);
+  };
+  if (f.phases) {
+    if (f.phases.length < 2) fail("needs at least two phases, or none");
+    if (f.phases[0].from !== 1) fail("its first phase must start at step 1");
+    f.phases.forEach((p, i) => {
+      if (!Number.isInteger(p.from) || p.from > f.steps.length)
+        fail(`phase "${p.title}" starts at step ${p.from}, which does not exist`);
+      if (i > 0 && p.from <= f.phases![i - 1].from)
+        fail(`phase "${p.title}" does not start after the one before it`);
+    });
+  }
+  for (const id of Object.keys(f.parts ?? {})) {
+    if (!f.participants.some((p) => p.id === id))
+      fail(`has a part for "${id}", which is not a participant`);
+  }
+  if (f.lesson && !lessons.some((l) => l.slug === f.lesson))
+    fail(`points to lesson "${f.lesson}", which does not exist`);
+  if (f.like && !bySlug.has(f.like.flow))
+    fail(`is likened to "${f.like.flow}", which does not exist`);
+}
 
 // A flow that classifies its references classifies all of them, bases itself on required ones,
 // and carries the rating those required references give it.
@@ -106,6 +133,19 @@ export function flow(slug: string): Flow {
   const f = bySlug.get(slug);
   if (!f) throw new Error(`Unknown flow "${slug}"`);
   return f;
+}
+
+/** The steps a phase covers, as numbers counting from 1: [first, last]. */
+export function phaseSpan(f: Flow, i: number): [number, number] {
+  const phases = f.phases ?? [];
+  return [phases[i].from, (phases[i + 1]?.from ?? f.steps.length + 1) - 1];
+}
+
+/** The numbers of the steps a participant sends or receives. */
+export function stepsOf(f: Flow, participant: string): number[] {
+  return f.steps
+    .map((s, i) => (s.from === participant || s.to === participant ? i + 1 : 0))
+    .filter(Boolean);
 }
 
 /** Unknown slugs fail the build, so links between flows never rot. */

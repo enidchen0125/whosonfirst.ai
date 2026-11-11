@@ -2,10 +2,18 @@
 import { Code } from "astro:components";
 import Base from "../../layouts/Base.astro";
 import FlowDiagram from "../../components/FlowDiagram.astro";
+import FlowOverview from "../../components/FlowOverview.astro";
 import FlowCard from "../../components/FlowCard.astro";
 import StandardCard from "../../components/StandardCard.astro";
 import DocMeta from "../../components/DocMeta.astro";
-import { flows, maturityLabel, rating, related } from "../../data/flows";
+import {
+  flow as flowBySlug,
+  flows,
+  maturityLabel,
+  rating,
+  related,
+} from "../../data/flows";
+import { lesson as lessonBySlug, lessons } from "../../data/learn/lessons";
 import { std } from "../../data/standards";
 import { REVIEWED } from "../../data/site";
 import {
@@ -42,6 +50,10 @@ const sections = [
   ...(flow.sections ?? []),
 ];
 const rel = related(flow);
+// Two ways in for a reader who is not ready for the steps: the lesson that
+// teaches the idea in plain words, and the flow this one is a variation of.
+const taught = flow.lesson ? lessonBySlug(flow.lesson) : undefined;
+const likened = flow.like ? flowBySlug(flow.like.flow) : undefined;
 const i = flows.indexOf(flow);
 const prev = flows[i - 1];
 const next = flows[i + 1];
@@ -207,7 +219,30 @@ const details = [
 
   <div class="wrap body">
     <div class="intro">
-      <div class="prose" set:html={block(flow.summary)} />
+      <div class="prose">
+        <Fragment set:html={block(flow.summary)} />
+        {
+          (taught || likened) && (
+            <ul class="ways-in">
+              {taught && (
+                <li>
+                  <strong>New to this?</strong>{' '}
+                  <a href={`/learn/${taught.slug}/`}>
+                    Lesson {lessons.indexOf(taught) + 1}: {taught.title}
+                  </a>{' '}
+                  covers the idea in plain words first.
+                </li>
+              )}
+              {likened && (
+                <li>
+                  <strong>Know <a href={`/flows/${likened.slug}/`}>{likened.short}</a>?</strong>{' '}
+                  This is the same, except that <Fragment set:html={inline(flow.like?.except ?? '')} />
+                </li>
+              )}
+            </ul>
+          )
+        }
+      </div>
       <aside class="fit">
         <h2>Use it when</h2>
         <ul>
@@ -215,6 +250,14 @@ const details = [
         </ul>
       </aside>
     </div>
+
+    {
+      (flow.phases || flow.parts) && (
+        <div class="overview">
+          <FlowOverview flow={flow} />
+        </div>
+      )
+    }
 
     <section aria-labelledby="walkthrough">
       <div class="section-head">
@@ -434,8 +477,22 @@ const details = [
       display: none;
     }
   }
-  .body > section {
+  .body > section,
+  .body > .overview {
     margin-top: clamp(2.5rem, 5vw, 3.75rem);
+  }
+  /* ways in for a reader who is not ready for the steps */
+  .ways-in {
+    list-style: none;
+    margin: 1.4rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.98rem;
+  }
+  .ways-in li {
+    margin: 0;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
   }
   .body h2 {
     margin-top: 0;

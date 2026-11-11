@@ -11,7 +11,7 @@ export const authorizationCodePkce: Flow = {
     "The baseline. A person signs in, approves specific scopes, and the agent receives a token that says so.",
   summary: `This is the flow almost everything else on this site builds on or stands in for. The user is sent to an authorization server they already trust, signs in there, and approves what the agent may do. The agent never sees a password; it gets a short-lived access token scoped to one resource.
 
-This page shows the flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching; a token restricted to one audience; and no implicit or password grant. If an agent acts for a person and that person is at the keyboard, start here.`,
+If an agent acts for a person and that person is at the keyboard, start here.`,
   fits: [
     "A user is present and can complete a browser sign-in.",
     "The agent needs access to **that user’s** data, with that user’s permissions.",
@@ -23,6 +23,23 @@ This page shows the flow as published: the OAuth 2.0 authorization code grant (R
     "Refresh tokens outlive the conversation. Decide where they are stored and who can revoke them before you ship.",
     "Desktop and CLI agents are public clients. Use a loopback redirect and PKCE; do not embed a client secret in a binary.",
   ],
+  lesson: "getting-a-token",
+  phases: [
+    { title: "The user asks, and the agent prepares a sign-in", from: 1 },
+    {
+      title: "The user signs in and approves, at the authorization server",
+      from: 3,
+    },
+    { title: "The agent trades a one-time code for tokens", from: 6 },
+    { title: "The agent calls the API, and the API checks the token", from: 9 },
+  ],
+  parts: {
+    user: "Signs in at the authorization server and approves what the agent may do.",
+    agent:
+      "Starts the sign-in, keeps the PKCE secret, checks what comes back, trades the code, and attaches the access token to each call. An OAuth client library does most of that. Where the tokens are kept is yours to decide.",
+    as: "Signs the user in, shows the consent screen, records the approval and issues the tokens. You register the agent with it and choose the scopes.",
+    api: "Validates every token before answering: signature, issuer, audience, expiry and scope. If the API is yours, so is this check.",
+  },
   participants: [
     { id: "user", label: "User", sub: "Resource owner", role: "human" },
     { id: "agent", label: "Agent", sub: "OAuth client", role: "agent" },
@@ -209,6 +226,10 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
     "step-up-authorization",
   ],
   notes: [
+    {
+      title: "What this page follows",
+      body: `The flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching; a token restricted to one audience; and no implicit or password grant.`,
+    },
     {
       title: "How OAuth 2.1 relates",
       body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated October 30, 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behavior as it does.

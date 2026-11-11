@@ -39,7 +39,13 @@ const top = 8;
 const y0 = top + boxH + 52;
 const rowH = 64;
 const LINE = 17; // line height of a two-line arrow label
-const H = y0 + rowH * (steps.length - 1) + 40;
+// A flow's phases divide the sequence into bands, each under a heading of its own.
+const phases = flow.phases ?? [];
+const phaseH = phases.length ? 34 : 0;
+/** The phase a step belongs to, both counting from 0. -1 where there are no phases. */
+const phaseAt = (i: number) => phases.findLastIndex((p) => i + 1 >= p.from);
+const yOf = (i: number) => y0 + i * rowH + (phaseAt(i) + 1) * phaseH;
+const H = yOf(steps.length - 1) + 40;
 // The participant boxes are drawn in a strip of their own, so that it can stay
 // in view while a long sequence scrolls beneath it.
 const headH = top + boxH + 8;
@@ -64,8 +70,26 @@ const KIND_LABEL: Record<StepKind, string> = {
 // ---- per-step drawing data + credential snapshots ----
 const held = new Map<string, string[]>(P.map((p) => [p.id, []]));
 
+const bands = phases.map((p, k) => {
+  const first = p.from - 1;
+  const last = (phases[k + 1]?.from ?? steps.length + 1) - 2;
+  const text = `${k + 1}  ${p.title}`;
+  if (text.length * 7 > W - 24)
+    console.warn(
+      `[${flow.slug}] phase ${k + 1} title is too long for the diagram: "${p.title}"`,
+    );
+  return {
+    k,
+    title: p.title,
+    first,
+    last,
+    // the band sits directly above its first step's row
+    y: yOf(first) - rowH / 2 - phaseH + 6,
+  };
+});
+
 const rows = steps.map((s, i) => {
-  const y = y0 + i * rowH;
+  const y = yOf(i);
   const to = s.to;
   const x1 = xOf(s.from);
 
@@ -86,6 +110,16 @@ const rows = steps.map((s, i) => {
     held.set(id, list);
     fresh.add(`${id}\u0000${what}`);
   }
+  const phase = phaseAt(i);
+  const part =
+    phase >= 0
+      ? {
+          n: phase + 1,
+          of: phases.length,
+          title: phases[phase].title,
+          start: phases[phase].from === i + 1,
+        }
+      : undefined;
   const snapshot = P.map((p) => ({
     ...p,
     items: (held.get(p.id) ?? []).map((text) => ({
@@ -109,6 +143,7 @@ const rows = steps.map((s, i) => {
       nx,
       w,
       snapshot,
+      part,
       from,
       to: undefined,
       route: name(s.from),
@@ -164,6 +199,7 @@ const rows = steps.map((s, i) => {
     labelX,
     lines,
     snapshot,
+    part,
     from,
     to: who(to),
     route: `${name(s.from)} → ${name(to)}`,
@@ -241,6 +277,20 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         }
 
         {
+          bands.map((b) => (
+            <g class="phase" data-phase={b.k} data-first={b.first} data-last={b.last}>
+              <rect class="phase-band" x="0" y={b.y} width={W} height={phaseH - 10} rx="2" />
+              <text class="phase-num" x="12" y={b.y + (phaseH - 10) / 2 + 4.6}>
+                {b.k + 1}
+              </text>
+              <text class="phase-title" x="30" y={b.y + (phaseH - 10) / 2 + 4.6}>
+                {b.title}
+              </text>
+            </g>
+          ))
+        }
+
+        {
           rows.map((r) =>
             r.self ? (
               <g class={`step kind-self role-${r.from.role}`} data-step={r.i} data-actors={r.s.from}>
@@ -311,7 +361,13 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     <ol class="flow-steps">
       {
         rows.map((r) => (
-          <li class={`flow-step kind-${r.s.kind}`} data-step={r.i} id={`step-${r.i + 1}`}>
+          <li class:list={['flow-step', `kind-${r.s.kind}`, { 'phase-start': r.part?.start }]} data-step={r.i} id={`step-${r.i + 1}`}>
+            {r.part && (
+              <p class="step-phase">
+                <span class="step-phase-n">Part {r.part.n} of {r.part.of}</span>
+                {r.part.title}
+              </p>
+            )}
             <p class="step-meta">
               <span class={`step-num role-${r.from.role}`}>{r.i + 1}</span>
               <span class="step-route">
@@ -403,9 +459,10 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         }
         const goto = t.closest<HTMLElement>('[data-goto]')?.dataset.goto;
         if (goto != null) return this.go(Number(goto), true);
-        const step = t.closest<SVGGElement>('svg .step');
+        // a band's heading stands for its first step
+        const step = t.closest<SVGGElement>('svg .step, svg .phase');
         if (step) {
-          const i = Number(step.dataset.step);
+          const i = Number(step.dataset.step ?? step.dataset.first);
           if (this.narrative) {
             // the diagram is a map of the narrative: jump to that step's text
             this.querySelector(`#step-${i + 1}`)?.scrollIntoView({ block: 'start' });
@@ -430,7 +487,14 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
       const fromHash = () => {
         const m = /^#step-(\d+)$/.exec(location.hash);
-        if (m) this.go(Number(m[1]) - 1, false);
+        if (!m) return;
+        this.go(Number(m[1]) - 1, false);
+        // Beside the diagram only the current step exists on the page, so the
+        // browser has nowhere to scroll to. Bring the diagram into view instead.
+        if (!this.narrative && !this.all) {
+          const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          this.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' });
+        }
       };
       window.addEventListener('hashchange', fromHash);
       this.narrow.addEventListener('change', this.setMode);
@@ -467,6 +531,9 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         g.classList.toggle('is-done', !all && s < i);
         g.classList.toggle('is-todo', !all && s > i);
         if (s === i) actors = (g.dataset.actors ?? '').split(' ');
+      });
+      this.querySelectorAll<SVGGElement>('svg .phase').forEach((g) => {
+        g.classList.toggle('is-active', !all && i >= Number(g.dataset.first) && i <= Number(g.dataset.last));
       });
       this.querySelectorAll<SVGGElement>('svg .actor').forEach((g) => {
         g.classList.toggle('is-active', !all && actors.includes(g.dataset.actor ?? ''));
@@ -770,6 +837,31 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     stroke-width: 2;
   }
 
+  /* phases: a heading across the diagram above the steps it covers */
+  .phase {
+    cursor: pointer;
+  }
+  .phase-band {
+    fill: var(--bg-sunken);
+  }
+  .phase-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--fg-muted);
+  }
+  .phase-title {
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--fg-muted);
+  }
+  .phase.is-active .phase-band {
+    fill: var(--bg-inset);
+  }
+  .phase.is-active :is(.phase-num, .phase-title) {
+    fill: var(--fg);
+  }
+
   /* steps: one ink for every message; the line style says what kind it is */
   .step {
     cursor: pointer;
@@ -976,6 +1068,28 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     margin-top: 0.8rem;
   }
   .flow-step[hidden] {
+    display: none;
+  }
+  /* Which part of the flow a step belongs to. Stepping through, every step says
+     so. Read as a list, only the step that opens a part does, as a heading. */
+  .step-phase {
+    margin: 0 0 0.8rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .step-phase-n {
+    display: block;
+    font-family: var(--font-label);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .flow:is([data-all], [data-narrative], :not([data-js])) .flow-step:not(.phase-start) .step-phase {
     display: none;
   }
   .step-meta {
