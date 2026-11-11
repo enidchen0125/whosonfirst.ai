@@ -1,0 +1,13 @@
+# The workflows name each action by commit, so that a tag moved later cannot
+# change what runs. This keeps those commits current, in one pull request a month.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+    groups:
+      actions:
+        patterns: ["*"]

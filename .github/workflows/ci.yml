@@ -1,0 +1,69 @@
+# Runs what CONTRIBUTING.md asks a contributor to run, on every pull request
+# and on every change to main. Two jobs, side by side:
+#
+#   checks    formatting and lint (Biome), types, the rating rule, the contrast audit
+#   rendered  the build, which refuses a broken cross-reference, and then the
+#             built site read as files and opened in a browser
+#
+# Nothing here deploys the site or needs a secret, so it runs the same on a
+# pull request from a fork.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request replaces the run before it. Runs on main finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  checks:
+    name: Lint, types and rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # `biome ci` is `npm run check` that cannot write, and it marks what it
+      # finds on the lines of the pull request.
+      - name: Format, lint and import order
+        run: npx biome ci
+      - name: Types, rating rule and contrast audit
+        run: npm test
+
+  rendered:
+    name: Build and rendered checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+      # The checks run headless, so the headless shell is all they need.
+      - name: Install Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Rendered checks
+        run: npm run check:rendered
