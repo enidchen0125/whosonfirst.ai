@@ -10,6 +10,12 @@ import FlowDiagram from "../../components/FlowDiagram.astro";
 import FlowCard from "../../components/FlowCard.astro";
 import TokenInspector from "../../components/TokenInspector.astro";
 import LastHop from "../../components/LastHop.astro";
+import Check from "../../components/Check.astro";
+import Mixup from "../../components/Mixup.astro";
+import Scenario from "../../components/Scenario.astro";
+import { apiSees } from "../../data/learn/api-sees";
+import { gloss } from "../../lib/gloss";
+import { block } from "../../lib/md";
 import { flow } from "../../data/flows";
 import { ROLE_LABEL, STATUS_LABEL, STATUS_TONE } from "../../data/types";
 import type { Role, StdStatus } from "../../data/types";
@@ -99,6 +105,7 @@ const toc = [
   ["shape", "Shape"],
   ["components", "Components"],
   ["diagrams", "Diagrams"],
+  ["lessons", "Lessons"],
   ["voice", "Voice"],
 ];
 ---
@@ -536,6 +543,55 @@ grant_type=client_credentials
       </div>
     </section>
 
+    <section class="section" id="lessons">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Lessons</h2>
+          <p>What a lesson is built from. Each works with scripts off.</p>
+        </div>
+        <div class="sg-rules">
+          <p><strong>A figure makes its point before a click.</strong> Its first state is a complete picture, because most readers never touch it.</p>
+          <p><strong>Every variation is also in a table.</strong> What a choice would show, the table beneath already says.</p>
+          <p><strong>Questions explain.</strong> Choosing an answer says whether it is right and, either way, why.</p>
+        </div>
+        <Scenario scenario={apiSees} glance="All three at a glance" />
+
+        <Check
+          id="sg-check"
+          title="A question, with the reason for each answer"
+          intro="As it appears at the end of a lesson, under “Check yourself”."
+          questions={[
+            {
+              id: 'sg-question',
+              question: 'Which of these is evidence an API can check?',
+              options: [
+                { text: 'A name the agent adds to the request.', why: 'The agent can put any name there.' },
+                {
+                  text: 'A token that names the user, signed by a service the API trusts.',
+                  correct: true,
+                  why: 'The agent did not write it and cannot change it.',
+                },
+              ],
+            },
+          ]}
+        />
+
+        <h3 class="sg-gap">A mistake, named and corrected</h3>
+        <Mixup belief="A token is encrypted.">
+          <p>A JWT is signed, not encrypted. Anyone who holds one can read it.</p>
+        </Mixup>
+
+        <h3 class="sg-gap">A term, defined where it is used</h3>
+        <div
+          class="prose"
+          set:html={block(
+            'The first use of a glossary term on a flow page is marked. Pressing it shows the definition in place: an access token is addressed to one audience, and a refresh token is not sent to an API at all.',
+            gloss(),
+          )}
+        />
+      </div>
+    </section>
+
     <section class="section" id="voice">
       <div class="wrap">
         <div class="section-head">
@@ -543,6 +599,10 @@ grant_type=client_credentials
           <p>How the site talks.</p>
         </div>
         <div class="voice">
+          <div>
+            <h3>Plain words first, then the name</h3>
+            <p>“A service the API trusts signs it. That service is called an authorization server.” A term arrives after the idea it names, never before.</p>
+          </div>
           <div>
             <h3>Say who does what</h3>
             <p>“The agent redeems the code.” Not “the code is redeemed.” Auth is about who acts; passive sentences hide exactly that.</p>
