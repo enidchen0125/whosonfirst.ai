@@ -163,7 +163,7 @@ export const tokens: TokenSpec[] = [
         text: '"sub": "https://tools.example/mcp",',
         indent: 2,
         cat: "what",
-        note: "The current actor: the party presenting this token.",
+        note: "The current actor: the party authorized to act for Alice. It says who was given that authority, not who is holding the token.",
       },
       {
         text: '"act": { "sub": "research-agent" }',
