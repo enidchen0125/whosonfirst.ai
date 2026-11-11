@@ -1,0 +1,15 @@
+name: Suggestion
+description: Something the site should cover, explain better, or leave out.
+labels: ["suggestion"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you change?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Who is it for, and what are they trying to do?
+      description: The site is for people deciding how an agent will authenticate and what it will be allowed to do.

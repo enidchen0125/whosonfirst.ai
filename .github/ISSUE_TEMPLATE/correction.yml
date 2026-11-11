@@ -1,0 +1,31 @@
+name: Correction
+description: Something on the site is wrong, out of date, or says more than its source does.
+labels: ["correction"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The address of the page, and the section or step if there is one.
+      placeholder: https://whosonfirst.ai/flows/token-exchange/#step-3
+    validations:
+      required: true
+  - type: textarea
+    id: says
+    attributes:
+      label: What the page says
+    validations:
+      required: true
+  - type: textarea
+    id: should
+    attributes:
+      label: What it should say
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A link to the specification, draft or documentation that shows it.
+    validations:
+      required: true

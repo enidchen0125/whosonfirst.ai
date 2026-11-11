@@ -382,7 +382,7 @@ function prepare(main, page, site) {
         ...rest.slice(at),
       ];
     }
-    // A question in a set of choices is its heading, and its number wants a full stop.
+    // A question in a set of choices is its heading, and its number wants a period.
     if (is(node, "legend")) {
       node.tagName = "p";
       node.children = [element("strong", {}, node.children)];

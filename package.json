@@ -3,6 +3,9 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
+  "license": "SEE LICENSE IN README.md",
+  "repository": "github:kevinswiber/whosonfirst.ai",
+  "homepage": "https://whosonfirst.ai",
   "description": "Who’s on First: a field guide to agent authentication and authorization.",
   "scripts": {
     "dev": "astro dev",
