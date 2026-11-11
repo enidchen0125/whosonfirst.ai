@@ -487,6 +487,26 @@ record(
   );
 }
 
+// A lesson may set one line of "What to keep" apart as its hard rule. More than
+// one and the mark stops meaning anything.
+{
+  const rules = built
+    .filter((b) => LESSONS.includes(b.path))
+    .map((p) => ({
+      path: p.path,
+      n: (p.html.match(/<li class="[^"]*\brule\b[^"]*"/g) ?? []).length,
+    }));
+  const over = rules.filter((r) => r.n > 1);
+  record(
+    "lessons",
+    "no lesson marks more than one hard rule in what to keep",
+    rules.some((r) => r.n === 1) && over.length === 0,
+    over.length
+      ? over.map((r) => `${r.path} marks ${r.n}`).join("; ")
+      : `${rules.filter((r) => r.n === 1).length} of ${rules.length} lessons mark one`,
+  );
+}
+
 /* ---------- run ---------- */
 const browser = await chromium.launch();
 

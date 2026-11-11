@@ -242,7 +242,8 @@ const checks: CheckQuestion[] = [
   lede="Alice has to say yes, and the agent must never see her password. OAuth is the routine that makes both true. You have clicked through it a hundred times."
   checks={checks}
   keep={[
-    "The user signs in and approves at the **authorization server**, never in the agent. **Never ask a user for their password.**",
+    "The user signs in and approves at the **authorization server**, never in the agent.",
+    { rule: "Never ask a user for their password." },
     "What comes back through the browser is a one-time **code**. The token itself only ever travels on a direct connection.",
     "**PKCE** ties the code to the app that asked for it.",
     "A **refresh token** lets the agent carry on without the user. Guard it as if it were the user’s access, because it is.",

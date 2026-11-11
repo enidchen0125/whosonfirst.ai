@@ -26,7 +26,12 @@ interface Props {
   lede: string;
   checks: CheckQuestion[];
   /** Three or four sentences to leave with. md-lite. */
-  keep: string[];
+  /**
+   * What to keep, as md-lite lines. A line given as `{ rule }` is the lesson's
+   * one hard rule, a "never", and is set apart with a red edge. At most one a
+   * lesson: a list where every line is a rule has none.
+   */
+  keep: (string | { rule: string })[];
   /** [what the lesson called it, the glossary term for it]. */
   names?: [plain: string, term: string][];
 }
@@ -86,7 +91,11 @@ const term = (name: string) =>
       <section class="keep" aria-labelledby="keep">
         <h2 id="keep">What to keep</h2>
         <ul>
-          {keep.map((k) => <li set:html={inline(k)} />)}
+          {
+            keep.map((k) =>
+              typeof k === 'string' ? <li set:html={inline(k)} /> : <li class="rule" set:html={inline(k.rule)} />,
+            )
+          }
         </ul>
       </section>
 
@@ -298,6 +307,12 @@ const term = (name: string) =>
     padding: 0.7rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 1.04rem;
+  }
+  /* the lesson's one hard rule: the same edge a mix-up has, in the color of a "no" */
+  .keep li.rule {
+    padding-left: 0.9rem;
+    border-left: 3px solid var(--red);
+    font-weight: 500;
   }
 
   .names > p,
