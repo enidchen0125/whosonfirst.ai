@@ -1478,6 +1478,22 @@ for (const theme of THEMES) {
             "history sits after the lookup",
             lookup.moved > lookup.first,
           );
+          const search = page.locator(".sx-search input");
+          for (const query of ["mTLS", "MTLS", "mutual TLS", "RFC8705"]) {
+            await search.fill(query);
+            record(
+              where,
+              `lookup finds RFC 8705 for “${query}”`,
+              await page.locator("#rfc8705").isVisible(),
+            );
+          }
+          await search.fill("not-a-standard-query");
+          record(
+            where,
+            "lookup hides entries that do not match",
+            (await page.locator(".sx-item:not([hidden])").count()) === 0,
+          );
+          await search.fill("");
         }
       }
 

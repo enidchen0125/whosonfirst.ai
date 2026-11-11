@@ -628,7 +628,7 @@ export const standards: Standard[] = [
   },
   {
     id: "rfc8705",
-    name: "Mutual TLS and Certificate-Bound Tokens",
+    name: "Mutual TLS (mTLS) and Certificate-Bound Tokens",
     ref: "RFC 8705",
     body: "IETF",
     status: "rfc",
