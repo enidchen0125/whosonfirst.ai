@@ -295,15 +295,32 @@ export const rules: Rule[] = [
     flow: "workload-identity-federation",
     role: "start",
     weight: 10,
-    when: { principal: ["self"], runtime: ["k8s", "managed", "headless"] },
+    // Every target is named so that this rule matches as many answers as the client
+    // credentials rule below, and stays above it.
+    when: {
+      principal: ["self"],
+      runtime: ["k8s", "managed", "headless"],
+      target: ["mcp", "api", "agent", "web", "internal"],
+    },
     why: "The platform can vouch for the agent. Use the identity it establishes to get short-lived access, with no long-lived secret to provision.",
   },
   {
     flow: "client-credentials",
     role: "start",
     weight: 8,
-    when: { principal: ["self"], target: ["mcp", "api", "agent"] },
+    when: {
+      principal: ["self"],
+      target: ["mcp", "api", "agent"],
+      runtime: ["headless", "k8s", "managed", "sandbox"],
+    },
     why: "The agent authenticates as itself. Use a signed assertion instead of a client secret wherever the authorization server allows.",
+  },
+  {
+    flow: "authorization-code-pkce",
+    role: "start",
+    weight: 5,
+    when: { principal: ["self"], runtime: ["local"] },
+    why: "On a person’s machine an agent cannot keep a secret, so it has no identity of its own to prove. Have the person who runs it sign in, and act for them.",
   },
   {
     flow: "spiffe-workload-identity",
