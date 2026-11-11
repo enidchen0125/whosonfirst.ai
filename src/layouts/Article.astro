@@ -6,6 +6,7 @@
 import Base from "./Base.astro";
 import DocMeta from "../components/DocMeta.astro";
 import { REVIEWED } from "../data/site";
+import { gloss, markHtml } from "../lib/gloss";
 
 interface Heading {
   depth: number;
@@ -26,6 +27,10 @@ const { frontmatter: fm, headings = [] } = Astro.props;
 const toc = headings.filter((h) => h.depth === 2);
 const KIND: Record<string, string> = { "/deployments/": "Deployment guide" };
 const kind = fm.section && KIND[fm.section.href];
+// A guide's text uses the vocabulary the lessons teach. The first use of each
+// glossary term is marked, so its definition can be shown in place.
+const body = await Astro.slots.render("default");
+const article = kind ? markHtml(body, gloss(Astro.url.pathname)) : body;
 const details = kind
   ? [
       {
@@ -51,6 +56,14 @@ const details = kind
       </p>
       <h1>{fm.title}</h1>
       {fm.lede && <p class="lede">{fm.lede}</p>}
+      {
+        kind && (
+          <p class="primer">
+            This guide uses the vocabulary of the <a href="/learn/">lessons</a>. If a term is new, press it for its
+            definition, or start there.
+          </p>
+        )
+      }
       {kind && <DocMeta reviewed={REVIEWED} subject="Guide" details={details} more="Review details" />}
     </div>
   </div>
@@ -70,13 +83,16 @@ const details = kind
         </nav>
       )
     }
-    <article class="article">
-      <slot />
-    </article>
+    <article class="article" set:html={article} />
   </div>
 </Base>
 
 <style>
+  .primer {
+    margin: 1rem 0 0;
+    max-width: 42rem;
+    color: var(--fg-muted);
+  }
   .article-grid {
     display: grid;
     gap: 1.5rem 3rem;

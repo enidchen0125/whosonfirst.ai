@@ -13,7 +13,7 @@ section:
 For each thing the agent calls, settle [whose authority](/learn/whose-authority/) the call uses. Then:
 
 - **For the signed-in user**, such as their calendar, their repositories or their documents: [authorization code with PKCE](/flows/authorization-code-pkce/), with the app registered as a confidential client. Each user grants access once per service, and the tokens stay on your server, filed under that user.
-- **As itself**, such as its own database, its queue or a knowledge base everyone shares: the identity your cloud gives the workload, through [workload identity federation](/flows/workload-identity-federation/), or a [client credential](/flows/client-credentials/) where that is not available.
+- **As itself**, such as its own database, its queue or a knowledge base everyone shares: the identity your cloud gives the workload, used directly for that cloud's own services and through [workload identity federation](/flows/workload-identity-federation/) for anything outside it, or a [client credential](/flows/client-credentials/) where neither is available.
 - **Not** one API key or one service account standing in for every user at a service that holds each user's data. The service then sees one caller, and nothing but your code keeps one user out of another's records. [Lesson 1](/learn/what-the-api-sees/) shows why.
 
 ## Two identities, kept apart
@@ -26,6 +26,8 @@ A hosted agent has an identity of its own and borrows its users'. Most trouble i
 
 A token issued through authorization code carries both: `client_id` names your app, and `sub` names the user. An API can limit either one without the other.
 
+To make that concrete, take an assistant that reads and creates events in each user's Google Calendar. Google's sign-in service is the authorization server. The Calendar API is the API. Your backend is the client, registered once with Google, where it is given its client ID and its secret. Inside a company the parts are the same and the names change: the authorization server is whatever employees already sign in with, and the API may be one of your own.
+
 ## Signing users in, and connecting their accounts
 
 These are two jobs, and it helps to build them as two.
@@ -36,10 +38,10 @@ These are two jobs, and it helps to build them as two.
 
 Both run the same exchange, and in both the backend is a **confidential client**: it runs where its operator controls it, so it can keep a secret.
 
-- **Prove which app it is when it trades the code.** With a client secret, or better, with a key the app holds and a signed assertion, so that no shared secret has to be stored on both sides.
+- **Prove which app it is when it trades the code.** With the client secret it was given at registration, or with a key of its own where the authorization server supports one. The [flow page](/flows/authorization-code-pkce/#hosted) shows the request.
 - **Use PKCE as well.** The [security best current practice](/standards/#rfc9700) recommends it for every client, and it costs nothing.
 - **Register exact redirect addresses.** The code is sent to that address and no other.
-- **Ask for scopes when a task needs them.** An agent that asks for everything at sign-up holds everything from then on.
+- **Ask for scopes when a task needs them.** Read access the first time a user asks about their schedule, and write access the first time they ask the agent to create an event. An agent that asks for everything at sign-up holds everything from then on.
 
 ## Where the tokens live
 
@@ -70,7 +72,7 @@ A reply in a chat window is done in seconds, with the user watching. A report th
 
 - **Narrow the scope for unattended work.** A job that files receipts does not need permission to send mail.
 - **Record which job used which grant.** If something goes wrong at three in the morning, the token's `sub` will say the user did it.
-- **Make the person reachable for anything that cannot be undone.** [Backchannel approval](/flows/ciba/) asks them on a device of their own, and [step-up](/flows/step-up-authorization/) asks for one specific approval.
+- **Make the person reachable for anything that cannot be undone.** [Backchannel approval](/flows/ciba/) asks them on a device of their own, and [step-up](/flows/step-up-authorization/) brings them back for a fresh sign-in or approval, which can be tied to one action.
 - **Show users what is connected**, and let them disconnect it.
 
 ## The agent's own access

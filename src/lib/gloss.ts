@@ -91,3 +91,47 @@ export function mark(text: string, g: Gloss): string {
     return `<a class="term" href="/glossary/#${e.slug}" data-term="${attr(e.term)}" data-def="${attr(e.def)}">${name}${plural}</a>`;
   });
 }
+
+/** Inside these, text is left alone: it is already a link, is literal, is a heading, or belongs to a control. */
+const LEAVE = new Set([
+  "a",
+  "code",
+  "pre",
+  "button",
+  "summary",
+  "label",
+  "svg",
+  "script",
+  "style",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "th",
+  "figure",
+]);
+
+/**
+ * Marks first uses of glossary terms in rendered HTML: the text of paragraphs and
+ * list items, outside the elements above and outside any custom element, whose
+ * insides belong to its own script. For pages written in MDX, whose text never
+ * passes through md.ts.
+ */
+export function markHtml(html: string, g: Gloss): string {
+  let prose = 0; // depth inside <p> or <li>
+  let leave = 0; // depth inside something to leave alone
+  return html.replace(
+    /<(\/?)([a-zA-Z][\w-]*)([^>]*)>|([^<]+)/g,
+    (whole, close: string, tag: string, rest: string, text: string) => {
+      if (text !== undefined)
+        return prose > 0 && leave === 0 ? mark(text, g) : text;
+      const name = tag.toLowerCase();
+      if (rest.endsWith("/")) return whole;
+      const step = close ? -1 : 1;
+      if (name === "p" || name === "li") prose = Math.max(0, prose + step);
+      if (LEAVE.has(name) || name.includes("-"))
+        leave = Math.max(0, leave + step);
+      return whole;
+    },
+  );
+}

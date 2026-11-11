@@ -15,7 +15,7 @@ import K8sIdentityMap from '../../components/K8sIdentityMap.astro';
 If someone asks what identity your agent runs as, a good answer has three parts.
 
 - **Its own ServiceAccount.** One for each agent, never shared, with no default API token mounted.
-- **A short-lived token for each thing it calls.** Kubernetes issues it for one audience and replaces it before it expires. No key sits in a Secret.
+- **A short-lived token for each thing it calls.** Kubernetes issues it for one audience and replaces it before it expires. No long-lived key has to sit in a Secret for it.
 - **Only the access that identity was given.** Whatever is being called decides what this ServiceAccount may do there.
 
 How the thing being called comes to accept that identity depends on what it is.
@@ -32,6 +32,35 @@ How the thing being called comes to accept that identity depends on what it is.
 | Anything, for a particular user | The user's own token, exchanged for each hop. The pod's identity is not the user's | [The five layers](#the-five-layers), layer five |
 
 </div>
+
+### Worked through: a nightly job and an API of your own
+
+The fourth row is the one to start from when both ends are yours and there is no service mesh. A job that reconciles invoices calls a billing API in the same cluster.
+
+1. **The job asks for a token addressed to billing.** Its pod mounts a ServiceAccount token whose audience is `billing`, as in [the baseline pod](#a-baseline-pod). Kubernetes writes it to a file and replaces it before it expires.
+2. **The job sends it.** In the `Authorization` header, as a bearer token, read from the file each time.
+3. **The billing API asks the cluster whether the token is good.** It posts the token to the TokenReview API, naming its own audience. The cluster answers with the ServiceAccount the token belongs to, or says it is not valid: wrong audience, expired, or from a pod that no longer exists.
+4. **The billing API applies its own rule.** `system:serviceaccount:agents:invoice-job` may read invoices and nothing else. That rule is yours to write, and it is the whole of what this identity can do.
+
+```yaml
+# What the billing API sends to the cluster
+apiVersion: authentication.k8s.io/v1
+kind: TokenReview
+spec:
+  token: eyJhbGciOiJSUzI1NiIs…    # the token the job sent
+  audiences: ["billing"]          # the audience the API answers to
+---
+# What comes back, abbreviated
+status:
+  authenticated: true
+  user:
+    username: system:serviceaccount:agents:invoice-job
+  audiences: ["billing"]
+```
+
+The billing API needs permission to create TokenReviews, and nothing else from the cluster, so it does talk to the cluster with a token of its own. Nothing long-lived was stored for the job, and the answer to "what does it run as?" is one line of that reply.
+
+When more than a few services call each other this way, the checks are worth moving out of each API: into a mesh, or behind an authorization server that every API trusts. The rows above say which.
 
 The rest of this page is the detail behind those rows.
 
@@ -117,7 +146,7 @@ spec:
 
 **Set the audience.** The default pod token is addressed to the Kubernetes API server. Sending it anywhere else invites that system to replay it against your cluster. Ask for a separate token per consumer.
 
-**Verify the right way.** An outside system checking the token against the cluster's published keys learns that it is authentic and unexpired. It does not learn whether the pod still exists. Where that matters, the Kubernetes documentation says to use the TokenReview API.
+**Verify the right way.** An outside system checking the token against the cluster's published keys learns that it is authentic and unexpired. It does not learn whether the pod still exists. Where that matters, the Kubernetes documentation says to use the TokenReview API. Name your own audience in the request and check the audiences in the answer: with none given, the review is made against the API server's audience.
 
 ## Reaching the cloud
 
