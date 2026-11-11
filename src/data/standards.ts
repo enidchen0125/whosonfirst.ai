@@ -796,7 +796,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -08, October 2026. Informational. In IETF Last Call, which ends on November 13, 2026. It would be the first WIMSE RFC.",
+      "Revision -08, October 2026. Informational. Its IETF Last Call ends on November 13, 2026. It would be the first WIMSE RFC.",
     topics: ["workload", "guidance", "kubernetes"],
     summary:
       "A survey of how credentials reach workloads today without long-lived secrets: Kubernetes projected tokens, cloud metadata services, SPIFFE, CI/CD OIDC.",
