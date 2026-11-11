@@ -10,7 +10,7 @@ Drafts in this area change monthly. If a revision number or a status has moved, 
 
 ## Change it yourself
 
-Most corrections are a one-line change to a data file. The README says [where things are](README.md#where-things-are) and [how content is edited](README.md#editing-content).
+Most corrections are a one-line change to a data file. [docs/development.md](docs/development.md) says [where things are](docs/development.md#where-things-are) and [how content is edited](docs/development.md#editing-content).
 
 ```bash
 npm install
@@ -38,7 +38,7 @@ npm run build
 npm run check:rendered
 ```
 
-The last one opens the built site in a browser and needs Chromium: `npx playwright install chromium`. The build and these checks refuse a good many mistakes by name: a flow that names an unknown standard, a rating that does not follow from its references, a lesson that teaches a term the glossary lacks, text too faint or too small, a page that overflows a phone.
+The last one opens the built site in a browser and needs Chromium: `npx playwright install chromium`. The same four run on every pull request, so a change that passes them here passes there. The build and these checks refuse a good many mistakes by name: a flow that names an unknown standard, a rating that does not follow from its references, a lesson that teaches a term the glossary lacks, text too faint or too small, a page that overflows a phone.
 
 Keep a pull request to one change, and say in it what source the change follows.
 

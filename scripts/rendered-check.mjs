@@ -498,6 +498,12 @@ record(
       );
     if (!md.includes(`https://whosonfirst.ai${p.path}`))
       copies.push(`${p.path} (does not give the page's address)`);
+    // the footer is left out of a copy, and what it says about the review is not
+    const month = /Standards status last reviewed ([A-Z][a-z]+ \d{4})/.exec(
+      p.html,
+    )?.[1];
+    if (!month || !md.includes(`last reviewed ${month}`))
+      copies.push(`${p.path} (does not say when the site was last reviewed)`);
   }
   record(
     "markdown",
@@ -606,6 +612,52 @@ record(
       llms.startsWith("# ") &&
         wrong.length === 0 &&
         existsSync(join(root, "llms-full.txt")),
+      wrong.slice(0, 8).join("; "),
+    );
+  }
+
+  // The README is what a visitor to the repository reads first, and it is
+  // written by hand. Every address it gives is on the site, it names every
+  // lesson, flow and deployment guide, and where it counts them it counts right.
+  {
+    const readme = readFileSync(
+      new URL("../README.md", import.meta.url),
+      "utf8",
+    );
+    const given = [
+      ...new Set(
+        [...readme.matchAll(/https:\/\/whosonfirst\.ai(\/[^\s)"'`<>]*)/g)].map(
+          (m) => m[1].replace(/[.,;:]+$/, ""),
+        ),
+      ),
+    ];
+    const wrong = [];
+    for (const address of given) {
+      const [path, section] = address.split("#");
+      const page = built.find((p) => p.path === path);
+      if (path.endsWith("/") ? !page : !existsSync(join(root, path)))
+        wrong.push(`${address} is not on the site`);
+      else if (section && !page?.html.includes(` id="${section}"`))
+        wrong.push(`${address} names no section of its page`);
+    }
+    const under = (dir) =>
+      built.filter((p) => new RegExp(`^/${dir}/[^/]+/$`).test(p.path));
+    for (const dir of ["learn", "flows", "deployments"])
+      for (const p of under(dir))
+        if (!given.includes(p.path)) wrong.push(`${p.path} is not listed`);
+    for (const [word, dir] of [
+      ["lessons", "learn"],
+      ["flows", "flows"],
+    ])
+      for (const m of readme.matchAll(
+        new RegExp(`\\b(\\d+) (?:short )?${word}\\b`, "g"),
+      ))
+        if (Number(m[1]) !== under(dir).length)
+          wrong.push(`it says “${m[0]}”, and there are ${under(dir).length}`);
+    record(
+      "readme",
+      "README.md lists every lesson, flow and deployment guide, counts them right, and gives no address the site lacks",
+      given.length > 0 && wrong.length === 0,
       wrong.slice(0, 8).join("; "),
     );
   }
@@ -773,7 +825,13 @@ record(
 }
 
 /* ---------- run ---------- */
-const browser = await chromium.launch();
+// Chromium on Linux takes font hinting from the system's settings, and hinted
+// text runs a few pixels wider, so a line that just fits on one machine did not
+// on another. No hinting is what phones and Macs draw, and it is the same here
+// and in continuous integration.
+const browser = await chromium.launch({
+  args: ["--font-render-hinting=none"],
+});
 
 // Every built page, loaded once under the site's own headers.
 {

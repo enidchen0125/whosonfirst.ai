@@ -492,7 +492,20 @@ export async function markdownFor(page, site) {
     .stringify(mdast)
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  return `${body}\n\n---\n\nFrom ${page.site}, a field guide to agent authentication and authorization. This page: ${new URL(page.path, site).href}\n`;
+  const checked = reviewed(page);
+  return `${body}\n\n---\n\nFrom ${page.site}, a field guide to agent authentication and authorization. This page: ${new URL(page.path, site).href}${checked ? `\n\n${checked}` : ""}\n`;
+}
+
+/**
+ * When the site was last checked against its sources, in the words of the
+ * page's footer. The footer is left out of a copy, and on a lesson or an index
+ * page it is the only place the month appears, so a copy ends with it.
+ */
+function reviewed(page) {
+  return /Standards status last reviewed [^<]*/
+    .exec(page.html)?.[0]
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -559,6 +572,7 @@ export default function markdownPages() {
           `# ${name}`,
           `> ${home.description}`,
           `${name} (${new URL("/", site).host}) is an independent reference, not a specification. It explains how software agents authenticate and how they are authorized: who is acting, for whom, and who said they could. Standards in this area change monthly; every page carries the month it was last checked against its sources, and links to them.`,
+          reviewed(home),
           `Each link below is the Markdown form of a page on the site. The same address without \`index.md\` is the page itself, and is the one to cite. All of the pages in one file: ${new URL("/llms-full.txt", site).href}`,
           ...sections
             .filter((s) => s.pages.length)

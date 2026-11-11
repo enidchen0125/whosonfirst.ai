@@ -18,6 +18,7 @@
     "check:rating": "node scripts/rating-check.mjs",
     "check:contrast": "node scripts/contrast-check.mjs",
     "check:rendered": "node scripts/rendered-check.mjs",
+    "readme:figure": "node scripts/readme-figure.mjs",
     "generate-types": "wrangler types",
     "deploy": "npm run build && wrangler deploy"
   },
