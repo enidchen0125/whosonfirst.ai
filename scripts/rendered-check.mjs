@@ -355,6 +355,55 @@ record(
   );
 }
 
+// A reader who has learned nothing should not be able to pass the lessons'
+// questions by habit: "pick the middle one" or "pick the longest one". Across
+// every question with three or more options, the right answer sits in no one
+// place, and is neither the longest nor the shortest, more than half the time.
+{
+  const words = (h) =>
+    h
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  const place = [];
+  let total = 0;
+  let longest = 0;
+  let shortest = 0;
+  for (const p of built.filter((b) => LESSONS.includes(b.path))) {
+    for (const q of p.html
+      .split(/<fieldset[^>]*class="[^"]*\bck-q\b/)
+      .slice(1)) {
+      const options = [
+        ...q
+          .split("</fieldset>")[0]
+          .matchAll(
+            /<li[^>]*class="[^"]*\b(is-right|is-wrong)\b[^>]*>[\s\S]*?class="[^"]*\bck-text\b[^>]*>([\s\S]*?)<\/span>\s*<\/label>/g,
+          ),
+      ];
+      if (options.length < 3) continue;
+      const lengths = options.map((m) => words(m[2]).length);
+      const right = options.findIndex((m) => m[1] === "is-right");
+      total++;
+      place[right] = (place[right] ?? 0) + 1;
+      if (lengths[right] === Math.max(...lengths)) longest++;
+      if (lengths[right] === Math.min(...lengths)) shortest++;
+    }
+  }
+  const most = Math.max(0, ...place.filter(Boolean));
+  record(
+    "lessons",
+    "the right answer to a question cannot be guessed from its place in the list",
+    total > 0 && most <= total / 2,
+    `of ${total} questions, the right answer is ${place.map((n, i) => `${n ?? 0} times in place ${i + 1}`).join(", ")}`,
+  );
+  record(
+    "lessons",
+    "the right answer to a question cannot be guessed from its length",
+    total > 0 && longest <= total / 2 && shortest <= total / 2,
+    `of ${total} questions, the right answer is the longest in ${longest} and the shortest in ${shortest}`,
+  );
+}
+
 /* ---------- run ---------- */
 const browser = await chromium.launch();
 for (const theme of THEMES) {
