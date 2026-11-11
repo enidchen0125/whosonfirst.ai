@@ -49,7 +49,7 @@ const whole = (s: string) => s.replace(/(\d)-(?=\d)/g, "$1\u2011");
     {
       based && (
         <span class="doc-fact">
-          <span class="doc-key">{based.key ?? 'Based on'}</span>
+          <span class="doc-key">{based.key ?? 'Based on'}</span><wbr />
           {based.refs.map((r, i) => (
             <>
               {i > 0 && ' and '}
@@ -58,7 +58,8 @@ const whole = (s: string) => s.replace(/(\d)-(?=\d)/g, "$1\u2011");
               </a>
             </>
           ))}
-          <span class="doc-status">{[based.status, based.revision].filter(Boolean).join(', ')}</span>
+          {/* only margins separate the label, the name and the status, so say where the line may break */}
+          <wbr /><span class="doc-status">{[based.status, based.revision].filter(Boolean).join(', ')}</span>
         </span>
       )
     }
