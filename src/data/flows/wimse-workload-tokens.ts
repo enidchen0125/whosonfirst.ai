@@ -21,9 +21,9 @@ The working group’s agent architecture document says plainly that agents are w
   ],
   watchOut: [
     "These are drafts. No WIMSE document has been published as an RFC yet, and implementations are experimental.",
-    "The WIT must never be sent in the `Authorization` header or accepted as a bearer token. A receiver that skips the proof has reintroduced the problem.",
+    "The WIT must never be used or accepted as a bearer token. It has a header field of its own: `Authorization` carries the proof token, not the WIT. A receiver that skips the proof has reintroduced the problem.",
     "The private key lives in the agent process. Protect it accordingly and rotate the credential often.",
-    "As with any workload identity, this identifies the software, not the user it is working for. Carry the user’s delegation separately.",
+    "As with any workload identity, this identifies the software, not the user it is working for. Carry the user’s delegation separately, in a header field of its own: a request that presents a proof token cannot also present a bearer token.",
   ],
   lesson: "whose-authority",
   phases: [
@@ -45,7 +45,7 @@ The working group’s agent architecture document says plainly that agents are w
     issuer:
       "Recognizes the workload and returns a signed Workload Identity Token that names it and carries its public key. How it recognizes the workload is the platform’s business: the draft does not prescribe it.",
     agent:
-      "Creates a key pair, keeps the private key, and gets a Workload Identity Token for the public key. For each request it signs a short-lived proof for the URL being called, and sends the token and the proof in their own headers, not in `Authorization`. The private key lives in the agent process: protect it and rotate the credential often.",
+      "Creates a key pair, keeps the private key, and gets a Workload Identity Token for the public key. For each request it signs a short-lived proof for the URL being called, and sends the token in its own header field and the proof in `Authorization`, under the `WPT` scheme. The private key lives in the agent process: protect it and rotate the credential often.",
     proxy:
       "Ends the TLS session from the agent and forwards the request on a new connection, with both headers untouched. It can verify them itself to apply policy.",
     tool: "Verifies the Workload Identity Token against the issuer’s keys, then verifies the proof with the public key inside the token, and checks that the proof matches the token, names this endpoint, and is fresh and, where it keeps track of `jti`, unseen. It does not accept the token on its own. A receiver that skips the proof is accepting a bearer token that anyone along the path can copy and replay.",
@@ -84,7 +84,7 @@ The working group’s agent architecture document says plainly that agents are w
       kind: "resp",
       label: "WIT: subject + public key",
       title: "The issuer returns a Workload Identity Token",
-      body: `A signed JWT of type \`wit+jwt\`. The subject is the workload’s identifier, a URI scoped to a trust domain. The \`cnf\` claim holds the workload’s public key. There is no audience: the same WIT is shown to every peer, which is safe because it is worthless without the key.`,
+      body: `A signed JWT of type \`wit+jwt\`. The subject is the workload’s identifier, a URI scoped to a trust domain. The \`cnf\` claim holds the workload’s public key and names the algorithm its proofs must be signed with. There is no audience: the same WIT is shown to every peer, which is safe because it is worthless without the key.`,
       code: {
         lang: "json",
         text: `// header: { "alg": "ES256", "kid": "issuer-key-1", "typ": "wit+jwt" }
@@ -94,7 +94,7 @@ The working group’s agent architecture document says plainly that agents are w
   "exp": 1745512510,
   "jti": "x-_1CTL2cca3CSE4cwb_l",
   "cnf": {
-    "jwk": { "kty": "OKP", "crv": "Ed25519", "x": "1CXXvflN_LVVsIsYXsUvB03JmlGWeCHqQVuouCF92bg" }
+    "jwk": { "kty": "OKP", "crv": "Ed25519", "alg": "Ed25519", "x": "1CXXvflN_LVVsIsYXsUvB03JmlGWeCHqQVuouCF92bg" }
   }
 }`,
       },
@@ -105,10 +105,10 @@ The working group’s agent architecture document says plainly that agents are w
       kind: "self",
       label: "Sign a proof for this request",
       title: "The agent signs a Workload Proof Token",
-      body: `A very short-lived JWT of type \`wpt+jwt\`, signed with the private key. \`aud\` is the URL being called, \`wth\` is a hash of the WIT, and \`jti\` lets the receiver refuse a second use, if it keeps track. The short expiry is what limits a copy either way. Optional claims bind it to an access token or a transaction token traveling in the same request.`,
+      body: `A very short-lived JWT of type \`wpt+jwt\`, signed with the private key. \`aud\` is the URL being called, \`wth\` is a hash of the WIT, and \`jti\` lets the receiver refuse a second use, if it keeps track. The short expiry is what limits a copy either way. Two more claims are mandatory when the request carries the tokens they cover: \`tth\` is a hash of a transaction token, and \`oth\` holds hashes of other tokens that carry the user’s identity or the request’s authorization context.`,
       code: {
         lang: "json",
-        text: `// header: { "alg": "EdDSA", "typ": "wpt+jwt" }
+        text: `// header: { "alg": "Ed25519", "typ": "wpt+jwt" }
 {
   "aud": "https://tools.example.org/search",
   "exp": 1745510016,
@@ -123,14 +123,13 @@ The working group’s agent architecture document says plainly that agents are w
       kind: "back",
       label: "Request + WIT + WPT",
       title: "Both tokens travel as headers",
-      body: `Each has its own header field. Neither goes in \`Authorization\`, which stays free for a user’s access token.`,
+      body: `The WIT has its own header field. The WPT goes in \`Authorization\`, under a \`WPT\` scheme the draft defines. A request has only one \`Authorization\` header, so one that presents a WPT cannot also present a bearer token. A token that carries the user’s identity or the request’s authorization context travels in a header field of its own, as a transaction token does in \`Txn-Token\`, and the proof holds its hash.`,
       code: {
         lang: "http",
         text: `POST /search HTTP/1.1
 Host: tools.example.org
-Workload-Identity-Token: eyJhbGciOiJFUzI1NiIsInR5cCI6IndpdCtqd3QifQ…
-Workload-Proof-Token: eyJhbGciOiJFZERTQSIsInR5cCI6IndwdCtqd3QifQ…
-Authorization: Bearer <user's delegated access token>`,
+Workload-Identity-Token: eyJhbGciOiJFUzI1NiIsImtpZCI6Imlzc3Vlci1rZXktMSIsInR5cCI6IndpdCtqd3QifQ…
+Authorization: WPT eyJhbGciOiJFZDI1NTE5IiwidHlwIjoid3B0K2p3dCJ9…`,
       },
     },
     {
@@ -154,7 +153,7 @@ Authorization: Bearer <user's delegated access token>`,
       kind: "resp",
       label: "Response",
       title: "The call proceeds",
-      body: `Anything that copied the headers on the way, including the gateway’s logs, has a proof valid for one request to one URL for a few seconds.`,
+      body: `Anything that copied the headers on the way, including the gateway’s logs, has a proof valid for one request to one URL, for minutes at most.`,
     },
   ],
   standards: [
