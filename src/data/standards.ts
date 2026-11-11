@@ -4,9 +4,10 @@ import type { Standard } from "./types";
  * The standards tracker.
  *
  * Status and revision details were checked in November 2026 (see data/site.ts).
- * Revision numbers and dates come from the IETF document mirror and from
- * specification repositories. Process states ("in last call", "with the RFC
- * Editor") are reported from secondary sources and are worded accordingly.
+ * IETF revision numbers, dates and process states ("in last call", "with the
+ * RFC Editor") were read from the IETF datatracker and the RFC Editor, and
+ * other revisions from specification repositories. A state worded as
+ * "reported" comes from a secondary source.
  */
 
 const rfc = (n: number) => `https://www.rfc-editor.org/rfc/rfc${n}`;
