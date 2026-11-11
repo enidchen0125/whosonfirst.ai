@@ -175,7 +175,7 @@ const moved = [
                     data-status={s.status}
                     data-topics={s.topics.join(' ')}
                     data-body={s.body}
-                    data-text={`${s.name} ${s.ref} ${s.body} ${s.summary} ${s.agents} ${s.detail ?? ''}`.toLowerCase()}
+                    data-text={`${s.name} ${s.ref} ${s.id} ${s.body} ${s.summary} ${s.agents} ${s.detail ?? ''}`.toLowerCase()}
                   >
                     <header>
                       <h3>{s.name}</h3>
@@ -282,6 +282,12 @@ const moved = [
         };
       };
 
+      // A name is typed many ways: "RFC 9449" and "rfc9449", "OAuth 2.1" and
+      // "oauth2.1". A word matches an entry's text as written, or with its
+      // spaces and hyphens taken out.
+      const squeeze = (s: string) => s.replace(/[\s-]+/g, '');
+      const squeezed = new Map(items.map((el) => [el, squeeze(el.dataset.text ?? '')]));
+
       const apply = (push = true) => {
         const f = read();
         const words = f.q.split(/\s+/).filter(Boolean);
@@ -292,7 +298,7 @@ const moved = [
             (f.status.length === 0 || f.status.includes(el.dataset.status ?? '')) &&
             (f.body.length === 0 || f.body.includes(el.dataset.body ?? '')) &&
             (f.topic.length === 0 || f.topic.some((t) => topics.includes(t))) &&
-            words.every((w) => (el.dataset.text ?? '').includes(w));
+            words.every((w) => (el.dataset.text ?? '').includes(w) || squeezed.get(el)!.includes(squeeze(w)));
           el.hidden = !ok;
           if (ok) shown++;
         }
@@ -330,7 +336,12 @@ const moved = [
       narrow.addEventListener('change', place);
       place();
 
-      form.addEventListener('input', () => apply());
+      form.addEventListener('input', () => {
+        apply();
+        // A reader far down the list who narrows it would be left below what
+        // remains, looking at the foot of the page. Bring the top of the list back.
+        if (countEl.getBoundingClientRect().top < 0) countEl.scrollIntoView({ block: 'start' });
+      });
       form.addEventListener('submit', (e) => e.preventDefault());
       const clear = () => {
         form.reset();
