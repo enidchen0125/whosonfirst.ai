@@ -63,7 +63,10 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
         s.options.map((o, i) => (
           <label>
             <input type="radio" name={s.id} value={o.id} data-n={i + 1} checked={o.id === initial} />
-            <span>{o.name}</span>
+            <span>
+              <span class="sc-name">{o.name}</span>
+              {o.avoid && <small class="sc-flag">do not build</small>}
+            </span>
           </label>
         ))
       }
@@ -78,6 +81,12 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
           <p class="sc-which">
             {s.legend}: <strong>{o.name}</strong>
           </p>
+          {o.avoid && (
+            <p class="sc-avoid">
+              <strong>Do not build this.</strong>{' '}
+              <Fragment set:html={inline(o.avoid)} />
+            </p>
+          )}
           <div
             class="sc-chain"
             data-long={cast.length > 3 ? '' : undefined}
@@ -166,7 +175,10 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
             <tbody>
               {s.options.map((o) => (
                 <tr>
-                  <th scope="row">{o.name}</th>
+                  <th scope="row">
+                    {o.name}
+                    {o.avoid && <span class="sc-flag">Do not build this</span>}
+                  </th>
                   {o.findings.map((f, k) => (
                     <td data-q={s.questions[k]}>
                       {f.verdict && <span class={`sc-mark is-${f.verdict}`}>{VERDICT_WORD[f.verdict]}</span>}
@@ -240,7 +252,7 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
     opacity: 0;
     pointer-events: none;
   }
-  .sc-choices span {
+  .sc-choices label > span {
     display: flex;
     align-items: center;
     gap: 0.55em;
@@ -255,7 +267,7 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
     box-shadow: 2px 2px 0 var(--border);
   }
   /* a radio's own mark, so the row reads as "pick one" before anything is picked */
-  .sc-choices span::before {
+  .sc-choices label > span::before {
     content: '';
     flex: none;
     width: 0.8em;
@@ -263,7 +275,7 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
     border: 1.5px solid currentColor;
     border-radius: 50%;
   }
-  .sc-choices label:hover span {
+  .sc-choices label:hover > span {
     background: var(--bg-sunken);
   }
   .sc-choices input:checked + span {
@@ -277,6 +289,37 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
   .sc-choices input:focus-visible + span {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+  /* A variation shown for comparison and not to be built says so in words, in three
+     places: on its button, at the head of its panel and in the comparison table. On
+     the button it takes the button's own color, which inverts when chosen. */
+  .sc-flag {
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sc-choices .sc-flag {
+    padding: 0.1rem 0.35rem;
+    border: 1px solid currentColor;
+    border-radius: var(--radius);
+  }
+  .sc-glance .sc-flag {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--red);
+  }
+  .sc-avoid {
+    margin: 0 0 0.9rem;
+    padding: 0.1rem 0 0.1rem 0.8rem;
+    border-left: 3px solid var(--red);
+    max-width: 44rem;
+    font-size: 0.96rem;
+  }
+  .sc-avoid strong {
+    color: var(--red);
   }
 
   /* one variation at a time; without :has() each follows the last under its name */

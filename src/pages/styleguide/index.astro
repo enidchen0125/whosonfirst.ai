@@ -10,6 +10,7 @@ import FlowDiagram from "../../components/FlowDiagram.astro";
 import FlowCard from "../../components/FlowCard.astro";
 import TokenInspector from "../../components/TokenInspector.astro";
 import LastHop from "../../components/LastHop.astro";
+import Caution from "../../components/Caution.astro";
 import Check from "../../components/Check.astro";
 import Mixup from "../../components/Mixup.astro";
 import Scenario from "../../components/Scenario.astro";
@@ -553,6 +554,7 @@ grant_type=client_credentials
           <p><strong>A figure makes its point before a click.</strong> Its first state is a complete picture, because most readers never touch it.</p>
           <p><strong>Every variation is also in a table.</strong> What a choice would show, the table beneath already says.</p>
           <p><strong>Questions explain.</strong> Choosing an answer says whether it is right and, either way, why.</p>
+          <p><strong>What must not be built says so.</strong> A figure compares approaches, and a comparison can be taken for a menu. A dangerous one is marked on its button, in its panel and in the table.</p>
         </div>
         <Scenario scenario={apiSees} glance="All three at a glance" />
 
@@ -580,6 +582,15 @@ grant_type=client_credentials
         <Mixup belief="A token is encrypted.">
           <p>A JWT is signed, not encrypted. Anyone who holds one can read it.</p>
         </Mixup>
+
+        <h3 class="sg-gap">A warning, for what must not be built</h3>
+        <Caution title="Never ask a user for their password to another service.">
+          <p>
+            For an approach a lesson shows only for comparison and that would do harm if built. The title is the
+            instruction, and the text says what goes wrong. Used rarely: a page where everything is a warning has
+            none.
+          </p>
+        </Caution>
 
         <h3 class="sg-gap">A term, defined where it is used</h3>
         <div

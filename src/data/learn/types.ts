@@ -45,6 +45,15 @@ export interface ScenarioOption {
   id: string;
   /** The choice, as it reads on its button. */
   name: string;
+  /**
+   * Set where this variation is shown for comparison and must not be built: one
+   * plain sentence saying why. md-lite. The figure then says "do not build" on
+   * the choice itself, at the head of its panel and in the comparison table, so
+   * the warning depends neither on the text around the figure nor on a click.
+   * A variation that is only an attack, or only weaker, does not need it; one a
+   * reader might take for a design they could ship does.
+   */
+  avoid?: string;
   /** Replaces the scenario's cast while this option is chosen. */
   cast?: Actor[];
   /** What travels along each arrow: one entry per gap between actors. */
