@@ -43,8 +43,13 @@ html {
   scroll-padding-top: 5rem;
 }
 
+/* A jump within the page glides, so the reader sees which way it went. Arriving
+   from another page at a section far down does not: the page would run past for
+   a second or two before settling, and the reader would lose their place before
+   reading a word. Focus is inside the page only once something in it has been
+   pressed, which is what tells the two apart. */
 @media (prefers-reduced-motion: no-preference) {
-  html {
+  html:focus-within {
     scroll-behavior: smooth;
   }
 }
