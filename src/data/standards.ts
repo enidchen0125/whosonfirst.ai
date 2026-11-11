@@ -321,7 +321,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -12, October 2026, following a working group last call in September. That revision changed the header syntax in a wire-breaking way.",
+      "Revision -12, October 2026. A working group last call opened in September 2026; since October the draft has working group consensus and is waiting for its write-up. Revision -12 defines its header fields as Structured Fields in place of the token68 syntax.",
     topics: ["registration", "proof-of-possession"],
     summary:
       "A client instance presents an attestation from its platform or backend, plus proof of possession of a key, to authenticate.",
@@ -411,7 +411,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -17, July 2026. Reported approved and in the RFC Editor queue since June 2026; no RFC number yet.",
+      "Revision -17, July 2026. Approved by the IESG and in the RFC Editor queue since June 2026; no RFC number yet.",
     topics: ["delegation"],
     summary:
       "Token exchange in one domain yields a JWT grant that is redeemed at another domain’s authorization server.",
@@ -426,7 +426,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -11, July 2026. Reported to have completed a third working group last call and to be awaiting write-up.",
+      "Revision -11, July 2026. A third working group last call ended in August 2026; the draft has working group consensus and is waiting for its write-up.",
     topics: ["delegation", "workload"],
     summary:
       "A short-lived, signed token that carries user identity and immutable request context through a call chain inside one trust domain.",
@@ -557,7 +557,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "May 2023. A companion draft on metadata and error remediation is reported to be headed for working group adoption.",
+      "May 2023. A companion draft on metadata and error remediation was adopted by the OAuth working group in August 2026.",
     topics: ["human-in-the-loop", "authorization"],
     summary:
       "`authorization_details`: a structured JSON description of exactly what is being authorized, in place of coarse scope strings.",
@@ -673,7 +673,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "draft",
     detail:
-      "Revision -09, September 2026. Individual draft; a call for adoption in the HTTP working group was issued, outcome not confirmed.",
+      "Revision -09, September 2026. Individual draft. A call for adoption in the HTTP working group ended in September 2026 with no consensus to adopt it at this time.",
     topics: ["proof-of-possession"],
     summary:
       "A header for conveying or referencing the public key that verifies an HTTP message signature.",
@@ -780,7 +780,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -08, October 2026. Reported as submitted to the IESG for publication.",
+      "Revision -08, October 2026. Submitted to the IESG for publication in October 2026.",
     topics: ["workload", "proof-of-possession"],
     summary:
       "Workload-to-workload authentication using HTTP Message Signatures with the Workload Identity Token key. Responses can be signed too.",
@@ -795,7 +795,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -08, October 2026. Informational. Reported to be in IETF Last Call in November 2026, which would make it the first WIMSE RFC.",
+      "Revision -08, October 2026. Informational. In IETF Last Call, which ends on November 13, 2026. It would be the first WIMSE RFC.",
     topics: ["workload", "guidance", "kubernetes"],
     summary:
       "A survey of how credentials reach workloads today without long-lived secrets: Kubernetes projected tokens, cloud metadata services, SPIFFE, CI/CD OIDC.",
@@ -1232,7 +1232,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "November 2025. The companion SD-JWT VC draft is reported to be in IESG evaluation.",
+      "November 2025. The companion SD-JWT VC draft is in IESG evaluation.",
     topics: ["credentials"],
     summary:
       "Selective Disclosure for JWTs: a signed credential whose holder can reveal only chosen claims, with key binding.",
