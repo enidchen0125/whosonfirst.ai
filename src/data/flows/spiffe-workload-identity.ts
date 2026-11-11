@@ -91,7 +91,7 @@ For agent systems this gives you a per-workload identity that works the same acr
       from: "node",
       kind: "self",
       label: "Attest the calling process",
-      title: "The node agent identifies the caller",
+      title: "The SPIRE agent identifies the caller",
       body: `From the socket it learns the caller’s process ID. From the kernel and the kubelet it learns which container and pod that process belongs to, its service account, labels and image. It matches those facts against the registration entries.`,
     },
     {
