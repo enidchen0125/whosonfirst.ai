@@ -5,7 +5,7 @@ Who’s on First is a field guide to agent authentication and authorization: who
 The site covers every common way an agent obtains and presents credentials, with a person present, with a person on call, and with no human at all. It is written to be read at three depths:
 
 - **Learn**: six short lessons that start from an API key and assume no OAuth. One example throughout, plain words first, and a figure in each that makes its point before anything is clicked.
-- **Flows**, the **decision guide** and **Deployments**: 19 interactive sequence diagrams, each opened by what happens in a few plain parts and who has to do what; six questions that turn an agent's situation into a short list of flows; and how the starting credential changes on hosted apps, Kubernetes, managed agent platforms, local machines, CI and sandboxes.
+- **Flows**, the **decision guide** and **Deployments**: 20 interactive sequence diagrams, each opened by what happens in a few plain parts and who has to do what; six questions that turn an agent's situation into a short list of flows; and how the starting credential changes on hosted apps, Kubernetes, managed agent platforms, local machines, CI and sandboxes.
 - **Standards**: a filterable tracker of the RFCs, drafts, specifications and projects involved, with status.
 
 Plus a glossary, whose definitions also appear in place beside the terms on flow pages, and the whole model on one page under Concepts.

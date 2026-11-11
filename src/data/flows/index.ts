@@ -4,6 +4,7 @@ import { levelOf, rate } from "../rating";
 import { std } from "../standards";
 import type { Flow, FlowGroup } from "../types";
 import { GROUPS, MATURITY_LABEL } from "../types";
+import { aauth } from "./aauth";
 import { agentPayments } from "./agent-payments";
 import { agentToAgent } from "./agent-to-agent";
 import { authorizationCodePkce } from "./authorization-code-pkce";
@@ -32,6 +33,7 @@ export const flows: Flow[] = [
   stepUpAuthorization,
   ciba,
   urlElicitation,
+  aauth,
   tokenExchange,
   crossAppAccess,
   identityChaining,

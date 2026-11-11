@@ -73,12 +73,13 @@ And the specifications that publish dated or numbered revisions:
 
 A published specification pins the draft revision it was written against. The site states both numbers, so either moving makes it stale.
 
-| The site says                                                                              | Where                                                                                                                               |
-| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| MCP 2026-07-28 requires OAuth 2.1 and cites draft -13; the current draft is -17            | `standards.ts` (`mcp-authorization`); `flows/mcp-authorization.ts` (comment in `roles`, and the note on what the revision rests on) |
-| MCP 2026-07-28 cites Client ID Metadata Documents -00; the MCP draft revision moves to -03 | `standards.ts` (`cimd`, `mcp-authorization`); `flows/mcp-authorization.ts`                                                          |
-| The MCP enterprise-managed authorization extension pins ID-JAG -04; the draft is at -06    | `standards.ts` (`id-jag`); `flows/cross-app-access.ts` (cautions)                                                                   |
-| OAuth 2.1 is at revision -17 dated October 30, 2026, and gathers the RFCs listed           | `flows/authorization-code-pkce.ts` (notes)                                                                                          |
+| The site says                                                                                                           | Where                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| MCP 2026-07-28 requires OAuth 2.1 and cites draft -13; the current draft is -17                                         | `standards.ts` (`mcp-authorization`); `flows/mcp-authorization.ts` (comment in `roles`, and the note on what the revision rests on) |
+| MCP 2026-07-28 cites Client ID Metadata Documents -00; the MCP draft revision moves to -03                              | `standards.ts` (`cimd`, `mcp-authorization`); `flows/mcp-authorization.ts`                                                          |
+| The MCP enterprise-managed authorization extension pins ID-JAG -04; the draft is at -06                                 | `standards.ts` (`id-jag`); `flows/cross-app-access.ts` (cautions)                                                                   |
+| OAuth 2.1 is at revision -17 dated October 30, 2026, and gathers the RFCs listed                                        | `flows/authorization-code-pkce.ts` (notes)                                                                                          |
+| AAuth is at revision -11, which added the person token and the five access modes, and builds on HTTP Signature Keys -09 | `standards.ts` (`aauth-hardt`, `signature-key`); `flows/aauth.ts` (every step, the comparison, cautions and notes)                  |
 
 ### Projects with releases
 
@@ -101,8 +102,9 @@ Statements about the future, or about a process that was unfinished at the last 
 | WIMSE HTTP signatures: submitted to the IESG                                                      | `standards.ts` (`wimse-httpsig`)                                                      |
 | WIMSE practices: in IETF Last Call in November 2026; would be the first WIMSE RFC                 | `standards.ts` (`wimse-practices`)                                                    |
 | No WIMSE document is an RFC yet                                                                   | `standards.ts` (`wimse-arch`)                                                         |
-| HTTP Signature-Key: call for adoption issued, outcome not confirmed                               | `standards.ts` (`signature-key`)                                                      |
-| AAuth (Hardt): the work is moving to a new OpenID Foundation working group                        | `standards.ts` (`aauth-hardt`)                                                        |
+| HTTP Signature-Key: call for adoption issued, outcome not confirmed                               | `standards.ts` (`signature-key`); `flows/aauth.ts` (notes)                            |
+| AAuth (Hardt): the work is moving to a new OpenID Foundation working group                        | `standards.ts` (`aauth-hardt`); `flows/aauth.ts` (notes)                              |
+| AAuth (Hardt): the draft lists four implementations, each marked exploratory                      | `flows/aauth.ts` (cautions)                                                           |
 | Mission-bound and actor drafts: individual, not adopted                                           | `standards.ts` (`mission-bound`, `actor-profile`, `txn-tokens-agents`, `scim-agents`) |
 | RFC 9700: an update draft is in progress                                                          | `standards.ts` (`rfc9700`)                                                            |
 | RFC 9396: a companion draft is headed for working group adoption                                  | `standards.ts` (`rfc9396`)                                                            |

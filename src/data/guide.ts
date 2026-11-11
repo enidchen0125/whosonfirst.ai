@@ -221,6 +221,19 @@ export const rules: Rule[] = [
     why: "If the agent can do irreversible things for a user who is not watching, find a way to make them reachable for those moments.",
   },
 
+  {
+    flow: "aauth",
+    role: "consider",
+    weight: 3,
+    when: {
+      principal: ["user"],
+      human: ["present", "reachable"],
+      target: ["api"],
+      boundary: ["cross"],
+    },
+    why: "A separate protocol written for this case: an API meets an agent nobody registered, acting for a person it has not seen before. The agent signs every request with its own key, and a server the user chose vouches for them. It is an individual draft. Prototype with it; do not depend on it.",
+  },
+
   // ── approvals ──
   {
     flow: "step-up-authorization",
