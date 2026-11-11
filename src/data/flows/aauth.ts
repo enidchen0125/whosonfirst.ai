@@ -17,7 +17,7 @@ export const aauth: Flow = {
 
 AAuth starts from the other end. It is not an OAuth extension. It is a separate protocol, written by the editor of the OAuth 2.0 specification. Each agent has its own key pair and an identifier that anyone can check, and it signs every request it makes. Every token in the protocol is bound to that key, so none of them is a bearer token. The user is represented by a **person server**, which they choose. It tells an API which person the agent acts for, asks that person when something needs their approval, and issues the token that records the answer.
 
-AAuth is an individual draft in its eleventh revision, which is why this page is rated experimental. An unrelated OAuth draft, the Agentic Authorization Grant, goes by the same short name. This page is not about that one.`,
+AAuth is an individual draft in its eleventh revision, which is why this page is rated experimental. An unrelated OAuth draft, titled “AAuth - Agentic Authorization OAuth 2.1 Extension”, goes by the same short name. This page is not about that one.`,
   fits: [
     "Agents that find APIs at runtime, in organizations where they were never registered.",
     "APIs that want to know which person a request is for without keeping a registry of agents or running a sign-in of their own.",
