@@ -29,7 +29,7 @@ CIBA came out of banking, where a call-center agent or a point-of-sale terminal 
   like: {
     flow: "step-up-authorization",
     except:
-      "the user is not in front of the agent. The authorization server reaches them on a device of their own, and the agent waits for the answer.",
+      "the user is not in front of the agent and no browser is redirected. The agent asks the authorization server directly and names the user, the server reaches them on a device of their own, and the agent waits for the answer.",
   },
   phases: [
     {

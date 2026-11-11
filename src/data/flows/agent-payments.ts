@@ -36,7 +36,8 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       from: 3,
     },
     {
-      title: "The credential provider checks the signatures and the limits",
+      title:
+        "The credential provider checks the limits, then issues a credential",
       from: 6,
     },
     { title: "The agent completes the purchase and gets a receipt", from: 9 },

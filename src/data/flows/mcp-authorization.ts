@@ -48,9 +48,9 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
   parts: {
     user: "Signs in and approves, as in any OAuth sign-in.",
     client:
-      "Follows the server’s pointers to its authorization server, identifies itself, runs the sign-in with PKCE, checks who answered, and keeps each token for the one server it was issued for. An MCP client library does this.",
-    as: "Publishes its metadata, looks the client up, signs the user in, and issues a token whose audience is this MCP server. It is a separate service: the MCP server does not have to be one.",
-    mcp: "Answers a request that has no token with a 401 that points to its metadata, publishes that metadata, and validates every token: issued for this server, by its authorization server, with the scope the tool needs. It never passes the token on.",
+      "Follows the server’s pointers to its authorization server, identifies itself, runs the sign-in with PKCE, checks who answered, and keeps each token for the one server it was issued for. An MCP client library does most of this. Check that yours validates the issuer.",
+    as: "Publishes its metadata, looks the client up, signs the user in, and issues a token whose audience is this MCP server. It is a separate role, and usually a separate service: the MCP server does not have to be one.",
+    mcp: "Answers a request that has no token with a 401 that points to its metadata, publishes that metadata, and validates every token: issued for this server, by its authorization server, with the scope the tool needs. It never passes the token on. [What a server author builds](#server) is set out below.",
   },
   participants: [
     { id: "user", label: "User", role: "human" },
@@ -305,7 +305,7 @@ Content-Type: application/json
       parts: [
         {
           title: "Does a server need this at all?",
-          body: `Authorization is optional in MCP. A server that the client launches as a local process takes its credentials from its environment, and a server that exposes nothing private has nothing to protect.
+          body: `Authorization is optional in MCP. A server that the client launches as a local process takes its credentials from its environment, and a server that only serves public, read-only data may have nothing to protect.
 
 A remote server that acts on a user’s data is the case this flow is for. It has to know which user each request is for, from something it can check.`,
         },
@@ -315,15 +315,17 @@ A remote server that acts on a user’s data is the case this flow is for. It ha
 
 **One key for the whole client** tells your server which application is calling and nothing about which person. Your server then cannot keep one user’s data from another. [Lesson 1](/learn/what-the-api-sees/) walks through that.
 
-**A key for each user, pasted into the client’s configuration**, does identify the user. But it is long-lived, it is often good for everything that user can do, it sits in a file on a machine you do not control, and nothing ties it to the one client it was pasted into.
+**A key for each user, pasted into the client’s configuration**, does identify the user. But it is long-lived, it is often good for everything that user can do, and the user has to copy it by hand into a file on a machine you do not control.
 
-A token from this flow lasts minutes, carries only the scopes the user approved, and is accepted at your server alone.`,
+An access token from this flow is short-lived, as short as the authorization server is set to make it. It carries only the scopes the user approved and, where the authorization server honors the \`resource\` parameter, it is issued for your server alone.
+
+The client may still hold a refresh token on that machine. The difference is that it belongs to one client, can be replaced and revoked for that client alone, and the user never sees or pastes it.`,
         },
         {
           title: "Where the authorization server comes from",
-          body: `It is a separate service, and you rarely write one. The sign-in system your company already runs can be it, or an identity product you host or subscribe to.
+          body: `It is a separate role, and usually a separate service. You rarely write one. The sign-in system your company already runs can be it, or an identity product you host or subscribe to.
 
-Whichever it is, it has to do what the steps above ask of it: publish its metadata, support PKCE, honor the \`resource\` parameter so that a token is issued for your server alone, and, for clients that have never registered with it, accept a Client ID Metadata Document.`,
+The specification requires it to implement OAuth 2.1, publish its metadata and support PKCE. For your audience check to mean anything, choose one that also honors the \`resource\` parameter, so that a token is issued for your server alone. For clients that have never registered with it, choose one that accepts a Client ID Metadata Document, which the specification says it should.`,
         },
         {
           title: "What you build",
@@ -331,7 +333,7 @@ Whichever it is, it has to do what the steps above ask of it: publish its metada
 
 **A metadata document** (step 3). A small JSON file that names your authorization server and the scopes a client needs to get started.
 
-**Token validation on every request** (step 14). Signature, issuer, expiry and scope, and above all that the token was issued for your server. Reject anything else. A JWT library does the cryptography. The audience and scope checks are the part to get right.`,
+**Token validation on every request** (step 14). Signature, issuer, expiry and scope, and above all that the token was issued for your server. Reject anything else. If the tokens are JWTs, a library does the cryptography, with the public keys your authorization server publishes at the address its metadata gives. If they are opaque, your server asks the authorization server what each one stands for. Either way, the audience and scope checks are the part to get right.`,
         },
         {
           title: "What you must not do",

@@ -225,6 +225,40 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
     "dpop",
     "step-up-authorization",
   ],
+  sections: [
+    {
+      id: "hosted",
+      title: "If the agent is a hosted app",
+      intro: `The diagram draws an agent on the user’s machine: a public client, with a redirect to \`127.0.0.1\` and nothing to prove itself with but PKCE. An agent that runs on your own servers follows the same eleven steps with two differences.`,
+      parts: [
+        {
+          title: "The browser comes back to your server",
+          body: `The redirect address in steps 3 and 6 is an HTTPS address on your backend, registered in advance. The code arrives there, never in the user’s browser storage and never in the page.`,
+        },
+        {
+          title: "The token request says which app is asking",
+          body: `A backend can keep a secret, so it is registered as a **confidential client** and authenticates when it redeems the code in step 7. The simplest form is the client ID and client secret in an \`Authorization: Basic\` header. PKCE is still sent: the security best current practice recommends it for every client.`,
+          code: {
+            lang: "http",
+            text: `POST /token HTTP/1.1
+Host: auth.example
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=SplxlOBeZQQYbYS6WxSbIA
+&redirect_uri=https://assistant.example/callback
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+&resource=https://calendar.example/api`,
+          },
+        },
+        {
+          title: "What that changes for you",
+          body: `The tokens that come back in step 8 stay on the server, filed under the user who signed in. [Hosted apps and backends](/deployments/web-apps/) covers where they live and what to do when the work outlives the request.`,
+        },
+      ],
+    },
+  ],
   notes: [
     {
       title: "What this page follows",
