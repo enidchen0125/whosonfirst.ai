@@ -21,7 +21,7 @@ CIBA came out of banking, where a call-center agent or a point-of-sale terminal 
   ],
   watchOut: [
     "**Approval fatigue.** An agent that can trigger a push whenever it likes will train its user to tap “approve.” Rate-limit requests and make each one specific.",
-    "The `binding_message` is what the human actually reads. “Agent requests access” is useless. “Pay invoice 1042, $1,250.00, to Acme Ltd” is a decision.",
+    "**What the user approves has to be what the token allows.** The authorization server should build the approval prompt from `authorization_details`, the same structured data that goes into the token: “Pay invoice 1042, $1,250.00, to Acme Ltd”. `binding_message` is free text the agent chose. Use it as a short reference the user can match, never as the only description of the action: an agent that has been talked into something can send an honest-looking sentence beside details that say something else.",
     "The agent chooses whom to ask via `login_hint`. If an attacker can influence that value, they choose who gets prompted. Derive it from the authenticated session, never from model output.",
     "CIBA support is uneven. It is common in financial-grade identity providers and less so elsewhere.",
   ],
@@ -48,9 +48,9 @@ CIBA came out of banking, where a call-center agent or a point-of-sale terminal 
   ],
   parts: {
     user: "Gets the request on a device the authorization server already knows, reads the message, authenticates, and approves or denies. They are answering the authorization server, not the agent.",
-    as: "Accepts the request, contacts the user over a channel set up with them beforehand, shows the binding message, and issues a short-lived token that carries the approved details. The user has to be known to it in advance, with an enrolled device.",
+    as: "Accepts the request, contacts the user over a channel set up with them beforehand, shows the action as it reads in the request’s `authorization_details`, with the binding message beside it as a reference, and issues a short-lived token that carries those same details. The user has to be known to it in advance, with an enrolled device.",
     agent:
-      "Authenticates to the authorization server, says which user to ask and what for, collects the result, and performs the one approved action. The `binding_message` it sends is what the person reads, and `login_hint` has to come from the authenticated session, never from model output.",
+      "Authenticates to the authorization server, says which user to ask and what for, collects the result, and performs the one approved action. What the person reads should come from `authorization_details`. If the authorization server can only display `binding_message`, build that text in code from the same fields, never from model output. `login_hint` has to come from the authenticated session, never from model output either.",
     api: "Checks that the request matches the authorization details in the token, and refuses a different amount or a second payment. If the API is yours, so is this check.",
   },
   participants: [
@@ -83,7 +83,7 @@ CIBA came out of banking, where a call-center agent or a point-of-sale terminal 
       kind: "back",
       label: "Backchannel auth request",
       title: "The agent asks the server to get approval",
-      body: `A direct, authenticated call. \`login_hint\` identifies the user. \`binding_message\` is shown on the user’s device so they can match the prompt to the action. With Rich Authorization Requests, \`authorization_details\` carries the transaction in structured form so the resulting token is good for this payment and no other.`,
+      body: `A direct, authenticated call. \`login_hint\` identifies the user. \`binding_message\` is a short reference shown on the user’s device, so they can match the prompt to the request they expect. With Rich Authorization Requests, \`authorization_details\` carries the transaction in structured form. It is what the server should show the user, and it is what makes the resulting token good for this payment and no other.`,
       code: {
         lang: "http",
         text: `POST /bc-authorize HTTP/1.1
