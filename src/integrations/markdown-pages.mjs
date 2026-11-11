@@ -391,13 +391,14 @@ function prepare(main, page, site) {
     // A note beside a fact, and the steps a part covers, are asides.
     if (has(node, "doc-note", "ov-r", "ov-steps", "aka"))
       node.children = [say("("), ...node.children, say(")")];
-    // "new" marks a credential a step has just handed over. It reads better after the name.
+    // A credential a step has just handed over is flagged "new", and one a step
+    // has consumed "used up". The flag reads better after the name, in its own words.
     if (has(node, "held-chip")) {
       const flag = node.children.find((c) => has(c, "held-flag"));
       if (flag)
         node.children = [
           ...node.children.filter((c) => c !== flag),
-          say(" (new)"),
+          say(` (${text(flag).trim()})`),
         ];
     }
     // 2. A glossary term in running text is a link to its definition. Read
