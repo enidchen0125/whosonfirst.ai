@@ -13,7 +13,7 @@ export const crossAppAccess: Flow = {
 
 The Identity Assertion JWT Authorization Grant, or ID-JAG, moves the decision to the identity provider the company already uses for single sign-on. The agent signs the user in once. When it needs access to another application, it asks the identity provider for a short-lived assertion aimed at that application’s authorization server. The identity provider applies administrator policy and either issues it or refuses. The agent trades the assertion for an ordinary access token.
 
-No browser redirect, no consent prompt, and one place where access is granted, logged and revoked. Vendors market this as Cross App Access. In MCP it is the official **Enterprise-Managed Authorization** extension.`,
+No browser redirect, no consent prompt, and one place where access is granted and logged, and where new access is cut off. Vendors market this as Cross App Access. In MCP it is the official **Enterprise-Managed Authorization** extension.`,
   fits: [
     "Workforce use: employees using an agent with company applications.",
     "The agent and the target application both trust the same enterprise identity provider.",
@@ -119,7 +119,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "sub": "U019488227",
   "aud": "https://auth.chat.example/",
   "resource": "https://mcp.chat.example/",
-  "client_id": "f53f191f9311af35",
+  "client_id": "https://client.example.com/client.json",
   "scope": "chat.read chat.history",
   "exp": 1311281270,
   "iat": 1311280970
@@ -133,7 +133,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "back",
       label: "JWT bearer grant with ID-JAG",
       title: "The agent presents the grant to the app’s authorization server",
-      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID. A URL as \`client_id\` says who the client claims to be and proves nothing by itself, so the request also carries a signed assertion or a registered secret. Where a client has no credential, the grant should be bound to a key the client proves it holds. Otherwise anyone who copies the grant can redeem it.`,
+      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID. A URL as \`client_id\` says who the client claims to be and proves nothing by itself, so the request also carries an assertion signed with a key the client’s metadata document publishes. A client registered in advance may send its registered secret instead. Where a client has no credential, the grant should be bound to a key the client proves it holds. Otherwise anyone who copies the grant can redeem it.`,
       code: {
         lang: "http",
         text: `POST /oauth2/token HTTP/1.1
