@@ -179,7 +179,7 @@ const checksScenario: ScenarioData = {
         { verdict: "yes", note: "`exp` is 10:10. It is 10:04." },
         { verdict: "yes", note: "`scope` allows `calendar.read`." },
       ],
-      so: `All five pass, and the API answers. **Nothing in this token says who is allowed to send it.** A token like this is called a *bearer* token: it works for whoever holds it, like cash. A short life limits how long a stolen copy is useful. The last lesson shows how to make a copy worth far less.`,
+      so: `All five pass, and the API answers. **Nothing in this token says who is allowed to send it.** A token like this is called a *bearer* token: it works for whoever holds it, like cash. A short life limits how long a stolen copy is useful. The final lesson shows how to make a copy worth far less.`,
     },
   ],
 };
@@ -362,8 +362,9 @@ const checks: CheckQuestion[] = [
 
   <h2>Try to break it</h2>
   <p>
-    An API believes nothing in a token until it has checked it. There are five checks, and each button below does
-    something to the token. Before you press one, guess which check will catch it. One of the six gets past all five.
+    An API believes nothing in a token until it has checked it. There are five checks. The first button below sends
+    the token as it was issued, and each of the other five does something to it. Before you press one of those, guess
+    which check will catch it. One of them gets past all five.
   </p>
 
   <Scenario scenario={checksScenario} glance="All six at a glance" />

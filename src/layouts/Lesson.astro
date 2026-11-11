@@ -156,7 +156,9 @@ const term = (name: string) =>
 
       <section class="deeper" aria-labelledby="deeper">
         <h2 id="deeper">Go deeper</h2>
-        <p>The same ground at full depth, when you want it. None of it is needed for the next lesson.</p>
+        <p>
+          The same ground at full depth, when you want it.{next && ' None of it is needed for the next lesson.'}
+        </p>
         <ul>
           {
             l.deeper.map((d) => (
