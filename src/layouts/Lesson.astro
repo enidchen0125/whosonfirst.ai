@@ -126,24 +126,26 @@ const term = (name: string) =>
               <a href="/glossary/">glossary</a>.
             </p>
             <div class="table-scroll" tabindex="0" role="region" aria-label="The names for these">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">In this lesson</th>
-                    <th scope="col">Its name</th>
-                    <th scope="col">Defined as</th>
+              {/* the roles are stated because on a phone the rows are laid out as blocks, and a
+                  browser may stop treating a table laid out that way as a table */}
+              <table role="table">
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">In this lesson</th>
+                    <th scope="col" role="columnheader">Its name</th>
+                    <th scope="col" role="columnheader">Defined as</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                   {names.map(([plain, name]) => {
                     const t = term(name);
                     return (
-                      <tr>
-                        <td>{plain}</td>
-                        <th scope="row">
+                      <tr role="row">
+                        <td role="cell">{plain}</td>
+                        <th scope="row" role="rowheader">
                           <a href={`/glossary/#${termSlug(t.term)}`}>{t.term}</a>
                         </th>
-                        <td set:html={inline(t.def)} />
+                        <td role="cell" set:html={inline(t.def)} />
                       </tr>
                     );
                   })}
@@ -356,6 +358,52 @@ const term = (name: string) =>
   .names td:first-child {
     width: 26%;
     color: var(--fg-muted);
+  }
+  /* Three columns do not fit a phone, and the one pushed off the edge would be
+     the definition. There each term is a block: the lesson's words for it, its
+     name, then what the name means. */
+  @media (max-width: 40rem) {
+    .names .table-scroll {
+      overflow-x: visible;
+      background: none;
+      border-bottom: 0;
+    }
+    .names table {
+      min-width: 0;
+    }
+    .names thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .names table,
+    .names tbody,
+    .names tr,
+    .names td,
+    .names tbody th {
+      display: block;
+    }
+    .names tr {
+      padding: 0.8rem 0 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .names td,
+    .names tbody th {
+      width: auto;
+      padding: 0;
+      border: 0;
+      white-space: normal;
+    }
+    .names td:first-child {
+      width: auto;
+      font-size: 0.9rem;
+    }
+    .names tbody th {
+      margin: 0.15rem 0 0.3rem;
+      font-size: 1.06rem;
+    }
   }
 
   .deeper ul {
