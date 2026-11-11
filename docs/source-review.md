@@ -189,10 +189,14 @@ For the person, or the session, that makes the changes. One fact is often stated
 
 1. **The tracker entry** in `src/data/standards.ts`: `detail`, and `status`, `ref`, `name` and `url` if the document changed kind. Keep the entry's `id` when a draft becomes an RFC or is renamed, unless every flow that names it is changed with it; the build fails on an unknown `id`.
 2. **Everywhere else the old value appears.** Search `src/` for the old revision number, version or date. The tables above name the known copies.
-3. **Ratings.** A status change can move a flow's rating. Flows with `roles` are checked by the build against their declared `maturity`; flows without `roles` are not, so read their `maturity` yourself. `about.mdx` states how many flows have been reviewed and that none is provisional.
-4. **The home page and the timeline.** `news` in `src/pages/index.astro`, and `moved` in `src/pages/standards/index.astro`, whose heading names the year.
-5. **This document.** Remove settled rows from the watch list and the citations table, and add new ones.
-6. **The review date**, once every section of a run has been applied or deliberately left:
+3. **The plain-words copies.** A fact stated on a flow page may be restated, more simply, in three other places, none of which the build ties to it:
+   - the flow's own overview: `phases`, `parts` and `like` in its file under `src/data/flows/`
+   - the lessons in `src/pages/learn/`, each of which names in a comment the flow or data file it must not contradict. The ones that restate protocol facts: lesson 3 (authorization code with PKCE, and what MCP adds to it), lesson 4 (client credentials and workload identity), lesson 5 (token exchange, and that MCP forbids token passthrough) and lesson 6 (DPoP, step-up and the credential broker)
+   - the definitions in `src/data/glossary.ts`, which flow pages now show in place beside the terms they use
+4. **Ratings.** A status change can move a flow's rating. Flows with `roles` are checked by the build against their declared `maturity`; flows without `roles` are not, so read their `maturity` yourself. `about.mdx` states how many flows have been reviewed and that none is provisional.
+5. **The home page and the timeline.** `news` in `src/pages/index.astro`, and `moved` in `src/pages/standards/index.astro`, whose heading names the year.
+6. **This document.** Remove settled rows from the watch list and the citations table, and add new ones.
+7. **The review date**, once every section of a run has been applied or deliberately left:
    - `REVIEWED` and `REVIEWED_ISO` in `src/data/site.ts`
    - the comment at the top of `src/data/standards.ts`
    - "verified in November 2026" in `src/pages/about.mdx`
@@ -200,8 +204,8 @@ For the person, or the session, that makes the changes. One fact is often stated
    - "read in November 2026" in `src/data/flows/workload-identity-federation.ts`
 
    The last two are dates for those pages alone. Change them only if those pages were re-read.
-7. **How facts were checked.** `src/pages/about.mdx` and the Accuracy section of `README.md` say which facts came from primary sources and which were reported. If a run read process states from the datatracker itself, that description changes.
-8. Run `npm run check`, `npm test` and `npm run build`.
+8. **How facts were checked.** `src/pages/about.mdx` and the Accuracy section of `README.md` say which facts came from primary sources and which were reported. If a run read process states from the datatracker itself, that description changes.
+9. Run `npm run check`, `npm test` and `npm run build`.
 
 ## Domains a run needs
 

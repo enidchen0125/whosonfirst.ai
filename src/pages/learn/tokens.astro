@@ -9,7 +9,9 @@ import type {
   Scenario as ScenarioData,
 } from "../../data/learn/types";
 
-// The example token, abbreviated. 1794305400 is 10:10:00 UTC on November 10, 2026.
+// The example token follows the JWT profile for access tokens (RFC 9068), abbreviated,
+// as the tokens in data/tokens.ts and data/verify.ts do; this lesson must not contradict them.
+// 1794305400 is 10:10:00 UTC on November 10, 2026.
 const claims = (scope = "calendar.read"): Exhibit => ({
   caption: "The token’s claims",
   lang: "json",

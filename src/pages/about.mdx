@@ -18,11 +18,24 @@ That is as far as the joke goes. The name and the four-cornered mark in the site
 
 ## What is covered
 
+- **Lessons.** Six, in order, for a developer who has called APIs and has not read an OAuth specification.
 - **Flows.** Each way an agent can obtain and present credentials, as a sequence diagram with the messages on the wire.
 - **Deployments.** How the starting credential changes with where the agent runs.
 - **Standards.** The RFCs, drafts and specifications involved, with status.
 
 The scope is authentication and authorization. Prompt injection, model safety and data governance appear only where they change an authentication decision, which is more often than one would like.
+
+## How to read it
+
+The site is written at three depths, and each is a complete account at its own level.
+
+**[The lessons](/learn/)** build one model in plain words, with one example. They leave things out on purpose: a lesson draws authorization code with PKCE in eight steps, and the flow page draws eleven. Where a lesson and a flow page differ in detail, the flow page is the fuller account.
+
+**The flow pages, the [decision guide](/guide/) and the deployment pages** are for choosing and building. A flow page opens with what happens in a few parts and who has to do what, and a glossary term can be pressed for its definition. Those overviews restate the page's own steps and add nothing to them.
+
+**The [standards tracker](/standards/)** is for looking things up, and for seeing how settled each piece is.
+
+The design of the lessons follows what is known about learning from text and diagrams. A figure makes its point in the state it first shows and repeats every variation in a table, because most readers do not click. Steps are advanced by the reader and never play by themselves. Common mistakes are stated and corrected by name. Questions come with an explanation of why each answer is right or wrong. None of it has been tested with readers yet, and the About page will say so until it has.
 
 ## How facts were checked
 

@@ -8,6 +8,12 @@ import type {
   Scenario as ScenarioData,
 } from "../../data/learn/types";
 
+/*
+ * What this lesson says about getting a token with no user restates
+ * data/flows/client-credentials.ts and data/flows/workload-identity-federation.ts,
+ * and must not contradict them. In particular the second was corrected against
+ * saying that no credential exists: the credentials are short-lived, not absent.
+ */
 const PERSON = "A person’s";
 const OWN = "Its own";
 

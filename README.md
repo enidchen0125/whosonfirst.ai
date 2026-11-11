@@ -2,13 +2,13 @@
 
 Who’s on First is a field guide to agent authentication and authorization: who is acting, for whom, and who said they could. It is published at [whosonfirst.ai](https://whosonfirst.ai).
 
-The site covers every common way an agent obtains and presents credentials, with a person present, with a person on call, and with no human at all. It has three parts:
+The site covers every common way an agent obtains and presents credentials, with a person present, with a person on call, and with no human at all. It is written to be read at three depths:
 
-- **Flows**: 19 interactive sequence diagrams, from OAuth authorization code with PKCE to workload identity tokens and agent payment mandates.
-- **Deployments**: how the starting credential changes on Kubernetes, managed agent platforms, local machines, CI and sandboxes.
+- **Learn**: six short lessons that start from an API key and assume no OAuth. One example throughout, plain words first, and a figure in each that makes its point before anything is clicked.
+- **Flows**, the **decision guide** and **Deployments**: 19 interactive sequence diagrams, each opened by what happens in a few plain parts and who has to do what; six questions that turn an agent's situation into a short list of flows; and how the starting credential changes on hosted apps, Kubernetes, managed agent platforms, local machines, CI and sandboxes.
 - **Standards**: a filterable tracker of the RFCs, drafts, specifications and projects involved, with status.
 
-Plus a concepts primer, a decision guide and a glossary.
+Plus a glossary, whose definitions also appear in place beside the terms on flow pages, and the whole model on one page under Concepts.
 
 ## Develop
 
@@ -42,7 +42,7 @@ npm test
 npm run check:rendered
 ```
 
-`npm run check` runs [Biome](https://biomejs.dev/) over the repository: formatting, lint rules and import order. `npm run fmt` does the same and writes the fixes. `npm test` runs the site's own checks: types (`astro check`), the rating rule and the color contrast audit. `npm run check:rendered` opens the built site in a browser.
+`npm run check` runs [Biome](https://biomejs.dev/) over the repository: formatting, lint rules and import order. `npm run fmt` does the same and writes the fixes. `npm test` runs the site's own checks: types (`astro check`), the rating rule and the color contrast audit. `npm run check:rendered` reads the built site, then opens it in a browser.
 
 `npm run build` writes a fully static site to `dist/client/`. There is no server component and no client-side framework: interactive pieces are small custom elements that enhance HTML rendered at build time, so every page reads correctly with JavaScript off.
 
@@ -57,23 +57,30 @@ Biome does not handle `.mdx`, so the deployment guides and the About page are no
 
 ## Where things are
 
-| Path                                  | What                                                                                              |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `src/data/flows/*.ts`                 | One file per flow: participants, steps, example messages, cautions                                |
-| `src/data/standards.ts`               | The standards tracker                                                                             |
-| `src/data/tokens.ts`                  | Annotated example tokens for the token inspector                                                  |
-| `src/data/guide.ts`                   | Questions and rules for the decision guide                                                        |
-| `src/data/glossary.ts`                | Glossary terms                                                                                    |
-| `src/data/site.ts`                    | The "last reviewed" date shown across the site                                                    |
-| `src/components/FlowDiagram.astro`    | Sequence diagram and step-through panel; a step narrative on a phone                              |
-| `src/data/verify.ts`                  | “What can the API verify?”: two credentials, four checks, and the wording of each verdict         |
-| `src/components/VerifyBrief.astro`    | The compact demonstration of that on the home page                                                |
-| `src/components/VerifyDetail.astro`   | The full comparison, on the Concepts page                                                         |
-| `src/components/LastHop.astro`        | The same question across a longer chain, on the Concepts page                                     |
-| `src/components/DocMeta.astro`        | Page facts: one line for the specification followed and the review date, the rest in a disclosure |
-| `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram                                                                |
-| `src/pages/deployments/*.mdx`         | Long-form deployment guides                                                                       |
-| `docs/source-review.md`               | What goes out of date, where to check it, and where each fact has to be changed                   |
+| Path                                  | What                                                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `src/data/learn/lessons.ts`           | The lessons, in order: the question each answers, the terms it teaches, where to go deeper         |
+| `src/pages/learn/*.astro`             | One file per lesson: its text, its figure and its questions                                        |
+| `src/layouts/Lesson.astro`            | The shape every lesson shares                                                                      |
+| `src/components/Scenario.astro`       | A lesson's figure: a small cast, one thing that varies, the same questions asked of each variation |
+| `src/components/Check.astro`          | Questions with feedback that says why                                                              |
+| `src/data/learn/api-sees.ts`          | The figure lesson 1 and the home page share                                                        |
+| `src/data/flows/*.ts`                 | One file per flow: participants, steps, example messages, cautions, and its overview               |
+| `src/components/FlowOverview.astro`   | “In short” and “Who does what”, before a flow's diagram                                            |
+| `src/lib/gloss.ts`                    | Marks the first use of each glossary term, so its definition can be shown in place                 |
+| `src/data/standards.ts`               | The standards tracker                                                                              |
+| `src/data/tokens.ts`                  | Annotated example tokens for the token inspector                                                   |
+| `src/data/guide.ts`                   | Questions and rules for the decision guide                                                         |
+| `src/data/glossary.ts`                | Glossary terms                                                                                     |
+| `src/data/site.ts`                    | The "last reviewed" date shown across the site                                                     |
+| `src/components/FlowDiagram.astro`    | Sequence diagram and step-through panel; a step narrative on a phone                               |
+| `src/data/verify.ts`                  | “What can the API verify?”: two credentials, four checks, and the wording of each verdict          |
+| `src/components/VerifyDetail.astro`   | The full comparison, on the Concepts page                                                          |
+| `src/components/LastHop.astro`        | The same question across a longer chain, on the Concepts page                                      |
+| `src/components/DocMeta.astro`        | Page facts: one line for the specification followed and the review date, the rest in a disclosure  |
+| `src/components/K8sIdentityMap.astro` | Kubernetes identity layers diagram                                                                 |
+| `src/pages/deployments/*.mdx`         | Long-form deployment guides                                                                        |
+| `docs/source-review.md`               | What goes out of date, where to check it, and where each fact has to be changed                    |
 
 ## Editing content
 
@@ -86,6 +93,23 @@ A flow that is a pattern more than a protocol can keep its steps general and add
 Further sections of the same form go in `sections`, after the example: for instance what a receiving system still has to decide, or documented implementations. A part can carry `tags` (whose product it is, its release stage, what kind of example it is) and `sources` (the documents it is drawn from, linked by title). A product's release stage is a tag on the part. It is not the flow's maturity rating, which comes from the standards the diagram's flow requires.
 
 If such a flow's diagram draws one arrangement among several, say so in `illustrated`: `steps` is shown above the diagram, and `references` beside the required references. The page then labels its basis, its required references and its rating as those of the flow the diagram draws.
+
+**Every flow has an overview.** Four fields say what a reader needs before the diagram, and the build refuses a flow without the first three:
+
+- `phases`: the steps in three to five plain parts, each with the number of the step it starts at. They are listed as "In short", drawn as headed bands in the diagram, and named above each step.
+- `parts`: what each party has to do, by participant id, in a sentence or two. A protocol page mostly describes other people's work; this is where a reader finds their own.
+- `lesson`: the lesson that teaches the flow's idea in plain words first.
+- `like`: for a flow that is another flow with a difference, which flow and what differs.
+
+They restate the flow's own page. Do not put a fact in an overview that the page does not already support.
+
+**Add or change a lesson.** A lesson is a page in `src/pages/learn/` using `layouts/Lesson.astro`, registered in `src/data/learn/lessons.ts`. The order there is the reading order. Every lesson has the same shape, and the layout supplies most of it: the question, where the lesson sits among the others, the text and its figure, questions to answer from memory, what to keep, the names for what was taught, and where to go deeper.
+
+- A lesson may teach only terms that are in the glossary. `teaches` lists them, and the build checks each one.
+- Its figure must make its point in the state it first shows, and `glance` adds a table of every variation beneath it. Most readers never click.
+- A lesson simplifies; it must not contradict. Each lesson names, in a comment, the flow or data file that holds the full account.
+
+**A line break before an inline element loses its space.** In an `.astro` template, text that ends a line followed by `<strong>`, `<a>`, `<em>` or `<code>` on the next runs into it on the page. Write `{' '}` at the end of the first line. `npm run check:rendered` finds any that slip through.
 
 **Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`. The first standard a flow lists is shown at the top of its page as the primary specification, with its status and revision, so list the one the flow follows most closely first.
 
@@ -113,6 +137,8 @@ The site takes the structure of an Internet-Draft, not its typewriter: fine rule
 
 **Fonts.** The four font files every first screen needs (Plex Sans 400 and 600, Plex Mono 500 and 600) are preloaded from `src/layouts/Base.astro`, so they download alongside the stylesheet and the text does not paint in a fallback font and then change. If one is still late, `IBM Plex Sans Fallback` in `src/styles/global.css` stands in: Arial scaled to Plex Sans's measurements, so the swap does not move the text. If you change which weights the first screen uses, change the preload list to match; a preloaded file that is not used is a wasted download.
 
+Nothing essential waits behind a click. A figure shows a complete answer in its first state, a lesson's comparison is also a table, and a definition that opens in place is a link to the glossary first.
+
 Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labeled disclosure, and history follows the lookup it belongs to.
 
 Three rules hold throughout:
@@ -124,7 +150,13 @@ Three rules hold throughout:
 Two checks cover this:
 
 - `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing falls below 4.5:1 in either theme.
-- `npm run check:rendered` (after `npm run build`) opens the built site in a browser (`scripts/rendered-check.mjs`) and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow page), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work: the home page explainer fits one screen and switches, both answers to "whose authority" appear before either list of flows, each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, the phone flow page reads as a narrative with the diagram on demand and easy to leave, and the stepper keeps keyboard focus usable (Left and Right step, Down scrolls, focus moves off a disabled button). It needs Chromium: `npx playwright install chromium`.
+- `npm run check:rendered` (after `npm run build`, `scripts/rendered-check.mjs`) first reads every built page: each internal link leads to a page and each anchor to something on it, no word runs into the inline element after it, and every lesson is listed. Then it opens the site in a browser and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow and every lesson), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work:
+  - the home page's figure makes its point before a click, fits about one screen and switches; there are three ways in; every lesson is listed in order; both answers to "whose authority" appear before either list of flows
+  - a lesson's figure shows one complete variation, the table beneath covers them all, a choice changes what is shown, no explanation appears before an answer is chosen, each question has one right answer, and the page runs in the order every lesson shares
+  - a flow's overview comes before its diagram and agrees with it, a part's link brings the diagram into view at its first step, and a glossary term shows its definition inside the window and puts it away again
+  - each page's review date and specification are on its first line of facts with the rest behind a disclosure, the standards lookup precedes its history, the phone menu opens from the keyboard and shows every destination, the phone flow page reads as a narrative with the diagram on demand and easy to leave, and the stepper keeps keyboard focus usable (Left and Right step, Down scrolls, focus moves off a disabled button)
+
+  It needs Chromium: `npx playwright install chromium`.
 
 ## Accuracy
 
