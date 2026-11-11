@@ -167,8 +167,10 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
               {s.options.map((o) => (
                 <tr>
                   <th scope="row">{o.name}</th>
-                  {o.findings.map((f) => (
-                    <td>{f.verdict && <span class={`sc-mark is-${f.verdict}`}>{VERDICT_WORD[f.verdict]}</span>}</td>
+                  {o.findings.map((f, k) => (
+                    <td data-q={s.questions[k]}>
+                      {f.verdict && <span class={`sc-mark is-${f.verdict}`}>{VERDICT_WORD[f.verdict]}</span>}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -639,18 +641,51 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
   .sc-glance tbody tr:last-child :is(th, td) {
     border-bottom: 0;
   }
-  /* the table keeps its shape on a phone and scrolls in its own frame */
-  @media (max-width: 34rem) {
+  /* On a phone a table this wide would hide its last columns off the edge. So each
+     variation becomes a block: its name, then every question beside its answer. The
+     column headings are still there for a screen reader; each cell repeats its own. */
+  @media (max-width: 40rem) {
+    .sc-glance table {
+      min-width: 0;
+    }
+    .sc-glance thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
     .sc-glance tr {
-      display: table-row;
-      padding: 0;
+      display: block;
+      padding: 0.6rem 0;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .sc-glance tbody tr:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .sc-glance tbody th {
+      display: block;
+      padding: 0 0 0.25rem;
+      border: 0;
+      font-weight: 600;
+    }
+    .sc-glance td {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.12rem 0;
+      border: 0;
+      font-size: 0.92rem;
+    }
+    .sc-glance tbody tr:last-child td {
       border: 0;
     }
-    .sc-glance tbody th,
-    .sc-glance td {
-      display: table-cell;
-      border-bottom: 1px solid var(--border);
-      padding: 0.45rem 0.8rem 0.45rem 0;
+    .sc-glance td::before {
+      content: attr(data-q);
+      color: var(--fg-muted);
     }
   }
 

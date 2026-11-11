@@ -75,10 +75,12 @@ const third = head[2] !== undefined;
     border-bottom: 1px solid var(--border);
     background: var(--bg-sunken);
   }
+  /* with room, a line of the listing stays one line */
   tbody th code {
     font-size: inherit;
     background: none;
     padding: 0;
+    white-space: nowrap;
   }
   tbody tr:last-child :is(th, td) {
     border-bottom: 0;
@@ -121,6 +123,9 @@ const third = head[2] !== undefined;
       margin-bottom: 0.3rem;
       white-space: normal;
       overflow-wrap: anywhere;
+    }
+    tbody th code {
+      white-space: break-spaces;
     }
     .an-tag {
       padding-top: 0.2rem;
