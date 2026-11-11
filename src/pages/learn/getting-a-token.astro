@@ -267,7 +267,9 @@ const checks: CheckQuestion[] = [
   <p>
     In that example Google’s sign-in page is the authorization server, the Google Calendar API is the API, and the
     app is the client. Inside a company, the authorization server is usually whatever employees already sign in
-    with. A library does most of the work in both cases, which is how so many of us have shipped this without ever
+    with. A company can also take the decision away from Alice: an administrator decides which agents may reach
+    which applications, and she is shown no approval screen. That is a flow of its own,{' '}
+    <a href="/flows/cross-app-access/">cross-app access</a>. In this lesson, Alice is asked. A library does most of the work in both cases, which is how so many of us have shipped this without ever
     seeing the steps.
   </p>
   <p>
