@@ -1020,7 +1020,7 @@ export const standards: Standard[] = [
     body: "Microsoft",
     status: "project",
     detail:
-      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported. The one exception is in preview: a flexible federated identity credential can match the subject of a GitHub, GitLab or Terraform Cloud token with wildcards.",
+      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported. The one exception is in preview: a [flexible federated identity credential](https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-flexible-federated-identity-credentials) can match the subject of a GitHub, GitLab or Terraform Cloud token with wildcards.",
     topics: ["workload"],
     summary:
       "An app registration or a user-assigned managed identity is configured, through a federated identity credential, to trust tokens from an outside issuer. The workload sends that token as the client assertion on a client credentials request and receives a Microsoft Entra access token.",
