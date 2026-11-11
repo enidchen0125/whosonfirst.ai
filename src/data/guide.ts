@@ -166,7 +166,7 @@ export const rules: Rule[] = [
     when: {
       principal: ["user"],
       human: ["present"],
-      target: ["api", "agent", "web"],
+      target: ["api", "agent", "web", "internal"],
       runtime: ["local", "k8s", "managed"],
     },
     why: "A person is present and a browser is available. This is the baseline everything else is measured against.",
@@ -295,15 +295,46 @@ export const rules: Rule[] = [
     flow: "workload-identity-federation",
     role: "start",
     weight: 10,
-    when: { principal: ["self"], runtime: ["k8s", "managed", "headless"] },
+    // Every target is named so that this rule matches as many answers as the client
+    // credentials rule below, and stays above it.
+    when: {
+      principal: ["self"],
+      runtime: ["k8s", "managed", "headless"],
+      target: ["mcp", "api", "agent", "web", "internal"],
+    },
     why: "The platform can vouch for the agent. Use the identity it establishes to get short-lived access, with no long-lived secret to provision.",
   },
   {
     flow: "client-credentials",
     role: "start",
     weight: 8,
-    when: { principal: ["self"], target: ["mcp", "api", "agent"] },
+    when: {
+      principal: ["self"],
+      target: ["mcp", "api", "agent"],
+      runtime: ["headless", "k8s", "managed", "sandbox"],
+    },
     why: "The agent authenticates as itself. Use a signed assertion instead of a client secret wherever the authorization server allows.",
+  },
+  // On a person's machine the agent has an identity of its own only where its
+  // installation was given a credential no other copy holds (RFC 8252, section
+  // 8.4). The first rule is for that case, the second for every other.
+  {
+    flow: "client-credentials",
+    role: "start",
+    weight: 6,
+    when: {
+      principal: ["self"],
+      target: ["mcp", "api", "agent", "internal"],
+      runtime: ["local"],
+    },
+    why: "Only where this installation was given a credential of its own, one that no other copy holds. Keep it in the operating system’s credential store, and prefer a key to a secret. A secret built into the app is the same in every copy, so it proves nothing about this one.",
+  },
+  {
+    flow: "authorization-code-pkce",
+    role: "start",
+    weight: 5,
+    when: { principal: ["self"], runtime: ["local"] },
+    why: "Where the installation has no credential of its own, the agent has no identity to prove, and the access is really a person’s. Have the person who runs it sign in, and act for them.",
   },
   {
     flow: "spiffe-workload-identity",
@@ -317,7 +348,7 @@ export const rules: Rule[] = [
     role: "consider",
     weight: 4,
     when: { runtime: ["k8s", "managed"], target: ["internal", "agent"] },
-    why: "If gateways terminate TLS between your workloads, a key-bound workload token with per-request proof survives the hop. Still experimental.",
+    why: "If gateways terminate TLS between your workloads, a key-bound workload token with per-request proof survives the hop. The specifications are still working-group drafts.",
   },
 
   // ── agents and the web ──
@@ -363,7 +394,7 @@ export const rules: Rule[] = [
     role: "add",
     weight: 4,
     when: {
-      runtime: ["local", "headless", "sandbox", "managed"],
+      runtime: ["local", "headless", "k8s", "sandbox", "managed"],
       target: ["api", "mcp", "agent"],
       risk: ["write", "irreversible"],
     },
@@ -398,11 +429,11 @@ export const cautions: Caution[] = [
   },
   {
     when: { target: ["web"], principal: ["user"] },
-    text: "Most websites have no way to accept a delegated token. An agent signing in with the user’s own password is impersonation, with all of the user’s power and none of the audit trail. Never collect the password. Have the person sign in for themselves, keep the session out of the model’s reach, and put your own limits in front of it.",
+    text: "Most websites have no way to accept a delegated token. The flows here that issue one apply only to a site that does. At any other, an agent signing in with the user’s own password is impersonation, with all of the user’s power and none of the audit trail. Never collect the password. Have the person sign in for themselves, keep the session out of the model’s reach, and put your own limits in front of it.",
   },
   {
     when: { runtime: ["local"] },
-    text: "A local agent is a public client. Do not embed secrets in it; use PKCE, a loopback redirect, and the operating system’s credential store.",
+    text: "A local agent is a public client unless its installation was given a credential of its own. Never build a secret into the app: every copy would hold the same one. Use PKCE and a loopback redirect, and keep tokens and keys in the operating system’s credential store.",
   },
 ];
 

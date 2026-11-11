@@ -66,7 +66,7 @@ export const tokens: TokenSpec[] = [
         text: '"iss": "https://auth.example",',
         indent: 1,
         cat: "meta",
-        note: "The authorization server that issued the token. The API must check it against the issuer it trusts; an agent that talks to many servers must check it against the one it meant to use.",
+        note: "The authorization server that issued the token. The API must check it against the issuer it trusts. The agent does not read it: a client must not inspect an access token (RFC 9068). An agent that talks to many servers checks the `iss` parameter of the authorization response instead (RFC 9207), against the server it sent the request to.",
       },
       {
         text: '"sub": "user:alice",',
@@ -163,7 +163,7 @@ export const tokens: TokenSpec[] = [
         text: '"sub": "https://tools.example/mcp",',
         indent: 2,
         cat: "what",
-        note: "The current actor: the party presenting this token.",
+        note: "The current actor: the party authorized to act for Alice. It says who was given that authority, not who is holding the token.",
       },
       {
         text: '"act": { "sub": "research-agent" }',
@@ -274,7 +274,7 @@ export const tokens: TokenSpec[] = [
         text: '"kubernetes.io": {',
         indent: 1,
         cat: "proof",
-        note: "Binding information. The token is valid only while the objects named here exist. Delete the pod and the token is dead, whatever `exp` says.",
+        note: "Binding information. The token is bound to the pod named here, and the API server stops accepting it once that pod is deleted, whatever `exp` says. A verifier learns that only by asking the cluster, through the TokenReview API. One that checks the signature against the published keys accepts the token until it expires.",
       },
       {
         text: '"namespace": "agents",',
@@ -286,7 +286,7 @@ export const tokens: TokenSpec[] = [
         text: '"serviceaccount": { "name": "research-agent", "uid": "…" },',
         indent: 2,
         cat: "who",
-        note: "Name and UID. The UID changes if the service account is deleted and recreated, which invalidates old tokens.",
+        note: "Name and UID. The UID changes if the service account is deleted and recreated, and the API server then refuses old tokens.",
       },
       {
         text: '"pod": { "name": "research-agent-7c9f-x2x8k", "uid": "…" },',
@@ -458,13 +458,13 @@ export const tokens: TokenSpec[] = [
         text: '"jti": "9e43f81b64a33f20116179",',
         indent: 1,
         cat: "meta",
-        note: "Single-use identifier.",
+        note: "A unique identifier for this grant. A receiving server that accepts each grant only once tracks it.",
       },
       {
-        text: '"exp": 1311281970,',
+        text: '"exp": 1311281270,',
         indent: 1,
         cat: "when",
-        note: "Minutes. The grant exists only to be exchanged immediately.",
+        note: "Minutes. The client may present the grant again for a new access token until it expires, unless the receiving server accepts each grant once.",
       },
       { text: '"iat": 1311280970', indent: 1, cat: "when", note: "Issued at." },
       { text: "}" },
@@ -574,10 +574,10 @@ export const tokens: TokenSpec[] = [
         note: "The workload identifier: a URI scoped to a trust domain. A SPIFFE ID qualifies. For an agent, this is “what is acting”; a user’s delegation travels separately.",
       },
       {
-        text: '"cnf": { "jwk": { "kty": "OKP", "crv": "Ed25519", "x": "1CXX…" } },',
+        text: '"cnf": { "jwk": { "kty": "OKP", "crv": "Ed25519", "alg": "Ed25519", "x": "1CXX…" } },',
         indent: 1,
         cat: "proof",
-        note: "The workload’s public key. Each request must come with a proof signed by the matching private key: a Workload Proof Token or an HTTP Message Signature.",
+        note: "The workload’s public key. Each request must come with a proof signed by the matching private key: a Workload Proof Token or an HTTP Message Signature. The key must carry `alg`, and the proof must be made with that algorithm.",
       },
       {
         text: '"jti": "x-_1CTL2cca3CSE4cwb_l",',

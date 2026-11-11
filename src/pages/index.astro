@@ -49,18 +49,17 @@ const authority = [
             "calling an HTTP API, with a browser at hand",
           ],
           ["device-authorization", "no browser where the agent runs"],
-        ],
-      },
-      {
-        when: label(human, "reachable"),
-        links: [
-          ["ciba", "ask them on a device they already use"],
+          ["cross-app-access", "the company identity provider decides"],
           [
             "step-up-authorization",
             "a fresh approval for one sensitive action",
           ],
           ["url-elicitation", "an MCP server needs a grant from a third party"],
         ],
+      },
+      {
+        when: label(human, "reachable"),
+        links: [["ciba", "ask them on a device they already use"]],
       },
       {
         when: label(human, "absent"),
@@ -70,7 +69,6 @@ const authority = [
             "authorization-code-pkce",
             "consent once, then run on a refresh token",
           ],
-          ["cross-app-access", "the company identity provider decides"],
         ],
       },
     ],
