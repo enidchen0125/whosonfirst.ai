@@ -461,6 +461,81 @@ record(
       (copies.length > 8 ? `; and ${copies.length - 8} more` : ""),
   );
 
+  // After each step a flow says who holds what, and flags a credential as "new"
+  // or "used up". The copy has to say the same of each: a code that has been
+  // spent must not read as one just issued.
+  {
+    const wrong = [];
+    let seen = 0;
+    const held = (md) =>
+      md
+        .split("\n")
+        .filter((l) => l.startsWith("- **"))
+        .join("\n")
+        .replace(/\\/g, "");
+    const count = (text, piece) => text.split(piece).length - 1;
+    for (const p of withCopy) {
+      const chips = [
+        ...p.html.matchAll(
+          /<span class="held-chip[^"]*"[^>]*><span class="held-flag"[^>]*>([^<]+)<\/span>([\s\S]*?)<\/span>(?=<span class="held-chip|<\/dd>)/g,
+        ),
+      ].map((m) => ({ flag: plain(m[1]), name: plain(m[2]) }));
+      if (!chips.length) continue;
+      seen += chips.length;
+      const md = held(
+        readFileSync(
+          join(root, attr(p, /type="text\/markdown"/, "href")),
+          "utf8",
+        ),
+      );
+      for (const flag of new Set(chips.map((c) => c.flag))) {
+        const page = chips.filter((c) => c.flag === flag).length;
+        const copy = count(md, ` (${flag})`);
+        if (page !== copy)
+          wrong.push(
+            `${p.path} (“${flag}” ${page} times on the page, ${copy} in the copy)`,
+          );
+      }
+      for (const c of chips)
+        if (!md.replaceAll("~~", "").includes(`${c.name} (${c.flag})`))
+          wrong.push(`${p.path} (${c.name} is not “${c.flag}” in the copy)`);
+    }
+    record(
+      "markdown",
+      "a credential flagged new or used up on a flow's page has the same flag in its Markdown copy",
+      seen > 0 && wrong.length === 0,
+      [...new Set(wrong)].slice(0, 8).join("; "),
+    );
+
+    // The case that shows it: in authorization code with PKCE the code is issued,
+    // then exchanged, and the token it buys is new at the step that spends it.
+    const pkce = join(root, "flows/authorization-code-pkce/index.md");
+    const all = join(root, "llms-full.txt");
+    const expect = [
+      ["authorization code (new)", true],
+      ["~~authorization code~~ (used up)", true],
+      ["access token (new)", true],
+      ["~~authorization code~~ (new)", false],
+    ];
+    const off = [];
+    for (const file of [pkce, all]) {
+      const text = existsSync(file)
+        ? readFileSync(file, "utf8").replace(/\\/g, "")
+        : "";
+      for (const [piece, wanted] of expect)
+        if (text.includes(piece) !== wanted)
+          off.push(
+            `${file.slice(root.length)} ${wanted ? "lacks" : "has"} “${piece}”`,
+          );
+    }
+    record(
+      "markdown",
+      "PKCE's authorization code is new when issued and used up once exchanged, in its copy and in llms-full.txt",
+      off.length === 0,
+      off.join("; "),
+    );
+  }
+
   // llms.txt lists exactly the pages that have a copy, and each link is a file.
   {
     const file = join(root, "llms.txt");
