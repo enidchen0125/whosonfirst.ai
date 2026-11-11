@@ -274,7 +274,7 @@ export const tokens: TokenSpec[] = [
         text: '"kubernetes.io": {',
         indent: 1,
         cat: "proof",
-        note: "Binding information. The token is valid only while the objects named here exist. Delete the pod and the token is dead, whatever `exp` says.",
+        note: "Binding information. The token is bound to the pod named here, and the API server stops accepting it once that pod is deleted, whatever `exp` says. A verifier learns that only by asking the cluster, through the TokenReview API. One that checks the signature against the published keys accepts the token until it expires.",
       },
       {
         text: '"namespace": "agents",',
@@ -286,7 +286,7 @@ export const tokens: TokenSpec[] = [
         text: '"serviceaccount": { "name": "research-agent", "uid": "…" },',
         indent: 2,
         cat: "who",
-        note: "Name and UID. The UID changes if the service account is deleted and recreated, which invalidates old tokens.",
+        note: "Name and UID. The UID changes if the service account is deleted and recreated, and the API server then refuses old tokens.",
       },
       {
         text: '"pod": { "name": "research-agent-7c9f-x2x8k", "uid": "…" },',
