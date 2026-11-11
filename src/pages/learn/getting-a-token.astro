@@ -243,7 +243,7 @@ const checks: CheckQuestion[] = [
   checks={checks}
   keep={[
     "The user signs in and approves at the **authorization server**, never in the agent.",
-    { rule: "Never ask a user for their password." },
+    { rule: "An agent never asks a user for their password. Only the authorization server does." },
     "What comes back through the browser is a one-time **code**. The token itself only ever travels on a direct connection.",
     "**PKCE** ties the code to the app that asked for it.",
     "A **refresh token** lets the agent carry on without the user. Guard it as if it were the user’s access, because it is.",
@@ -304,8 +304,9 @@ const checks: CheckQuestion[] = [
     And anything typed into a conversation, the model can be asked to repeat by the next page it reads.
   </p>
   <p>
-    So for a service that offers this exchange the rule has no exceptions: never ask a user for their password. It
-    also teaches people to type it into whatever asks, which is the habit phishing depends on. OAuth once had a way
+    So for a service that offers this exchange the rule has no exceptions: an agent never asks a user for their
+    password. Only the authorization server does. Asking would also teach people to type it into whatever asks,
+    which is the habit phishing depends on. OAuth once had a way
     for an app to collect a password and trade it for a token, and the{' '}
     <a href="/standards/#rfc9700">current security guidance</a> says it must not be used. For a service that offers
     nothing else, see <a href="/learn/limits/#no-other-way">the last lesson</a>.
