@@ -19,6 +19,7 @@
     "check:contrast": "node scripts/contrast-check.mjs",
     "check:rendered": "node scripts/rendered-check.mjs",
     "readme:figure": "node scripts/readme-figure.mjs",
+    "social:assets": "node scripts/social-assets.mjs",
     "generate-types": "wrangler types",
     "deploy": "npm run build && wrangler deploy"
   },

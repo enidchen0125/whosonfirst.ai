@@ -86,6 +86,7 @@ The workflow names each action by commit, not by tag. `.github/dependabot.yml` o
 | `docs/source-review.md`               | What goes out of date, where to check it, and where each fact has to be changed                    |
 | `README.md`                           | What a visitor to the repository reads first: what the site is and where to start in it            |
 | `scripts/readme-figure.mjs`           | Draws the picture at the top of the README from the built site, in each theme                      |
+| `scripts/social-assets.mjs`           | Draws what goes in a post that announces the site: a carousel, pictures, a flow stepped through    |
 | `AGENTS.md`                           | What a coding agent working in this repository needs to know                                       |
 
 ## Editing content
@@ -215,6 +216,32 @@ curl -sI -H "Accept: text/markdown" https://whosonfirst.ai/flows/dpop/ | grep -i
 ```
 
 The rule is not kept in this repository. Until it exists, a request that asks for Markdown gets the page, which is still a correct answer.
+
+## Pictures for a post
+
+A link shared by itself shows the page's card. A post that announces the site, or one flow, wants more than a card: a picture that makes its point where it is seen, before anyone follows the link. `scripts/social-assets.mjs` draws those from the built site:
+
+```bash
+npm run build
+```
+
+```bash
+npm run social:assets
+```
+
+It writes to `social/`, which is not committed:
+
+| File                                              | What                                                                                                                                                                                                             |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `carousel.pdf`, `carousel-01.png` …               | Nine pages of 1080 × 1350, for a document post: the question, the first lesson's figure one choice at a time, the three choices side by side, every flow, a flow in one of its steps, the tracker's counts, and the three ways in |
+| `three-questions.png`, `three-questions-wide.png` | The three choices side by side, as one picture: at 4:5, and at 16:9 for where pictures are cropped wide                                                                                                          |
+| `flows.png`, `standards.png`                      | Two of the carousel's pages, each as a picture by itself                                                                                                                                                         |
+| `flow-<slug>.mp4`, `flow-<slug>-cover.png`        | One flow stepped through, about two seconds a step, and the frame it opens on                                                                                                                                    |
+| `repository.png`                                  | 1280 × 640, for the repository's social preview, which is set by hand in the repository's settings on GitHub                                                                                                     |
+
+`--flow <slug>` chooses the flow the video steps through and the carousel shows a step of; without it that is MCP authorization. `--no-video` leaves the video out. The video needs `ffmpeg` on the path, and is skipped with a note where there is none.
+
+Every word in these pictures is read from the pages as built: the home page's question and its ways in, the first lesson's figure, the groups and ratings on the flows page, the tracker's counts, a flow's steps and its diagram as drawn. The script holds the layout and none of the content, so a picture cannot say what the site does not. If a page it reads has changed shape, it stops and names what it could not find, and if a picture has outgrown its frame it says which. Make the pictures again after the content changes. Do not edit them by hand.
 
 ## Response headers
 
