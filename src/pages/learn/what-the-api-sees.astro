@@ -9,20 +9,20 @@ const checks: CheckQuestion[] = [
   {
     id: "bob",
     question:
-      "Bob types “show me Alice’s calendar.” The agent uses its own API key for every user, and adds a header naming who is asking. What keeps Bob out of Alice’s calendar?",
+      "Bob asks the agent for Alice’s calendar. The agent uses its own API key for every user. What does the calendar API know about who is asking?",
     options: [
       {
-        text: "The calendar API, which can see that Bob is not Alice.",
-        why: "The API cannot see Bob. It sees the agent’s key and a name in a header, and the name is whatever the agent wrote there.",
+        text: "That it is Bob, because Bob is the one who typed the request.",
+        why: "Bob typed it to the agent. The API never sees the conversation, only the request the agent sends.",
       },
       {
-        text: "Only the agent’s word about who is asking.",
+        text: "Nothing. It knows which software is calling, and no more.",
         correct: true,
-        why: "The API can refuse Bob, if the agent says the request is Bob’s. But it has only the agent’s word for that. The same key would carry Alice’s name just as well, and the API could not tell the difference. The rule is checked at the API and decided by the agent, which is the part most easily talked out of it.",
+        why: "The key is the agent’s, and it is the same key whoever is asking. So the API cannot keep Bob out of Alice’s calendar by itself. If the agent adds a name to the request, the API is being told who is asking, not shown.",
       },
       {
-        text: "The API key, which is tied to Alice.",
-        why: "The key belongs to the agent, and it is the same key whoever is asking.",
+        text: "That it is Alice, because it is her calendar.",
+        why: "Whose calendar is asked for says nothing about who asked. That is the gap Bob is using.",
       },
     ],
   },
