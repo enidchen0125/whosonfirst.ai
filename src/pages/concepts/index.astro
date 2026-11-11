@@ -155,6 +155,10 @@ const toc = [
         authority it carries, and what that authority covers. This page explains the parties involved, the ways
         authority is handed on, and the claims in a token that carry the answers.
       </p>
+      <p class="primer">
+        This is the whole model on one page, with the caveats left in. If the vocabulary is new,{' '}
+        <a href="/learn/">six short lessons</a> cover the same ground from the start.
+      </p>
       <nav class="toc" aria-label="On this page">
         {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
       </nav>
@@ -442,6 +446,11 @@ const toc = [
 </Base>
 
 <style>
+  .primer {
+    margin: 1rem 0 0;
+    max-width: 42rem;
+    color: var(--fg-muted);
+  }
   .toc {
     display: flex;
     flex-wrap: wrap;

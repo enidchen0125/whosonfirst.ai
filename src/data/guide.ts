@@ -9,6 +9,8 @@ export interface Question {
   id: string;
   title: string;
   help?: string;
+  /** Where the question is explained, for a reader who is not sure what it is asking. */
+  more?: { href: string; text: string };
   options: { value: string; label: string; hint?: string }[];
 }
 
@@ -17,6 +19,10 @@ export const questions: Question[] = [
     id: "principal",
     title: "Whose authority is the agent using?",
     help: "The single most important question. It decides whose name is on the token.",
+    more: {
+      href: "/learn/whose-authority/",
+      text: "Not sure? Lesson 4 sorts five examples",
+    },
     options: [
       {
         value: "user",
@@ -74,12 +80,12 @@ export const questions: Question[] = [
       {
         value: "enterprise",
         label: "A vendor we use at work",
-        hint: "Both sides connected to our company identity provider",
+        hint: "Both sides use the sign-in system our company runs",
       },
       {
         value: "cross",
         label: "Someone else entirely",
-        hint: "No shared identity provider",
+        hint: "No sign-in system in common",
       },
     ],
   },
@@ -97,7 +103,11 @@ export const questions: Question[] = [
         label: "Remote, with no browser",
         hint: "Container, SSH session, CI job",
       },
-      { value: "k8s", label: "Kubernetes or a cloud we operate" },
+      {
+        value: "k8s",
+        label: "Our own servers or cloud",
+        hint: "A hosted app, containers, Kubernetes",
+      },
       { value: "managed", label: "A managed agent platform" },
       { value: "sandbox", label: "A sandbox that runs untrusted code" },
     ],
@@ -389,7 +399,10 @@ export const deployLinks: Record<string, { href: string; label: string }> = {
     href: "/deployments/local/#headless-and-remote-agents",
     label: "Headless and CI agents",
   },
-  k8s: { href: "/deployments/kubernetes/", label: "Agents on Kubernetes" },
+  k8s: {
+    href: "/deployments/",
+    label: "Where the agent runs, platform by platform",
+  },
   managed: {
     href: "/deployments/agent-platforms/",
     label: "Managed agent platforms",

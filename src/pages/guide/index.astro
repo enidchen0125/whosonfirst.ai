@@ -52,7 +52,8 @@ const data = {
       <h1>Which flow fits your agent?</h1>
       <p class="lede">
         Six questions. Answer as many as you can; the recommendations update as you go and the address bar keeps your
-        answers, so you can share the result.
+        answers, so you can share the result. If the questions use words you have not met, <a href="/learn/">the
+        lessons</a> teach them in about forty minutes.
       </p>
     </div>
   </div>
@@ -67,7 +68,17 @@ const data = {
                 <span class="dg-num">{i + 1}</span>
                 {q.title}
               </legend>
-              {q.help && <p class="dg-help">{q.help}</p>}
+              {q.help && (
+                <p class="dg-help">
+                  {q.help}
+                  {q.more && (
+                    <>
+                      {' '}
+                      <a href={q.more.href}>{q.more.text}</a>.
+                    </>
+                  )}
+                </p>
+              )}
               <div class="dg-options">
                 {q.options.map((o) => (
                   <label>

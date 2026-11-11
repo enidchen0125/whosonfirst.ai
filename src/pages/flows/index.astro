@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import FlowCard from "../../components/FlowCard.astro";
-import { byGroup, flows, maturityLabel } from "../../data/flows";
+import { byGroup, flow, flows, maturityLabel } from "../../data/flows";
 import { HUMAN_LABEL } from "../../data/types";
 
 const groups = byGroup();
@@ -60,6 +60,26 @@ for (const f of flows) {
     throw new Error(`flows/index: add "${f.slug}" to COMPARE`);
 }
 
+/**
+ * The flows the lessons introduce, in the order the lessons do, each with the
+ * situation it answers. The rest of the catalog is variations on these.
+ */
+const START: [slug: string, when: string][] = [
+  ["authorization-code-pkce", "A person is there to sign in."],
+  [
+    "mcp-authorization",
+    "The same, when the agent meets a server it has never seen.",
+  ],
+  ["client-credentials", "Nobody is there. The agent acts as itself."],
+  [
+    "workload-identity-federation",
+    "The agent acts as itself, and the platform it runs on vouches for it.",
+  ],
+  ["token-exchange", "A tool in the middle has to call the next API."],
+  ["dpop", "A copied token should be useless to whoever copied it."],
+];
+const start = START.map(([slug, when]) => ({ flow: flow(slug), when }));
+
 const filters = [
   { id: "all", label: "All flows" },
   { id: "present", label: "Human present" },
@@ -84,6 +104,29 @@ const filters = [
   </div>
 
   <div class="wrap fl">
+    <section class="fl-start" aria-labelledby="start">
+      <div class="section-head">
+        <h2 id="start">Start with these</h2>
+        <p>
+          Six flows cover most of the ground, and the others are variations on them. If the vocabulary is new,{' '}
+          <a href="/learn/">the lessons</a> come first.
+        </p>
+      </div>
+      <ol>
+        {
+          start.map(({ flow: f, when }) => (
+            <li>
+              <a href={`/flows/${f.slug}/`}>
+                <span class="when">{when}</span>
+                <strong>{f.short}</strong>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <h2 class="fl-all" id="all">Every flow</h2>
     <fieldset class="fl-filter">
       <legend class="visually-hidden">Filter by human involvement</legend>
       {
@@ -200,6 +243,57 @@ const filters = [
   .fl-filter input:focus-visible + span {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* where to start: the situation first, then the name of the flow that answers it */
+  .fl-start {
+    padding-bottom: 2.2rem;
+    border-bottom: 1px solid var(--fg);
+  }
+  .fl-start h2,
+  .fl-all {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+  .fl-all {
+    margin-top: 2rem;
+  }
+  .fl-start ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+    gap: 0 2.5rem;
+    border-top: 1.5px solid var(--fg);
+  }
+  .fl-start li {
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .fl-start ol a {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.7rem 0.3rem 0.75rem 0;
+    text-decoration: none;
+  }
+  .fl-start ol a:hover {
+    background: var(--accent-soft);
+  }
+  .fl-start .when {
+    font-size: 0.98rem;
+    line-height: 1.4;
+    color: var(--fg);
+  }
+  .fl-start strong {
+    justify-self: start;
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  .fl-start strong::after {
+    content: ' →';
   }
 
   .fl-group {
