@@ -501,12 +501,16 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
 
       this.addEventListener('keydown', (e) => {
         if (this.narrative || (e.target as Element).closest('pre, input, textarea, summary')) return;
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          this.go(this.index + 1, true);
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          this.go(this.index - 1, true);
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        this.go(this.index + (e.key === 'ArrowRight' ? 1 : -1), true);
+        // Focus on a link inside the step just left would go with it, and the
+        // next arrow key would reach nobody. Hand it to a control that stays.
+        if (document.activeElement?.closest('.flow-step[hidden]')) {
+          (
+            this.querySelector<HTMLButtonElement>('[data-act="next"]:not(:disabled)') ??
+            this.querySelector<HTMLButtonElement>('[data-act="prev"]')
+          )?.focus({ preventScroll: true });
         }
       });
 
