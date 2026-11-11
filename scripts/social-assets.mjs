@@ -11,8 +11,9 @@
  *   npm run build && node scripts/social-assets.mjs
  *   node scripts/social-assets.mjs --flow dpop     step through another flow
  *   node scripts/social-assets.mjs --no-video
+ *   node scripts/social-assets.mjs --dark          the same pictures in the dark theme
  *
- * Writes to social/, which is not committed:
+ * Writes to social/, or to social/dark/ with --dark. Neither is committed:
  *
  *   carousel.pdf                 pages of 1080 × 1350, for a document post
  *   carousel-01.png …            the same pages as pictures
@@ -53,6 +54,12 @@ const option = (name, fallback) => {
 /** The flow the video steps through, and the carousel shows a step of. */
 const FLOW = option("flow", "mcp-authorization");
 const VIDEO = !args.includes("--no-video");
+/**
+ * Light unless asked. Every color on the site is a light and dark pair, and the
+ * mark carries both, so the dark pictures are the same drawing in the site's
+ * own dark theme: the pages are read, and the diagram photographed, in it too.
+ */
+const SCHEME = args.includes("--dark") ? "dark" : "light";
 
 const ADDRESS = "whosonfirst.ai";
 /** A post's picture: 4:5, the tallest a feed shows without cropping. */
@@ -65,7 +72,13 @@ const GLIDE = 8;
 const FPS = 30;
 
 const root = fileURLToPath(new URL("../dist/client/", import.meta.url));
-const out = fileURLToPath(new URL("../social/", import.meta.url));
+const out = fileURLToPath(
+  new URL(
+    SCHEME === "dark" ? "../social/dark/" : "../social/",
+    import.meta.url,
+  ),
+);
+const shown = SCHEME === "dark" ? "social/dark" : "social";
 if (!existsSync(join(root, "flows", FLOW, "index.html"))) {
   console.error(
     existsSync(join(root, "index.html"))
@@ -124,7 +137,7 @@ const inPage = (body) => `(() => { ${HELPERS} ${body} })()`;
 async function readSite() {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 1000 },
-    colorScheme: "light",
+    colorScheme: SCHEME,
   });
   const page = await context.newPage();
   const open = (path) =>
@@ -257,7 +270,7 @@ async function readFlow(slug) {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 1000 },
     deviceScaleFactor: 2,
-    colorScheme: "light",
+    colorScheme: SCHEME,
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
@@ -336,7 +349,7 @@ const FACES = [
 ]
   .map(([family, weight]) => face(family, weight))
   .join("\n");
-/** The site's own values. A picture is seen on someone else's page, so it keeps to the light ones. */
+/** The site's own values: each color is a light and dark pair, and SCHEME picks which. */
 const TOKENS = readFileSync(
   new URL("../src/styles/tokens.css", import.meta.url),
   "utf8",
@@ -346,7 +359,7 @@ const MARK = `data:image/svg+xml;base64,${readFileSync(new URL("../public/favico
 const CSS = `
 ${FACES}
 ${TOKENS}
-:root { color-scheme: light; }
+:root { color-scheme: ${SCHEME}; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -885,14 +898,14 @@ const doc = (
 const written = [];
 const note = (file) => {
   const kb = Math.round(statSync(join(out, file)).size / 1024);
-  written.push(`${`social/${file}`.padEnd(40)} ${String(kb).padStart(6)} kB`);
+  written.push(`${`${shown}/${file}`.padEnd(46)} ${String(kb).padStart(6)} kB`);
 };
 
 async function sheet(size, scale = 2) {
   const context = await browser.newContext({
     viewport: size,
     deviceScaleFactor: scale,
-    colorScheme: "light",
+    colorScheme: SCHEME,
   });
   const page = await context.newPage();
   const draw = async (html) => {
@@ -933,6 +946,8 @@ const deck = pages(site, flow);
   const s = await sheet(TALL, 1);
   for (const p of await s.draw(deck.map((p) => p.html).join("")))
     problems.push(`carousel.pdf: ${p}`);
+  // a page being printed is drawn light whatever was asked: this one is not being printed
+  await s.page.emulateMedia({ media: "screen" });
   await s.page.pdf({
     path: join(out, "carousel.pdf"),
     width: `${TALL.width}px`,
