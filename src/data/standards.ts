@@ -36,7 +36,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "October 2012. Still the current standard until OAuth 2.1 is published.",
+      "October 2012. Updated by RFCs 8252, 8996 and 9700. Still the current standard until OAuth 2.1 is published.",
     topics: ["core"],
     summary:
       "Defines the roles (client, authorization server, resource server) and the core grants: authorization code, client credentials, refresh.",
@@ -50,7 +50,7 @@ export const standards: Standard[] = [
     ref: "RFC 6750",
     body: "IETF",
     status: "rfc",
-    detail: "October 2012.",
+    detail: "October 2012. Updated by RFCs 8996 and 9700.",
     topics: ["core"],
     summary:
       "The `Authorization: Bearer` header and the `WWW-Authenticate` error vocabulary, including `insufficient_scope`.",
@@ -147,7 +147,7 @@ export const standards: Standard[] = [
     ref: "RFC 7519",
     body: "IETF",
     status: "rfc",
-    detail: "May 2015.",
+    detail: "May 2015. Updated by RFCs 7797 and 8725.",
     topics: ["core"],
     summary:
       "A compact way to carry claims between two parties, signed or encrypted, with seven registered claims: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat` and `jti`. A recipient not named in `aud` must reject the token, and no one may accept it at or after `exp`.",
@@ -369,7 +369,7 @@ export const standards: Standard[] = [
     summary:
       "Fixes an audience-confusion weakness in client assertions: the audience must be the authorization server’s issuer identifier.",
     agents:
-      "Any agent using `private_key_jwt` or JWT bearer grants should follow it. Published this month.",
+      "Any agent using `private_key_jwt` or JWT bearer grants should follow it. Published in November 2026.",
     url: rfc(10070),
   },
 
