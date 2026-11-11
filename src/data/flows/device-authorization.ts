@@ -23,6 +23,31 @@ It is simple and widely deployed, which is why it is the first thing people reac
     "Polling too fast earns a `slow_down` error. Respect `interval`.",
     "The token lands in a headless environment. Plan for where it is stored and how it is revoked when the container goes away.",
   ],
+  lesson: "getting-a-token",
+  like: {
+    flow: "authorization-code-pkce",
+    except:
+      "the agent has no browser where it runs. The user approves on a second device, and the agent polls until they have.",
+  },
+  phases: [
+    { title: "The agent gets a short code and shows it to the user", from: 1 },
+    {
+      title: "The user signs in on a second device while the agent polls",
+      from: 4,
+    },
+    {
+      title: "The user approves, and the agent’s next poll returns tokens",
+      from: 7,
+    },
+    { title: "The agent calls the API with the token", from: 10 },
+  ],
+  parts: {
+    user: "Opens the URL on a phone or laptop, signs in, types the code, and approves the request. The approval screen is their only chance to notice a request they did not start.",
+    agent:
+      "Asks the authorization server to start a device flow, shows the user the code and the URL, and polls the token endpoint, no more often than `interval` allows, until the answer arrives. Where the tokens are stored in a headless environment, and how they are revoked, is yours to plan.",
+    as: "Returns the two codes, signs the user in, looks up the pending request from the code, shows what is being asked for, and issues the tokens once the user approves. If it is yours, show the client name, location and requested scopes prominently, and keep codes short-lived.",
+    api: "Sees an ordinary access token. It cannot tell that the approval happened on a different device from the one making the call.",
+  },
   participants: [
     { id: "user", label: "User", sub: "On phone or laptop", role: "human" },
     {

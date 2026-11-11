@@ -25,6 +25,30 @@ Two parts of version 1.0 matter for trust. Agent Cards can be signed, so a calle
     "The remote agent is a full autonomous system. Authenticating it tells you who operates it, not what it will do with your data.",
     "In-task authorization happens out of band. The state change is a request, not proof that anything was granted.",
   ],
+  lesson: "chains",
+  phases: [
+    {
+      title: "The client agent fetches the remote agent’s card and checks it",
+      from: 1,
+    },
+    { title: "The client agent gets a token for the remote agent", from: 4 },
+    {
+      title: "The client agent sends a task, which the remote agent authorizes",
+      from: 6,
+    },
+    {
+      title: "The remote agent needs more, and the user authorizes it directly",
+      from: 8,
+    },
+  ],
+  parts: {
+    user: "Authorizes the remote agent directly when it needs more partway through the task, for example by completing an OAuth flow in a browser with the remote agent’s service. The request reaches the user through the client agent.",
+    client:
+      "Reads the remote agent’s Agent Card, verifies its signature if it is signed, chooses a security scheme it can satisfy, and sends a matching credential in an HTTP header on every request. Getting that credential happens outside A2A, and whether the remote agent learns which user the task is for depends on the token you send. When the remote agent needs more authorization, relays the request to the user.",
+    as: "Issues the client agent an access token whose audience is the remote agent. A2A says only that the credential is obtained out of band: in practice by one of the other flows on this site, such as client credentials or token exchange.",
+    remote:
+      "Publishes an Agent Card that declares the credentials it requires, authenticates every request, and authorizes each operation. What a caller may do is its own decision: which skills, which data, at what scopes. When it needs more authorization partway through, it moves the task to the `TASK_STATE_AUTH_REQUIRED` state with a message that explains what is needed.",
+  },
   participants: [
     { id: "user", label: "User", role: "human" },
     { id: "client", label: "Client agent", role: "agent" },

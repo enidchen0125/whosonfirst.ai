@@ -25,6 +25,33 @@ The specification is through IETF approval and waiting in the RFC Editor’s que
     "Each hop can add or drop claims. Make sure the receiving side does not treat a claim as verified merely because it arrived.",
     "Keep the grant short-lived and single-audience. It is a bearer credential for obtaining tokens.",
   ],
+  lesson: "chains",
+  like: {
+    flow: "token-exchange",
+    except:
+      "the next hop belongs to another organization. The exchange yields a grant, and the other side’s authorization server turns that into a token of its own.",
+  },
+  phases: [
+    {
+      title: "The agent gets a grant at home, addressed to the other domain",
+      from: 1,
+    },
+    {
+      title: "The agent trades the grant for a token from the other domain",
+      from: 5,
+    },
+    {
+      title: "The agent calls the other domain’s API, which checks the token",
+      from: 8,
+    },
+  ],
+  parts: {
+    agent:
+      "Trades its domain A token at its home authorization server for a short-lived grant, presents the grant at domain B’s token endpoint, and calls the API with the token domain B issues. It also authenticates to domain B as a client that domain B knows.",
+    asa: "Decides what crosses its boundary: which clients may obtain grants for which external domains, and which claims about the user are released. Signs a short-lived grant whose only audience is domain B’s authorization server. It can end the arrangement by refusing to issue grants.",
+    asb: "Verifies the grant against keys it has agreed to trust for domain A, checks that it is the audience, and maps the incoming subject and claims to its own. Then issues its own access token, and is free to grant less than was asked. The trust between the two authorization servers is set up in advance: the specification does not create it for you.",
+    api: "Validates a token from its own authorization server. It sees nothing issued by domain A.",
+  },
   participants: [
     { id: "agent", label: "Agent", sub: "Client in domain A", role: "agent" },
     { id: "asa", label: "AS, domain A", sub: "Home", role: "authz" },

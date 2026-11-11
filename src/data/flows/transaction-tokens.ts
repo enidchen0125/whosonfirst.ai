@@ -25,6 +25,28 @@ For agent systems this is a way to keep the user’s intent attached to a reques
     "The transaction token service becomes critical infrastructure: every request depends on it, and it must be told the truth about request context.",
     "How agent-specific context should be represented is still being worked out in individual drafts.",
   ],
+  lesson: "chains",
+  phases: [
+    {
+      title: "The gateway trades the access token for a transaction token",
+      from: 1,
+    },
+    {
+      title: "The gateway drops the access token and calls the agent service",
+      from: 5,
+    },
+    {
+      title: "The agent service calls the tool service with the same token",
+      from: 7,
+    },
+  ],
+  parts: {
+    edge: "Validates the caller’s access token, then authenticates as a workload and exchanges that token, with details of the request, for a transaction token. Forwards the request with the transaction token in the `Txn-Token` header and drops the access token. This is the last place the access token should be seen.",
+    tts: "Checks the access token and the requester, then writes the request’s context into the short-lived token it signs. Every request depends on this service, and it must be told the truth about request context.",
+    agent:
+      "Verifies the token’s signature, audience and expiry, and reads from it who the request is for and what was approved. Calls the tool service as itself, with its workload identity, and attaches the transaction token unmodified. The transaction token does not say which service is calling: the workload identity does.",
+    tool: "Verifies the token and authorizes the call on its context. It can refuse anything that does not match the fixed details of the transaction. If the tool service is yours, so is this check.",
+  },
   participants: [
     { id: "edge", label: "Gateway", sub: "Trust domain edge", role: "infra" },
     { id: "tts", label: "Txn-token service", role: "authz" },

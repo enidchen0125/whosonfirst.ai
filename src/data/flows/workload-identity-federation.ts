@@ -32,6 +32,32 @@ What the pattern removes is the need to provision and manage a long-lived applic
     "**The receiver has to reach the issuer’s keys.** A private cluster or an internal identity provider has to publish its discovery document and keys somewhere the receiver can fetch them, or upload the keys where the receiver allows that.",
     "**Workload identity is not a user’s authority.** Federation establishes which workload is calling. It does not carry a person’s identity or consent, and it does not turn the agent’s access into the user’s. Carrying a user’s authority is delegation: see [token exchange](/flows/token-exchange/).",
   ],
+  lesson: "whose-authority",
+  phases: [
+    {
+      title: "The identity provider gives the workload an identity credential",
+      from: 1,
+    },
+    {
+      title: "The workload presents it, and the token service checks it",
+      from: 2,
+    },
+    {
+      title: "The token service applies a trust rule and issues a credential",
+      from: 5,
+    },
+    {
+      title: "The workload calls the target API with that credential",
+      from: 7,
+    },
+  ],
+  parts: {
+    idp: "Establishes which workload this is and supplies a short-lived, signed credential that says so. The platform usually does this and keeps the credential fresh. You configure which identity the workload runs as.",
+    agent:
+      "Reads the identity credential, presents it to the token service, and uses the short-lived credential that comes back to call the target API, repeating the exchange when that expires. An SDK or credential library usually does this, once it is told where to find the identity credential and what to ask for. Both credentials still need protecting: keep them out of logs, prompts and tool output.",
+    sts: "Finds the issuer’s public keys, checks the credential’s signature, issuer, audience and expiry, applies a trust rule, and issues a short-lived credential. The receiving system does the checking. The trust rule and the access behind it are written in advance, and they are yours to get right: a rule that matches more workloads than you meant gives each of them the access.",
+    api: "Authorizes the call with the access the trust rule granted, and logs it under that role or identity. It has to support the arrangement: an API that only accepts an API key cannot be federated to. That access is the agent’s own authority: nothing in this flow carries a user’s identity or consent.",
+  },
   participants: [
     {
       id: "idp",

@@ -36,7 +36,8 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
     { title: "The client finds out where to sign in", from: 1 },
     { title: "The client says who it is", from: 5 },
     {
-      title: "The user signs in, and the client gets a token for this one server",
+      title:
+        "The user signs in, and the client gets a token for this one server",
       from: 8,
     },
     {

@@ -23,6 +23,34 @@ Two standards make this workable. The step-up challenge lets an API answer “th
     "Scope accumulation: after several step-ups the token may hold everything. Prefer transaction-bound authorization details that expire with the action.",
     "If the user is not in the session, a redirect goes nowhere. Use [CIBA](/flows/ciba/) for that case.",
   ],
+  lesson: "limits",
+  like: {
+    flow: "authorization-code-pkce",
+    except:
+      "it runs again partway through a task, for one named action, because the API asked for more.",
+  },
+  phases: [
+    {
+      title: "The agent tries a transfer, and the API says what is missing",
+      from: 1,
+    },
+    {
+      title: "The agent pauses, and the user approves this one transfer",
+      from: 4,
+    },
+    { title: "The agent trades a one-time code for a stronger token", from: 8 },
+    {
+      title: "The agent retries, and the API matches the request to the token",
+      from: 11,
+    },
+  ],
+  parts: {
+    user: "Authenticates again, as strongly as the API asked for, reads the transfer as the authorization server shows it, and approves that one transfer.",
+    agent:
+      "Reads the API’s challenge, tells the user why it stopped, and sends a new authorization request that repeats the API’s requirements and describes the one transfer. Then it trades the code, retries the call, and goes back to its everyday token for everything else.",
+    as: "Asks the user for the stronger factor, shows the transfer as it received it, and issues a token that records how and when the user authenticated and carries the approved details. Its consent screen must show what will actually happen, taken from the authorization request and not from the agent’s description.",
+    api: "Decides by its own policy that this call needs more, says what is missing in a machine-readable challenge, and on the retry compares the request body with the authorization details in the token. If the API is yours, so is this enforcement: an API that accepts the weak token for the sensitive call has no step-up.",
+  },
   participants: [
     { id: "user", label: "User", role: "human" },
     { id: "agent", label: "Agent", sub: "OAuth client", role: "agent" },

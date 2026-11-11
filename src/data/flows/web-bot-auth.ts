@@ -25,6 +25,29 @@ This is identification, not authorization. A valid signature says “this reques
     "The specification is an early working group draft, and the header syntax has changed between revisions. Deployed verifiers may expect an older form.",
     "The signature covers selected parts of the request. Know which, and do not assume the body is protected.",
   ],
+  lesson: "whose-authority",
+  phases: [
+    {
+      title: "The operator publishes its public keys and gives the agent a key",
+      from: 1,
+    },
+    {
+      title: "The agent signs each request and names the operator in a header",
+      from: 3,
+    },
+    {
+      title: "The verifier fetches the keys, checks the signature and decides",
+      from: 5,
+    },
+    { title: "The website receives a labeled request and responds", from: 7 },
+  ],
+  parts: {
+    op: "Publishes its public keys in a key directory, at a well-known path on a domain it controls, and gives the agent the matching private key. That domain is the agent’s identity. On a shared agent platform the key lives in the platform’s infrastructure, not in the model’s reach.",
+    agent:
+      "Signs each outgoing request and adds three headers: where to find the keys, what was signed and how, and the signature itself. The signature covers selected parts of the request, so know which, and do not assume the body is protected. The header syntax has changed between draft revisions: check which one your counterpart implements.",
+    edge: "Fetches the operator’s keys from the URL the request names, verifies the signature with the named key, checks the time window, and applies policy: allow, rate-limit, serve a different representation, charge, or block. It typically passes the verified operator identity on to the website.",
+    site: "Receives the request, typically labeled with the verified operator identity, makes its own decisions and responds. The signature names the operator, not the end user: if the site needs to know which person the agent is acting for, that takes the site’s own login or an OAuth token.",
+  },
   participants: [
     { id: "op", label: "Agent operator", sub: "Publishes keys", role: "authz" },
     { id: "agent", label: "Browsing agent", role: "agent" },

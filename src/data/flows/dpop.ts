@@ -25,6 +25,21 @@ Mutual TLS does the same job at the transport layer and is a good fit where a se
     "Both the authorization server and the resource server must support it. A resource server that ignores the binding and accepts the token as a plain bearer token has gained nothing.",
     "Proofs are tied to method and URL, and servers may require a nonce. Clock skew and proxies that rewrite URLs are the usual sources of trouble.",
   ],
+  lesson: "limits",
+  phases: [
+    { title: "The agent creates a key and gets a token bound to it", from: 1 },
+    {
+      title: "The agent signs a new proof and sends it with the token",
+      from: 4,
+    },
+    { title: "The API checks that the caller holds the key", from: 6 },
+  ],
+  parts: {
+    agent:
+      "Generates a key pair, sends a signed proof with the token request, and signs a new proof before each API call, covering the method, the URL, the time and a hash of the token. Where the private key lives is yours to decide: a platform keystore or a non-exportable key where one exists, and not the same file as the token.",
+    as: "Binds each token to the agent’s public key by putting the key’s thumbprint in the token, and answers with `token_type: DPoP` instead of `Bearer`. It must support DPoP, and so must the API.",
+    api: "Verifies the proof on every request: its signature, that its key matches the thumbprint in the token, that the method and URL are this request’s, that it is recent, and that it has not been seen before. It rejects a DPoP-bound token presented as `Bearer`. If the API is yours, so is this check: an API that ignores the binding has gained nothing.",
+  },
   participants: [
     { id: "agent", label: "Agent", sub: "Holds private key", role: "agent" },
     { id: "as", label: "Authorization server", role: "authz" },

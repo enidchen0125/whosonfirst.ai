@@ -25,6 +25,30 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
     "An open mandate is a signed blank cheque with limits. The limits are the security: amount, merchant, items, expiry.",
     "The user’s consent must be captured on a surface the agent does not control. If the agent draws the approval screen, the signature proves nothing.",
   ],
+  lesson: "limits",
+  phases: [
+    {
+      title: "The user signs the limits, and the agent later finds an offer",
+      from: 1,
+    },
+    {
+      title: "The merchant signs the terms, and the agent signs the purchase",
+      from: 3,
+    },
+    {
+      title: "The credential provider checks the signatures and the limits",
+      from: 6,
+    },
+    { title: "The agent completes the purchase and gets a receipt", from: 9 },
+  ],
+  parts: {
+    user: "Reviews and signs the limits the agent must stay within, such as amount, merchant, items and expiry. Signs on a trusted surface that the agent does not control, then leaves.",
+    agent:
+      "Finds an offer inside the user’s limits while the user is away, and builds a checkout with the merchant. Using the key that the open mandates name, signs closed mandates bound to the merchant’s signed checkout. Presents the payment mandate to the credential provider, then the checkout mandate and the payment credential to the merchant.",
+    cp: "Holds the user’s payment methods. Verifies that the open mandate is signed by the user, that it names this agent’s key, and that the closed mandate is inside the limits, then issues a credential for this payment. The protocol requires that check to be done by deterministic code, not by a model.",
+    merchant:
+      "Signs the checkout, which fixes the items, price and totals. Receives the checkout mandate together with the payment credential, and returns a receipt. The mandates and receipts form the evidence trail if the purchase is disputed.",
+  },
   participants: [
     { id: "user", label: "User", sub: "On a trusted surface", role: "human" },
     {

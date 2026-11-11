@@ -23,6 +23,27 @@ The grant is trivial. The hard part is the credential the agent uses to authenti
     "There is no consent step, so scopes are whatever an admin configured. Review them as you would a service account’s IAM role.",
     "No refresh token is issued; the agent just asks again. Keep access tokens short-lived so revoking the client takes effect quickly.",
   ],
+  lesson: "whose-authority",
+  phases: [
+    {
+      title: "The agent signs a proof of its identity and asks for a token",
+      from: 1,
+    },
+    {
+      title: "The authorization server checks the proof and issues a token",
+      from: 3,
+    },
+    {
+      title: "The agent calls the API, and the API authorizes a service",
+      from: 5,
+    },
+  ],
+  parts: {
+    agent:
+      "Signs a short-lived proof of its identity with a private key it holds, asks for a token that is valid for one API, and sends that token with each call. No refresh token is issued: it asks again. What it authenticates with is yours to choose: prefer a key the agent holds to a static client secret.",
+    as: "Verifies the agent’s proof against the public key registered for it, checks audience, expiry and replay, decides which of the requested scopes the agent is allowed, and issues a token whose subject is the agent. There is no consent step, so the scopes are whatever an administrator configured. Review them as you would a service account’s permissions.",
+    api: "Validates the token and authorizes a machine caller, not a person: rules that depend on “the current user” have nothing to bind to. If the API is yours, do not treat a request parameter the agent filled in as evidence of which user it is working for.",
+  },
   participants: [
     { id: "agent", label: "Agent", sub: "Confidential client", role: "agent" },
     { id: "as", label: "Authorization server", role: "authz" },

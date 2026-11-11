@@ -27,6 +27,34 @@ There is no standard for this. It is an architecture, implemented in several man
     "Scope each credential to specific hosts, and inject only into headers or bodies, never URLs. Otherwise an attacker can route the secret to a server that will echo it back.",
     "Clients that validate a key’s format locally may reject placeholders.",
   ],
+  lesson: "limits",
+  phases: [
+    {
+      title: "An operator stores the key, and the agent starts without it",
+      from: 1,
+    },
+    {
+      title: "The agent calls the API, and the proxy checks the destination",
+      from: 3,
+    },
+    {
+      title: "The proxy adds the real key, and the API answers the agent",
+      from: 5,
+    },
+    {
+      title: "An injection tries to send the key out, and the proxy refuses",
+      from: 9,
+    },
+  ],
+  parts: {
+    agent:
+      "Makes ordinary HTTPS requests with a placeholder, or nothing, where the key would be. Its sandbox is set up so that all outbound traffic goes through the proxy and so that it trusts the proxy’s certificate authority. A client that validates a key’s format locally may reject the placeholder.",
+    proxy:
+      "Checks that the destination is on the allow-list and that a credential is scoped to that host, fetches the credential from the vault, swaps it for the placeholder and forwards the request. It refuses a host that is not on the list. It has to terminate TLS to do this, and it should inject only into headers or bodies, never URLs.",
+    vault:
+      "Holds the real credentials, each with the hosts it may be sent to, and releases them to the proxy only. For OAuth-protected services it holds the refresh token and renews access tokens itself. An operator stores each credential ahead of time.",
+    api: "Receives the request with the real key attached and answers it. An agent that has been talked into something can still make harmful calls to a host it is allowed to reach.",
+  },
   participants: [
     { id: "agent", label: "Agent", sub: "Inside sandbox", role: "agent" },
     {

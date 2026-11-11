@@ -25,6 +25,31 @@ The working group’s agent architecture document says plainly that agents are w
     "The private key lives in the agent process. Protect it accordingly and rotate the credential often.",
     "As with any workload identity, this identifies the software, not the user it is working for. Carry the user’s delegation separately.",
   ],
+  lesson: "whose-authority",
+  phases: [
+    {
+      title: "The agent creates a key and gets an identity token bound to it",
+      from: 1,
+    },
+    {
+      title: "The agent signs a proof for this one request and sends both",
+      from: 4,
+    },
+    {
+      title: "The gateway forwards the request, with token and proof untouched",
+      from: 6,
+    },
+    { title: "The tool service verifies the token, then the proof", from: 7 },
+  ],
+  parts: {
+    issuer:
+      "Recognizes the workload and returns a signed Workload Identity Token that names it and carries its public key. How it recognizes the workload is the platform’s business: the draft does not prescribe it.",
+    agent:
+      "Creates a key pair, keeps the private key, and gets a Workload Identity Token for the public key. For each request it signs a short-lived, single-use proof for the URL being called, and sends the token and the proof in their own headers, not in `Authorization`. The private key lives in the agent process: protect it and rotate the credential often.",
+    proxy:
+      "Ends the TLS session from the agent and forwards the request on a new connection, with both headers untouched. It can verify them itself to apply policy.",
+    tool: "Verifies the Workload Identity Token against the issuer’s keys, then verifies the proof with the public key inside the token, and checks that the proof matches the token, names this endpoint, and is fresh and unseen. It does not accept the token on its own. A receiver that skips the proof is accepting a bearer token that anyone along the path can copy and replay.",
+  },
   participants: [
     {
       id: "issuer",

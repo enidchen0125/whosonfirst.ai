@@ -25,6 +25,34 @@ CIBA came out of banking, where a call-center agent or a point-of-sale terminal 
     "The agent chooses whom to ask via `login_hint`. If an attacker can influence that value, they choose who gets prompted. Derive it from the authenticated session, never from model output.",
     "CIBA support is uneven. It is common in financial-grade identity providers and less so elsewhere.",
   ],
+  lesson: "limits",
+  like: {
+    flow: "step-up-authorization",
+    except:
+      "the user is not in front of the agent. The authorization server reaches them on a device of their own, and the agent waits for the answer.",
+  },
+  phases: [
+    {
+      title: "The agent asks the authorization server to get approval",
+      from: 1,
+    },
+    {
+      title: "The authorization server contacts the user, who approves",
+      from: 4,
+    },
+    { title: "The agent collects a token good for this one payment", from: 6 },
+    {
+      title: "The agent releases the payment, and the API checks the token",
+      from: 8,
+    },
+  ],
+  parts: {
+    user: "Gets the request on a device the authorization server already knows, reads the message, authenticates, and approves or denies. They are answering the authorization server, not the agent.",
+    as: "Accepts the request, contacts the user over a channel set up with them beforehand, shows the binding message, and issues a short-lived token that carries the approved details. The user has to be known to it in advance, with an enrolled device.",
+    agent:
+      "Authenticates to the authorization server, says which user to ask and what for, collects the result, and performs the one approved action. The `binding_message` it sends is what the person reads, and `login_hint` has to come from the authenticated session, never from model output.",
+    api: "Checks that the request matches the authorization details in the token, and refuses a different amount or a second payment. If the API is yours, so is this check.",
+  },
   participants: [
     { id: "user", label: "User", sub: "On their phone", role: "human" },
     {

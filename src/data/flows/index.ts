@@ -55,12 +55,18 @@ for (const f of flows) {
   const fail = (what: string) => {
     throw new Error(`[${f.slug}] ${what}`);
   };
+  // every flow in the catalog has one: a page without it starts at the protocol
+  if (!f.phases) fail("has no phases: say what happens in a few plain parts");
+  if (!f.parts) fail("has no parts: say what each party has to do");
+  if (!f.lesson) fail("names no lesson that teaches its idea first");
   if (f.phases) {
-    if (f.phases.length < 2) fail("needs at least two phases, or none");
+    if (f.phases.length < 2) fail("needs at least two phases");
     if (f.phases[0].from !== 1) fail("its first phase must start at step 1");
     f.phases.forEach((p, i) => {
       if (!Number.isInteger(p.from) || p.from > f.steps.length)
-        fail(`phase "${p.title}" starts at step ${p.from}, which does not exist`);
+        fail(
+          `phase "${p.title}" starts at step ${p.from}, which does not exist`,
+        );
       if (i > 0 && p.from <= f.phases![i - 1].from)
         fail(`phase "${p.title}" does not start after the one before it`);
     });

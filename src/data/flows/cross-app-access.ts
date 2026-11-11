@@ -25,6 +25,32 @@ No browser redirect, no consent prompt, and one place where access is granted, l
     "The underlying IETF specification is still a working group draft, and the MCP extension pins a specific revision. Expect changes.",
     "Support is uneven on both ends: the identity provider must issue ID-JAGs and each application’s authorization server must accept them.",
   ],
+  lesson: "chains",
+  phases: [
+    {
+      title: "The user signs in through the company identity provider",
+      from: 1,
+    },
+    {
+      title: "The agent asks for a grant, and the identity provider decides",
+      from: 2,
+    },
+    {
+      title: "The agent trades the grant at the app’s authorization server",
+      from: 5,
+    },
+    {
+      title: "The agent calls the MCP server, and the server checks the token",
+      from: 8,
+    },
+  ],
+  parts: {
+    client:
+      "Signs the user in once through the company identity provider. For each application it needs, asks the identity provider for a short-lived grant, trades it at that application’s authorization server for an access token, and uses the token like any other MCP access token. It authenticates to that authorization server as a client, either registered in advance or identified by a URL.",
+    idp: "Signs the user in, then decides each request by the administrator’s policy: may this client reach that application, for this user, with these scopes? Issues a short-lived grant or refuses. An administrator configures the answer, and the user is not asked.",
+    as: "Validates the grant: the identity provider’s signature, that it is the intended audience, that the client matches, and that the grant has not expired or been used. Then issues an ordinary access token restricted to the MCP server the grant names. It trusts the identity provider because the company’s tenant was configured for single sign-on with it.",
+    mcp: "Validates the access token exactly as it would one obtained through an interactive flow. It does not need to know the difference.",
+  },
   participants: [
     { id: "client", label: "Agent", sub: "MCP client", role: "agent" },
     {

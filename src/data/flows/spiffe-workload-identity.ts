@@ -25,6 +25,30 @@ For agent systems this gives you a per-workload identity that works the same acr
     "Registration entries decide which workloads get which IDs. Loose selectors (a whole namespace) hand the same identity to things that should differ.",
     "An LLM agent that spawns sub-agents in one process shares one SVID among them. Workload identity stops at the process boundary.",
   ],
+  lesson: "whose-authority",
+  phases: [
+    {
+      title: "The SPIRE agent proves what it is and learns what it may issue",
+      from: 1,
+    },
+    {
+      title: "The AI agent asks for its identity and receives a certificate",
+      from: 3,
+    },
+    { title: "The AI agent and the tool service verify each other", from: 6 },
+    {
+      title: "The tool service decides whether this identity may call it",
+      from: 7,
+    },
+  ],
+  parts: {
+    server:
+      "Has the SPIRE agent on each node prove what it is, then tells it which identities it may issue. Registration entries decide which workloads get which IDs. Loose selectors, such as a whole namespace, hand the same identity to things that should differ.",
+    node: "Proves what it is to the SPIRE server with evidence the platform provides. When a workload asks over the local socket, it works out which process is calling, matches that against the registration entries, and hands back a short-lived certificate and the trust bundle. It pushes a new certificate before the old one expires.",
+    agent:
+      "Asks the SPIRE agent for its identity over a local socket, sending no password, token or key, then presents the certificate it receives to the tool service and verifies the tool’s in return. If a call is for a user, the request carries an access token as well: the certificate says which workload this is, not which user it is acting for. Sub-agents it spawns in the same process share its one identity.",
+    tool: "Presents its own certificate, verifies the AI agent’s against the trust bundle, then reads the caller’s SPIFFE ID and decides whether that identity may call this endpoint. A sidecar or mesh proxy in front of it can read the ID and decide instead. With no policy, every workload in the trust domain can call every other.",
+  },
   participants: [
     {
       id: "server",

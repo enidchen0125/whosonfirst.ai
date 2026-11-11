@@ -25,6 +25,31 @@ The same mechanism covers anything sensitive that should bypass the agent: enter
     "The server becomes a holder of third-party tokens, with everything that implies for storage and revocation.",
     "The feature is still marked as subject to change, and its wire format did change in 2026-07-28. Check client support before depending on it.",
   ],
+  lesson: "chains",
+  phases: [
+    {
+      title: "The client calls a tool, and the server answers with a link",
+      from: 1,
+    },
+    {
+      title: "The client shows the link, and the user opens it in a browser",
+      from: 4,
+    },
+    { title: "The user signs in at the third-party service", from: 6 },
+    { title: "The server gets the third-party tokens and keeps them", from: 8 },
+    {
+      title: "The client retries, and the server calls the third-party API",
+      from: 10,
+    },
+  ],
+  parts: {
+    user: "Reads the full URL the client shows, agrees to open it, and signs in and consents at the third-party service in a browser. The access they grant goes to the MCP server, not to the AI client.",
+    client:
+      "Shows the complete URL, does not fetch it itself, and opens it only with the user’s consent, in a browser context the model cannot read. There is no completion callback, so it then retries the original call, echoing `requestState`.",
+    mcp: "Finds it has no third-party token for this user, does not try the client’s token there, and answers the tool call with a URL to visit. Its connect page checks that the browser belongs to the user who made the tool call, then it runs its own OAuth flow with the third party and stores the tokens keyed to the user. If the server is yours, so are the storage and revocation of those tokens.",
+    third:
+      "Signs the user in, shows a consent screen that names the MCP server’s application, and returns a code that the server redeems for tokens. Its API then receives the server’s call. To it, the MCP server is an ordinary OAuth client.",
+  },
   participants: [
     { id: "user", label: "User", sub: "In their browser", role: "human" },
     { id: "client", label: "MCP client", sub: "Agent host", role: "agent" },
