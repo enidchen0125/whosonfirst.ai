@@ -574,10 +574,10 @@ export const tokens: TokenSpec[] = [
         note: "The workload identifier: a URI scoped to a trust domain. A SPIFFE ID qualifies. For an agent, this is “what is acting”; a user’s delegation travels separately.",
       },
       {
-        text: '"cnf": { "jwk": { "kty": "OKP", "crv": "Ed25519", "x": "1CXX…" } },',
+        text: '"cnf": { "jwk": { "kty": "OKP", "crv": "Ed25519", "alg": "Ed25519", "x": "1CXX…" } },',
         indent: 1,
         cat: "proof",
-        note: "The workload’s public key. Each request must come with a proof signed by the matching private key: a Workload Proof Token or an HTTP Message Signature.",
+        note: "The workload’s public key. Each request must come with a proof signed by the matching private key: a Workload Proof Token or an HTTP Message Signature. The key must carry `alg`, and the proof must be made with that algorithm.",
       },
       {
         text: '"jti": "x-_1CTL2cca3CSE4cwb_l",',
