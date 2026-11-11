@@ -566,8 +566,33 @@ for (const theme of THEMES) {
             inView: box.top >= 0 && box.bottom <= innerHeight / 3,
             nameShown: n.width >= 40 && n.right <= innerWidth,
             section:
-              sec && !sec.hidden && sec.offsetParent ? sec.textContent : "",
+              sec && !sec.hidden && sec.offsetParent
+                ? sec.querySelector(".here-sec-name").textContent
+                : "",
+            button: !!sec && !sec.hidden && !!sec.offsetParent,
           };
+          // pressing the button lists the sections, and choosing one goes there
+          if (found.button) {
+            sec.click();
+            await frame();
+            const menu = document.querySelector(".site-header .here-menu");
+            const links = [...menu.querySelectorAll("a")];
+            const m = menu.getBoundingClientRect();
+            found.listed = links.length;
+            found.menuFits =
+              menu.matches(":popover-open") &&
+              m.left >= 0 &&
+              m.right <= innerWidth &&
+              m.top >= 0;
+            const last = links[links.length - 1];
+            last.click();
+            await frame();
+            const target = document.getElementById(last.hash.slice(1));
+            const t = target.getBoundingClientRect().top;
+            found.went =
+              !menu.matches(":popover-open") && t >= 0 && t < innerHeight;
+            history.replaceState(null, "", location.pathname);
+          }
           scrollTo(0, 0);
           await frame();
           return found;
@@ -578,6 +603,14 @@ for (const theme of THEMES) {
             "halfway down, the header still says which page this is",
             !!line && line.inView && line.nameShown,
             line ? line.name : "no line",
+          );
+          record(
+            where,
+            "its button lists the page’s sections, and choosing one goes there",
+            !!line?.button && line.listed > 1 && line.menuFits && line.went,
+            line
+              ? `${line.listed ?? 0} listed${line.menuFits ? "" : ", list off screen"}${line.went ? "" : ", did not arrive"}`
+              : "",
           );
           if (vp.name === "desktop")
             record(

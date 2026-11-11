@@ -7,7 +7,8 @@
  *
  * It takes the place of the small label above a page's title, so the top of the
  * page is no taller for it. A script in the base layout adds the section the
- * reader has scrolled to; without the script the line is the trail and the name.
+ * reader has scrolled to, as a button that lists the page's sections. Without
+ * the script the line is the trail and the name.
  *
  * It sits inside the site header, whose styles and script address `nav`
  * elements there, so this is a `div` with the navigation role.
@@ -47,7 +48,17 @@ const { trail = [], current } = Astro.props;
     }
     <li class="here-page" aria-current="page">{current}</li>
   </ol>
-  <span class="here-sec" aria-hidden="true" hidden></span>
+  <button class="here-sec" type="button" popovertarget="here-menu" hidden>
+    <span class="visually-hidden">Sections on this page. Now in: </span>
+    <span class="here-sec-name"></span>
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+  </button>
+  <div class="here-menu" id="here-menu" popover>
+    <p>On this page</p>
+    <ol></ol>
+  </div>
 </div>
 
 <style>
@@ -99,26 +110,106 @@ const { trail = [], current } = Astro.props;
     color: var(--fg);
     font-weight: 600;
   }
-  /* the section scrolled to: in the reading face, and the first thing to give way */
+  /* The section scrolled to, in the reading face. It is a button: pressing it lists
+     the page's sections, to go to another. It is the first thing to give way. */
   .here-sec {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     flex: 0 1 auto;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-height: 1.6rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--fg-muted);
     font-family: var(--font-body, inherit);
     font-size: 0.84rem;
     font-weight: 400;
     letter-spacing: 0;
     text-transform: none;
+    cursor: pointer;
   }
-  .here-sec::before {
-    content: '›';
-    margin-right: 0.6rem;
-    color: var(--fg-subtle);
+  .here-sec[hidden] {
+    display: none;
+  }
+  .here-sec:hover,
+  .here-sec[aria-expanded='true'] {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .here-sec-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .here-sec svg {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  .here-menu {
+    position: fixed;
+    inset: auto;
+    top: var(--here-menu-top, 6rem);
+    left: var(--here-menu-left, 1rem);
+    margin: 0;
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(70vh, 30rem);
+    overflow-y: auto;
+    padding: 0.7rem 0.9rem 0.8rem;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    color: var(--fg);
+    box-shadow: 3px 3px 0 var(--border);
+    font-family: var(--font-body, inherit);
+    font-size: 0.94rem;
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: normal;
+  }
+  .here-menu p {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-label);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .here-menu ol {
+    display: block;
+  }
+  .here-menu :global(li) {
+    margin: 0;
+  }
+  .here-menu :global(li)::before {
+    content: none;
+  }
+  .here-menu :global(a) {
+    display: block;
+    padding: 0.35rem 0;
+    color: var(--fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .here-menu :global(li:last-child a) {
+    border-bottom: 0;
+  }
+  .here-menu :global(a:hover) {
+    text-decoration: underline;
+  }
+  .here-menu :global(a[aria-current]) {
+    font-weight: 600;
   }
   @media (max-width: 40rem) {
-    /* on a phone the line is for the page's name; a section would crowd it out */
+    /* on a phone the line is for the page's name, and the button is its sign alone */
     .here-sec {
+      margin-left: auto;
+      flex: none;
+    }
+    .here-sec-name {
       display: none;
     }
     /* and a label in the middle of the trail gives way to the name, or to its short form */
