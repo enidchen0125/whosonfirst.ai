@@ -40,7 +40,8 @@ Both run the same exchange, and in both the backend is a **confidential client**
 
 - **Prove which app it is when it trades the code.** With the client secret it was given at registration, or with a key of its own where the authorization server supports one. The [flow page](/flows/authorization-code-pkce/#hosted) shows the request.
 - **Use PKCE as well.** The [security best current practice](/standards/#rfc9700) recommends it for every client, and it costs nothing.
-- **Register exact redirect addresses.** The code is sent to that address and no other.
+- **Register exact redirect addresses.** The code is sent to that address and no other. Where a service does not say which authorization server a response came from, use a separate address for each service.
+- **Tie the callback to the session that started it.** Keep `state` and the PKCE value in the user's session, and accept a code only if this browser's session began this request. Otherwise an attacker can finish, in a victim's browser, a connection the attacker started, and the victim's agent begins working in the attacker's account.
 - **Ask for scopes when a task needs them.** Read access the first time a user asks about their schedule, and write access the first time they ask the agent to create an event. An agent that asks for everything at sign-up holds everything from then on.
 
 ## Where the tokens live
@@ -63,6 +64,7 @@ Refresh tokens need a little care in use:
 The model chooses which tool to call and with what arguments. Your code makes the call.
 
 - The token is attached by your code, after the model has decided, and is never part of the prompt, the tool's description or the tool's result.
+- A token goes only to the API it was issued for. The host is fixed in the tool's code, or checked against a list you keep. It never comes from an address the model supplied or the agent read: a general "fetch this URL" tool that adds the user's token will send it wherever injected text points.
 - Watch the places that record requests: logs, traces and error reports often capture headers.
 - Where the agent also runs code it wrote or was given, keep credentials out of that environment altogether. See [sandboxes](/deployments/sandboxes/) and the [credential broker](/flows/credential-broker/) pattern.
 
@@ -91,6 +93,8 @@ Some of what the agent touches belongs to you and not to any user: its database,
   <li>Refresh tokens are stored on the server, encrypted, filed by user and by issuer.</li>
   <li>The user a token is fetched for comes from the session, never from model output.</li>
   <li>Tokens do not appear in prompts, tool results, logs or traces.</li>
+  <li>A token is sent only to the API it was issued for, at a host fixed in code.</li>
+  <li>A sign-in is finished only in the browser session that started it.</li>
   <li>Unattended work runs on narrow scopes, is attributable to a job, and can be switched off by the user.</li>
   <li>The app's own access uses the platform's identity where one is offered.</li>
 </ul>

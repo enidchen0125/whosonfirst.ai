@@ -172,7 +172,7 @@ grant_type=authorization_code
       kind: "back",
       label: "API call with Bearer token",
       title: "The agent calls the API",
-      body: `The token goes in the \`Authorization\` header and nowhere else. Never in a URL, and never into the model’s context window: a token the model can read is a token a prompt injection can exfiltrate.`,
+      body: `The token goes in the \`Authorization\` header and nowhere else. Never in a URL, and never into the model’s context window: a token the model can read is a token a prompt injection can exfiltrate. It goes only to the API it was issued for, at an address fixed in the code and never taken from the model.`,
       code: {
         lang: "http",
         text: `GET /api/events?from=today HTTP/1.1
@@ -185,7 +185,7 @@ Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
       kind: "self",
       label: "Validate iss, aud, exp, scope",
       title: "The API validates the token",
-      body: `Signature, issuer, expiry, scope, and above all **audience**. An API that accepts tokens minted for some other service becomes a confused deputy. If the token is for \`https://calendar.example/api\` and this is not that, reject it.`,
+      body: `Signature, issuer, expiry, scope, the token type where the issuer sets one, and above all **audience**. An API that accepts tokens minted for some other service becomes a confused deputy. If the token is for \`https://calendar.example/api\` and this is not that, reject it.`,
     },
     {
       from: "api",
@@ -251,6 +251,12 @@ grant_type=authorization_code
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 &resource=https://calendar.example/api`,
           },
+        },
+        {
+          title: "The callback belongs to the session that started it",
+          body: `One desktop agent knows what it sent. A backend serving many users has to be told. Keep \`state\` and the PKCE verifier in the user’s session, not in a table any request can look up, and accept a code only if this browser’s session started this request. Otherwise an attacker can start a connection in their own session, sign in to the service as themselves, and get a victim’s browser to load the callback. The attacker’s account is then connected to the victim’s profile, and the victim’s agent begins working in it.
+
+Where a service does not send \`iss\` in step 6, register a separate redirect address for each service, so that a response arriving at the wrong one is refused.`,
         },
         {
           title: "When the access token runs out",
