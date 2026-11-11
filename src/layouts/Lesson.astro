@@ -65,6 +65,15 @@ const term = (name: string) =>
           }
         </ol>
       </nav>
+      {
+        i > 0 && (
+          <p class="builds">
+            This lesson builds on the {i === 1 ? 'one' : 'ones'} before it. If you arrived here first and a term is
+            unfamiliar, <a href={`/learn/${lessons[0].slug}/`}>lesson 1</a> is where they start, and each is in the{' '}
+            <a href="/glossary/">glossary</a>.
+          </p>
+        )
+      }
     </div>
   </div>
 
@@ -241,6 +250,14 @@ const term = (name: string) =>
       clip-path: inset(50%);
       white-space: nowrap;
     }
+  }
+
+  /* for the reader who landed here from somewhere other than the lesson before */
+  .builds {
+    margin: 0.9rem 0 0;
+    max-width: 42rem;
+    font-size: 0.92rem;
+    color: var(--fg-muted);
   }
 
   .lesson {

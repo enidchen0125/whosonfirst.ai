@@ -41,8 +41,8 @@ const checks: CheckQuestion[] = [
         why: "With her password, the agent cannot be told apart from Alice. Whatever it does is recorded as her doing it.",
       },
       {
-        text: "That an unknown program deleted it.",
-        why: "The sign-in was valid, so the API attributes everything that follows to Alice’s account.",
+        text: "That the calendar-assistant app deleted it.",
+        why: "That is what a token would let the API record. A password sign-in names no app, only Alice.",
       },
     ],
   },
@@ -114,11 +114,16 @@ const checks: CheckQuestion[] = [
 
   <Scenario scenario={apiSees} glance="All three at a glance" />
 
-  <h2>Where the API key falls short</h2>
+  <h2>Where the key and the password fall short</h2>
   <p>
     An API key is what most of us reach for first, and for a program with one owner it is fine. The trouble starts
     when one agent works for many people. One key is one identity, so every request looks the same to the API,
     whoever asked. The agent can add a name to the request, but a name the sender typed is a claim, not evidence.
+  </p>
+  <p>
+    Handing the agent Alice’s password fails the other way. The API now believes Alice herself is there. Everything
+    the agent does is recorded as her doing it, and nothing holds it to her calendar: a password opens the whole
+    account, for as long as she does not change it.
   </p>
   <p>
     That matters more for an agent than for an ordinary program, because an agent can be talked into things. It reads

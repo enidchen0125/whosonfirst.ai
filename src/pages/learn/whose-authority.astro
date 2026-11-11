@@ -53,7 +53,7 @@ const sort: CheckQuestion[] = [
   {
     id: "sort-support",
     question:
-      "A support bot that tells customers the status of their own orders.",
+      "A support bot that tells each customer the status of their own orders, and must never show one customer another’s.",
     options: [
       {
         text: PERSON,
@@ -154,16 +154,16 @@ const checks: CheckQuestion[] = [
       "Your agent runs as a nightly job and calls an internal billing API. Security asks what identity it runs as. Which is the best answer?",
     options: [
       {
-        text: "It uses an API key that we keep in an environment variable.",
-        why: "That is a credential, not an identity. It never expires, it has to be stored and rotated by hand, and anyone who copies it is the job.",
+        text: "A shared one: the API key we keep in an environment variable for our services.",
+        why: "That is a credential, not an identity. It usually has no expiry, it has to be stored and replaced by hand, and anyone who copies it is the job.",
       },
       {
-        text: "Its own: an identity our platform issues to that one job, traded for a short-lived token that can reach billing and nothing else.",
+        text: "Its own: an identity the platform issues to that one job, good for billing and nothing else.",
         correct: true,
         why: "It names one workload, it is issued where the job runs so nothing long-lived has to be stored, and what it can reach is written down in one rule.",
       },
       {
-        text: "Mine. I set it up, so it runs under my account.",
+        text: "Mine: I set the job up, so it runs under my own account and permissions.",
         why: "Then the job can do everything you can, its actions are logged as yours, and it breaks or lingers when you change teams.",
       },
     ],
@@ -175,7 +175,7 @@ const checks: CheckQuestion[] = [
     options: [
       {
         text: "The administrator who set the agent up.",
-        why: "The administrator wrote the rule, but is not named in the token. The token is about whoever is acting on it.",
+        why: "The administrator wrote the rule, but is not named in the token. The token is about whoever’s authority is being used: here, the agent’s own.",
       },
       {
         text: "The agent itself.",
@@ -194,7 +194,7 @@ const checks: CheckQuestion[] = [
       "Alice connects her mailbox to an agent and leaves for two weeks. The agent keeps working on a refresh token. What is the main risk?",
     options: [
       {
-        text: "The refresh token will expire and the agent will stop.",
+        text: "The refresh token may expire while she is away, and the agent will stop working.",
         why: "That would be an inconvenience. The risk is in what the agent can do while it keeps working.",
       },
       {
@@ -203,8 +203,8 @@ const checks: CheckQuestion[] = [
         why: "A person’s authority, and no person present to notice. Narrow the scope, keep a way to reach Alice for anything that cannot be undone, and know how the grant is revoked.",
       },
       {
-        text: "The mail service cannot tell that an agent is involved.",
-        why: "It can: the token names the app it was issued to. The trouble is how much that app can do while unsupervised.",
+        text: "The mail service cannot tell which app is using Alice’s access.",
+        why: "It can: the token names the client it was issued to. The trouble is how much that app can do while unsupervised.",
       },
     ],
   },
@@ -255,7 +255,10 @@ const checks: CheckQuestion[] = [
     questions={sort}
   />
 
-  <p>A rule of thumb that covers most cases:</p>
+  <p>
+    The pattern in those five: the mail assistant, the support bot and the agent filing Alice’s receipts act for a
+    person. The invoice job and the deploy digest act as themselves. A rule of thumb that covers most cases:
+  </p>
   <ul>
     <li>If the right answer depends on who is asking, the agent acts for that person.</li>
     <li>If the work belongs to a team or a company, and runs on a schedule or a trigger, the agent acts as itself.</li>
@@ -267,6 +270,12 @@ const checks: CheckQuestion[] = [
     proves which software it is to the authorization server, gets a short-lived access token, and sends that to the
     API. There is no browser and no consent screen, because there is no user. OAuth calls this{' '}
     <strong>client credentials</strong>.
+  </p>
+  <p>
+    Which service plays the authorization server depends on where the agent runs. Inside a company it is usually
+    the sign-in system its services already trust. In a cloud it is the cloud’s own token service. On Kubernetes
+    the cluster can play the part itself: it issues each pod a token, and an API in the cluster can check that token
+    directly.
   </p>
   <p>
     The interesting part is the first step. What does the agent prove itself <em>with</em>? There are three common
@@ -293,14 +302,14 @@ const checks: CheckQuestion[] = [
         <tr>
           <th scope="row">Who issues it</th>
           <td>Whoever runs the API</td>
-          <td>The authorization server</td>
+          <td>The authorization server, for a secret. A key pair is your own, with the public half registered there</td>
           <td>The platform the agent runs on: a cloud, Kubernetes, a CI system</td>
         </tr>
         <tr>
           <th scope="row">If a copy leaks</th>
           <td>It works until someone notices and replaces it</td>
           <td>A token stops in minutes. The secret works until it is replaced</td>
-          <td>It stops when it expires, usually within the hour</td>
+          <td>It stops when it expires: minutes to hours, depending on the platform</td>
         </tr>
         <tr>
           <th scope="row">Who replaces it</th>
@@ -318,12 +327,13 @@ const checks: CheckQuestion[] = [
     is, and replaces the note before it expires. The job trades that note for access.
   </p>
 
-  <Scenario scenario={vouch} title="An identity the agent never had to be given" />
+  <Scenario scenario={vouch} title="An identity nobody had to store for the agent" />
 
   <p>
-    When the service accepting the note is not the platform that issued it, such as a cloud accepting a note from
-    your CI system, the arrangement is called <strong>federation</strong>: one system agreeing to trust identities
-    that another one issued.
+    In the figure the platform and the authorization server are two different systems, and the second has agreed to
+    accept identities that the first one issues. That agreement is called <strong>federation</strong>. A cloud
+    accepting a note from your CI system is the usual example. Where a platform’s own services accept its own notes,
+    nothing is federated: it is all one system.
   </p>
 
   <Mixup belief="A service account is the safe choice, because no user’s access is involved.">

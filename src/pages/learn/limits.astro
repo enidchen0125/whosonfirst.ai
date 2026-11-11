@@ -39,8 +39,8 @@ const failures: ScenarioData = {
       hops: ["a request, with the copied token"],
       findings: [
         {
-          verdict: "yes",
-          note: "The copy stops working when the token expires. Minutes, not months.",
+          verdict: "partly",
+          note: "The copy works until the token expires. Minutes, not months.",
         },
         {
           verdict: "partly",
@@ -59,24 +59,24 @@ const failures: ScenarioData = {
           note: "Reading a calendar is not a step anyone would be asked about.",
         },
       ],
-      so: `A stolen token is a real token. Two things limit what it is worth: **time**, because it expires, and **proof**, because a token bound to a key is useless to someone who has only the token.`,
+      so: `A stolen token is a real token. Two things limit what it is worth: **time**, because it expires, and **proof**, because a token bound to a key is refused when it arrives without the key.`,
     },
     {
       id: "misuse",
       name: "The agent is talked into doing something",
       cast: [
         { label: "Agent", sub: "read a poisoned page", role: "agent" },
-        { label: "Mail API", role: "resource" },
+        { label: "Calendar API", role: "resource" },
       ],
-      hops: ["a request to send mail, with its calendar token"],
+      hops: ["a request to delete every event, with its own token"],
       findings: [
         {
           verdict: "no",
           note: "The agent is using its own, valid token. Expiry is beside the point.",
         },
         {
-          verdict: "yes",
-          note: "The token is for reading a calendar. The mail API refuses it, whatever the agent was told.",
+          verdict: "partly",
+          note: "A read-only token cannot delete, so this request is refused. Whatever the token does allow, the agent can still be talked into.",
         },
         {
           verdict: "no",
@@ -88,7 +88,7 @@ const failures: ScenarioData = {
         },
         {
           verdict: "yes",
-          note: "If sending in Alice’s name needs her approval, she sees the request and says no.",
+          note: "If the API will not delete without Alice’s approval, the request stops in front of her.",
         },
       ],
       so: `A tricked agent uses real credentials, so neither time nor proof helps. **What holds is what the token cannot do**, and a person standing in front of anything that cannot be undone.`,
@@ -104,7 +104,7 @@ const failures: ScenarioData = {
       findings: [
         {
           verdict: "partly",
-          note: "An access token is nearly worthless by the time it arrives. A refresh token or an API key is not.",
+          note: "An access token works only for the minutes it has left. A refresh token or an API key keeps working.",
         },
         { verdict: "partly", note: "It limits what the thief gets." },
         {
@@ -129,7 +129,7 @@ const checks: CheckQuestion[] = [
       "An attacker copies a token that is bound to a key. They do not have the key. What can they do with the token?",
     options: [
       {
-        text: "Use it until it expires.",
+        text: "Use it at that API until it expires, like any other token.",
         why: "That is true of a plain bearer token. A bound token has to arrive with a fresh signature made by the private key.",
       },
       {
@@ -168,15 +168,15 @@ const checks: CheckQuestion[] = [
     question: "Where should an agent’s long-lived credentials be kept?",
     options: [
       {
-        text: "In the system prompt, so the model can use them when it needs to.",
-        why: "Whatever is in the prompt can be repeated by the model, to anyone whose text it reads.",
+        text: "In an environment variable inside the sandbox where the agent runs code.",
+        why: "Code the agent runs there can read its environment, and so can anything that code was talked into running.",
       },
       {
-        text: "In the agent’s memory of the conversation.",
-        why: "That is also something the model reads, and often something that is logged.",
+        text: "In each tool’s description, so the model knows which key goes with which tool.",
+        why: "A tool’s description is part of what the model reads, so it can be repeated to anyone whose text the model reads.",
       },
       {
-        text: "In the code around the model, or behind a proxy outside it. Never where the model can read them.",
+        text: "In the code around the model, or behind a proxy outside it, where the model cannot read them.",
         correct: true,
         why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential. The model sees the result and never the secret.",
       },
@@ -201,7 +201,7 @@ const checks: CheckQuestion[] = [
     ["A token only the holder of a key can use", "Sender-constrained token"],
     ["Showing, on each request, that you hold the key", "Proof of possession"],
     ["One common way of doing that", "DPoP"],
-    ["The API demanding a fresh, specific approval", "Step-up"],
+    ["The API sending the agent back for a fresh sign-in or a wider approval", "Step-up"],
   ]}
 >
   <h2>Two failures to plan for</h2>
@@ -219,8 +219,7 @@ const checks: CheckQuestion[] = [
   </ul>
   <p>
     You cannot prevent either for certain. What you can decide is what each one costs. Five controls do most of
-    that work. Before you look, guess which of them would stop an agent that has been tricked into sending Alice’s
-    calendar to a stranger.
+    that work. Before you look, guess: does any one of them help with everything that can go wrong?
   </p>
 
   <Scenario scenario={failures} glance="All three at a glance" />
@@ -232,18 +231,22 @@ const checks: CheckQuestion[] = [
 
   <h2>The five controls</h2>
   <p>
-    <strong>Keep tokens short-lived.</strong> Minutes for an access token. The refresh token makes that painless
-    for the agent and limits what a copy is worth. It is the cheapest control here, and the one already built in.
+    <strong>Keep tokens short-lived.</strong> Minutes for an access token. A refresh token makes that painless for
+    the agent, and the short life limits what a copy is worth. It is the cheapest control here, and the one already
+    built in.
   </p>
   <p>
     <strong>Ask for little, and ask late.</strong> One audience and the narrowest scope that does the job, requested
-    when a task needs it. An agent that holds only <code>calendar.read</code> cannot be talked into sending mail.
+    when a task needs it. An agent that holds only <code>calendar.read</code> cannot be talked into deleting
+    anything. It can still be talked into reading, so a narrow scope shrinks the damage without removing it.
   </p>
   <p>
     <strong>Bind the token to a key.</strong> The agent makes a key pair and keeps the private half. The token names
     the public half, and every request carries a fresh signature made with the private one. A copy of the token is
-    then refused. This is a <strong>sender-constrained token</strong>; the signature is{' '}
-    <strong>proof of possession</strong>, and the most common way to do it is called DPoP.
+    then refused. This is a <strong>sender-constrained token</strong>. The signature is called{' '}
+    <strong>proof of possession</strong>, and one common way to do it is DPoP. The private key stays in your code or
+    in the platform’s key store, never where the model can read it: a key the model could repeat would be no better
+    than a token it could repeat.
   </p>
   <p>
     <strong>Keep credentials out of the model’s reach.</strong> The model decides which tool to call. Your code makes
@@ -253,9 +256,10 @@ const checks: CheckQuestion[] = [
   </p>
   <p>
     <strong>Ask a person when it matters.</strong> For anything that cannot be undone, the API refuses the everyday
-    token and says what it needs. The person approves that one action at the authorization server, and the agent
-    gets a token good for exactly that. This is called <strong>step-up</strong>. If the person is not at the
-    keyboard, the authorization server can reach them on their phone instead.
+    token and says what it needs. The agent sends the person back to the authorization server, to sign in again or
+    to approve more. This is called <strong>step-up</strong>. When the request also describes the one action, the
+    token that comes back is good for exactly that. If the person is not at the keyboard, the authorization server
+    can reach them on their phone instead.
   </p>
 
   <Mixup belief="My agent asks the user to confirm before doing anything risky, so risky actions are covered.">

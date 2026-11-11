@@ -168,7 +168,7 @@ export const lessons: Lesson[] = [
     title: "What limits the damage when something goes wrong?",
     short: "Limiting the damage",
     promise:
-      "Name the two failures every agent design has to plan for, and the control that answers each.",
+      "Name the two failures every agent design has to plan for, and the controls that limit each.",
     minutes: 7,
     teaches: [
       "Prompt injection",

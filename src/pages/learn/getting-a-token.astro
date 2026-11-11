@@ -4,6 +4,7 @@ import FlowDiagram from "../../components/FlowDiagram.astro";
 import Mixup from "../../components/Mixup.astro";
 import type { CheckQuestion } from "../../data/learn/types";
 import type { Flow } from "../../data/types";
+import { inline } from "../../lib/md";
 
 /**
  * Authorization code with PKCE, shortened to what a first reading needs. The full
@@ -11,140 +12,166 @@ import type { Flow } from "../../data/types";
  * Left out on purpose: the `state` value, the issuer check on the way back, and
  * the API's validation as a step of its own (the previous lesson covers it).
  */
-const walk: Pick<Flow, "slug" | "title" | "participants" | "steps"> = {
-  slug: "learn-getting-a-token",
-  title: "Getting a token for a user",
-  participants: [
-    { id: "user", label: "Alice", sub: "The user", role: "human" },
-    { id: "agent", label: "Agent", sub: "Your app", role: "agent" },
-    {
-      id: "as",
-      label: "Authorization server",
-      sub: "Sign-in service",
-      role: "authz",
-    },
-    { id: "api", label: "Calendar API", role: "resource" },
+/** The eight steps in four parts: the list above the diagram, and the bands inside it. */
+const PARTS: [title: string, from: number, says: string][] = [
+  [
+    "Alice asks, and the agent sends her to sign in",
+    1,
+    "The agent has no access yet. It sends her browser to the authorization server, and keeps a one-time value to itself.",
   ],
-  steps: [
-    {
-      from: "user",
-      to: "agent",
-      kind: "back",
-      label: "“What’s on tomorrow?”",
-      title: "Alice asks for something the agent cannot reach yet",
-      body: `The agent has no token for the calendar. Asking for one now, when a task needs it, means the screen Alice is about to see matches something she just asked for.`,
-    },
-    {
-      from: "agent",
-      to: "as",
-      kind: "front",
-      label: "Sends Alice to sign in",
-      title: "The agent sends Alice’s browser to the authorization server",
-      body: `The agent does not ask Alice for anything. It opens her browser on the authorization server’s own page, with a note in the address: which app is asking, what for, and where to send her back. This is the jump you have seen behind every “Sign in with” button.
+  [
+    "Alice signs in and approves, away from the agent",
+    3,
+    "She proves who she is to the authorization server and says yes there. Her approval is recorded there, which is called **consent**.",
+  ],
+  [
+    "The agent trades a one-time code for a token",
+    4,
+    "Her browser comes back with a code that works once. The agent trades it, together with the value it kept, on a direct connection. That check is called **PKCE**.",
+  ],
+  [
+    "The agent calls the API",
+    7,
+    "The access token goes in a header, the API runs its five checks, and Alice gets her answer.",
+  ],
+];
 
-The agent also makes up a random secret and sends only a scrambled version of it, the \`code_challenge\`. It keeps the original. That matters in step 5.`,
-      code: {
-        lang: "http",
-        text: `GET /authorize?response_type=code
+const walk: Pick<Flow, "slug" | "title" | "participants" | "steps" | "phases"> =
+  {
+    slug: "learn-getting-a-token",
+    title: "Getting a token for a user",
+    phases: PARTS.map(([title, from]) => ({ title, from })),
+    participants: [
+      { id: "user", label: "Alice", sub: "The user", role: "human" },
+      { id: "agent", label: "Agent", sub: "Your app", role: "agent" },
+      {
+        id: "as",
+        label: "Authorization server",
+        sub: "Sign-in service",
+        role: "authz",
+      },
+      { id: "api", label: "Calendar API", role: "resource" },
+    ],
+    steps: [
+      {
+        from: "user",
+        to: "agent",
+        kind: "back",
+        label: "“What’s on tomorrow?”",
+        title: "Alice asks for something the agent cannot reach yet",
+        body: `The agent has no token for the calendar. Asking for one now, when a task needs it, means the screen Alice is about to see matches something she just asked for.`,
+      },
+      {
+        from: "agent",
+        to: "as",
+        kind: "front",
+        label: "Sends Alice to sign in",
+        title: "The agent sends Alice’s browser to the authorization server",
+        body: `The agent does not ask Alice for anything. It opens her browser on the authorization server’s own page, with a note in the address: which app is asking, what for, and where to send her back. This is the jump you have seen behind every “Sign in with” button.
+
+The agent also makes up a random value for this one sign-in and sends only a scrambled version of it, the \`code_challenge\`. It keeps the original, the \`code_verifier\`, to itself. That matters in step 5.`,
+        code: {
+          lang: "http",
+          text: `GET /authorize?response_type=code
   &client_id=calendar-assistant
   &scope=calendar.read
   &redirect_uri=https://assistant.example/callback
   &code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
   &code_challenge_method=S256 HTTP/1.1
 Host: auth.example`,
+        },
+        gain: [["agent", "code_verifier"]],
       },
-      gain: [["agent", "its own secret"]],
-    },
-    {
-      from: "user",
-      to: "as",
-      kind: "front",
-      label: "Signs in and approves",
-      title: "Alice signs in and says yes, away from the agent",
-      body: `Alice proves who she is to the authorization server, in whatever way it requires: a password, a passkey, a second factor. The agent is not part of this and sees none of it.
+      {
+        from: "user",
+        to: "as",
+        kind: "front",
+        label: "Signs in and approves",
+        title: "Alice signs in and says yes, away from the agent",
+        body: `Alice proves who she is to the authorization server, in whatever way it requires: a password, a passkey, a second factor. The agent is not part of this and sees none of it.
 
 Then the server shows her what is being asked, in plain words, and she approves. That approval is recorded at the authorization server. It is called **consent**, and Alice can withdraw it there later without going near the agent.`,
-    },
-    {
-      from: "as",
-      to: "agent",
-      kind: "front",
-      label: "One-time code",
-      title: "Her browser comes back carrying a one-time code",
-      body: `The authorization server sends Alice’s browser back to the agent with an **authorization code**. It is not a token. It works once, for about a minute.
-
-It is weak on purpose. This trip runs through the browser, where addresses end up in history and logs. So what travels here is worth nothing without the secret the agent kept.`,
-      code: {
-        lang: "http",
-        text: `GET /callback?code=SplxlOBeZQQYbYS6WxSbIA HTTP/1.1
-Host: assistant.example`,
       },
-      gain: [["agent", "authorization code"]],
-    },
-    {
-      from: "agent",
-      to: "as",
-      kind: "back",
-      label: "Code + its secret",
-      title: "The agent trades the code for a token, directly",
-      body: `This call goes straight from the agent to the authorization server, not through the browser. The agent sends the code together with the secret from step 2. The server scrambles the secret the same way and compares. Only the app that started the sign-in can finish it.
+      {
+        from: "as",
+        to: "agent",
+        kind: "front",
+        label: "One-time code",
+        title: "Her browser comes back carrying a one-time code",
+        body: `The authorization server sends Alice’s browser back to the agent with an **authorization code**. It is not a token. It works once, for about a minute.
+
+It is weak on purpose. This trip runs through the browser, where addresses end up in history and logs. So what travels here is worth nothing without the value the agent kept.`,
+        code: {
+          lang: "http",
+          text: `GET /callback?code=SplxlOBeZQQYbYS6WxSbIA HTTP/1.1
+Host: assistant.example`,
+        },
+        gain: [["agent", "authorization code"]],
+      },
+      {
+        from: "agent",
+        to: "as",
+        kind: "back",
+        label: "Code + the value it kept",
+        title: "The agent trades the code for a token, directly",
+        body: `This call goes straight from the agent to the authorization server, not through the browser. The agent sends the code together with the \`code_verifier\` from step 2. The server scrambles it the same way and compares. Only the app that started the sign-in can finish it.
 
 That check has a name, **PKCE** (said “pixie”). Someone who stole the code from the browser has half of what they need, and the half that never left the agent is the half that counts.`,
-      lose: [
-        ["agent", "authorization code"],
-        ["agent", "its own secret"],
-      ],
-    },
-    {
-      from: "as",
-      to: "agent",
-      kind: "resp",
-      label: "Access token (+ refresh)",
-      title: "The authorization server issues the token",
-      body: `Back comes the access token from the last lesson: about Alice, issued to this app, for the calendar API, read only, good for ten minutes.
+        lose: [
+          ["agent", "authorization code"],
+          ["agent", "code_verifier"],
+        ],
+      },
+      {
+        from: "as",
+        to: "agent",
+        kind: "resp",
+        label: "Access token (+ refresh)",
+        title: "The authorization server issues the token",
+        body: `Back comes the access token from the last lesson: about Alice, issued to this app, for the calendar API, read only, good for ten minutes.
 
 Often a second token comes with it. A **refresh token** is not sent to any API. The agent keeps it and shows it to the authorization server when the access token runs out, to get a new one without sending Alice through sign-in again.`,
-      code: {
-        lang: "json",
-        text: `{
+        code: {
+          lang: "json",
+          text: `{
   "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…",
   "token_type": "Bearer",
   "expires_in": 600,
   "refresh_token": "8xLOxBtZp8",
   "scope": "calendar.read"
 }`,
+        },
+        gain: [
+          ["agent", "access token"],
+          ["agent", "refresh token"],
+        ],
       },
-      gain: [
-        ["agent", "access token"],
-        ["agent", "refresh token"],
-      ],
-    },
-    {
-      from: "agent",
-      to: "api",
-      kind: "back",
-      label: "Request, with the token",
-      title: "The agent calls the API",
-      body: `The token goes in the \`Authorization\` header, and the API runs its five checks.
+      {
+        from: "agent",
+        to: "api",
+        kind: "back",
+        label: "Request, with the token",
+        title: "The agent calls the API",
+        body: `The token goes in the \`Authorization\` header, and the API runs its five checks.
 
 One habit to form now: the token belongs in your code, not in the model’s prompt or memory. A token the model can read is a token that text on a web page can ask it to repeat.`,
-      code: {
-        lang: "http",
-        text: `GET /events?day=tomorrow HTTP/1.1
+        code: {
+          lang: "http",
+          text: `GET /events?day=tomorrow HTTP/1.1
 Host: calendar.example
 Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…`,
+        },
       },
-    },
-    {
-      from: "api",
-      to: "agent",
-      kind: "resp",
-      label: "Tomorrow’s events",
-      title: "The API answers",
-      body: `Alice gets her answer. The agent never saw her password, and it holds something that can do exactly one thing: read her calendar.`,
-    },
-  ],
-};
+      {
+        from: "api",
+        to: "agent",
+        kind: "resp",
+        label: "Tomorrow’s events",
+        title: "The API answers",
+        body: `Alice gets her answer. The agent never saw her password, and it holds something that can do exactly one thing: read her calendar.`,
+      },
+    ],
+  };
 
 const checks: CheckQuestion[] = [
   {
@@ -177,10 +204,10 @@ const checks: CheckQuestion[] = [
       },
       {
         text: "They can. A code is as good as a token.",
-        why: "A code cannot be sent to an API at all. It can only be traded for a token, once, by the app that holds the matching secret.",
+        why: "A code cannot be sent to an API at all. It can only be traded for a token, once, by the app that holds the matching value.",
       },
       {
-        text: "It works once, for about a minute, and only with the secret the agent kept.",
+        text: "It works once, for about a minute, and only with the value the agent kept.",
         correct: true,
         why: "That is PKCE. The half that travels through the browser is useless without the half that never left the agent.",
       },
@@ -246,9 +273,19 @@ const checks: CheckQuestion[] = [
   </p>
 
   <h2>The exchange, step by step</h2>
+  <p>Four parties and eight steps, in four parts:</p>
+  <ol class="parts">
+    {
+      PARTS.map(([title, from, says]) => (
+        <li>
+          <strong>{title}.</strong> <Fragment set:html={inline(says)} />
+        </li>
+      ))
+    }
+  </ol>
   <p>
-    Four parties, eight steps. Before you start, guess at which step the agent first holds something it could send
-    to the calendar API.
+    The diagram walks through each step. Before you start, guess at which step the agent first holds something it
+    could send to the calendar API.
   </p>
 
   <div class="wide">
@@ -275,8 +312,8 @@ const checks: CheckQuestion[] = [
   <Mixup belief="Getting an access token is how my app finds out who the user is.">
     <p>
       An access token is for the API, not for your app. It says what may be done, and your app is not meant to read
-      it. Finding out who signed in is a separate job with its own token, the ID token, which is what “Sign in with”
-      buttons add on top. Access is <em>authorization</em>. Knowing who someone is, is <em>authentication</em>. An
+      it. Finding out who signed in is a separate job with its own token, the ID token, which is what most “Sign in
+      with” buttons add on top. Access is <em>authorization</em>. Knowing who someone is, is <em>authentication</em>. An
       agent usually needs the first, and only sometimes the second.
     </p>
   </Mixup>
@@ -298,7 +335,8 @@ const checks: CheckQuestion[] = [
     <li>
       <strong>An app on the user’s machine</strong>, such as a desktop app, a command-line tool or an editor
       extension, cannot keep a secret: anything shipped inside it can be extracted. It is a{' '}
-      <strong>public client</strong>, and PKCE is what it relies on.
+      <strong>public client</strong>, and PKCE is what it relies on. The value PKCE uses is made up fresh for each
+      sign-in, so there is nothing shipped inside the app to extract.
     </li>
     <li>
       <strong>An agent with no browser where it runs</strong> shows a short code, and Alice approves on her phone
@@ -336,9 +374,20 @@ const checks: CheckQuestion[] = [
 
   <h2>And MCP?</h2>
   <p>
-    If your agent connects to a remote <strong>MCP</strong> server, this same exchange runs. MCP adds one thing in
-    front of it. The agent may never have heard of the server before, so the server’s first reply says where its
-    authorization server is, and the agent can identify itself by a web address it controls instead of a client ID
-    registered in advance. Everything after that is the eight steps above.
+    If your agent connects to a remote <strong>MCP</strong> server, this same exchange runs. MCP adds two things
+    in front of it, and one rule. The agent may never have heard of the server before, so the server’s first reply
+    points to a document that names its authorization server, and the agent can identify itself by a web address it
+    controls instead of a client ID registered in advance. The rule is that every token is requested for that one
+    server. After that, it is the eight steps above.
   </p>
 </Lesson>
+
+<style>
+  .parts {
+    padding-left: 1.4em;
+  }
+  .parts li {
+    margin-bottom: 0.6em;
+    font-size: 1.04rem;
+  }
+</style>

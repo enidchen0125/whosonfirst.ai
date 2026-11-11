@@ -1,4 +1,5 @@
 ---
+import { Code } from "astro:components";
 import Lesson from "../../layouts/Lesson.astro";
 import Mixup from "../../components/Mixup.astro";
 import Scenario from "../../components/Scenario.astro";
@@ -6,6 +7,7 @@ import type {
   CheckQuestion,
   Scenario as ScenarioData,
 } from "../../data/learn/types";
+import { codeThemes } from "../../lib/code-themes.mjs";
 
 /**
  * Three things a tool in the middle might send to the API behind it. The fuller
@@ -59,7 +61,7 @@ const chain: ScenarioData = {
           note: "`aud` is the scheduling tool. The calendar API has to ignore the address to accept it.",
         },
       ],
-      so: `This is the tempting one: the tool already holds a token, so why not use it? Because it only works if the calendar API stops checking who a token is for, and then **every service that is ever handed a token can use it anywhere.** It is called token passthrough, and MCP forbids it.`,
+      so: `This is the tempting one: the tool already holds a token, so why not use it? Because it only works if the calendar API stops checking who a token is for, and then **any service that is ever handed a token from that issuer can use it there.** It is called token passthrough, and MCP forbids it.`,
     },
     {
       id: "key",
@@ -198,8 +200,8 @@ const checks: CheckQuestion[] = [
   lede="Agents call tools, and tools call other services. Every hop needs a credential, and what gets handed along decides what the last service in the chain can know."
   checks={checks}
   keep={[
-    "Each hop gets a token of its own. **Exchange, never forward.**",
-    "A forwarded token only works if the next API stops checking the audience, and then every token works everywhere.",
+    "A service never passes on a token that was issued for itself. **Exchange, never forward.**",
+    "A forwarded token only works if the next API stops checking the audience, and then any token from that issuer works there.",
     "**Delegation** names the person and the software acting for them. **Impersonation** names only the person. Prefer delegation.",
     "Access should shrink as it travels down a chain. It should never grow.",
   ]}
@@ -236,13 +238,37 @@ const checks: CheckQuestion[] = [
     in what it requires of the calendar API: accepting a token that was addressed to someone else.
   </p>
   <p>
-    An API that does that can be used by anyone holding any token from the same authorization server. A tool you
-    connected for one purpose can quietly use your token for another. The tool has become what security people call
-    a <strong>confused deputy</strong>: a service with real access, used for something nobody approved.
+    An API that does that can be used by any service holding any token from the same authorization server. A tool
+    you connected for one purpose can quietly use your token for another. And an API that accepts tokens it was not
+    issued can be steered, by any caller holding one, into acting with authority that caller should not have.
+    Security people call a service misused that way a <strong>confused deputy</strong>.
   </p>
   <p>
     The audience check from the token lesson is the defense, and it only works if no service ever asks another to
-    skip it. So the rule is short: <strong>exchange, never forward.</strong>
+    skip it.
+  </p>
+
+  <h2>What to do instead</h2>
+  <p>
+    The tool asks for a token of its own for the next hop. It takes the token it was handed back to the
+    authorization server and asks for a new one, addressed to the calendar API. The authorization server decides
+    whether this tool may act for Alice there, and if so issues it. That trade is a{' '}
+    <strong>token exchange</strong>, and this is what then arrives at the calendar API:
+  </p>
+  <Code
+    code={`{
+  "sub": "alice",
+  "aud": "https://calendar.example",
+  "scope": "calendar.read",
+  "act": { "sub": "scheduling-tool" }
+}`}
+    lang="json"
+    themes={codeThemes as any}
+    defaultColor={false}
+  />
+  <p>
+    Still about Alice, now addressed to the calendar API, and no wider than this step needs. So the rule is short:{' '}
+    <strong>exchange, never forward.</strong>
   </p>
 
   <h2>Two ways to write “for Alice”</h2>
@@ -280,7 +306,7 @@ const checks: CheckQuestion[] = [
   <h2>Where you will meet this</h2>
   <ul>
     <li>
-      <strong>An MCP server that calls another API.</strong> It may not pass along the token the client sent it.
+      <strong>An MCP server that calls another API.</strong> It must not pass along the token the client sent it.
       It gets a token of its own for the API behind it, by exchange or by asking the user to connect that account
       directly.
     </li>
@@ -290,7 +316,12 @@ const checks: CheckQuestion[] = [
     </li>
     <li>
       <strong>A request that crosses into another company.</strong> Their authorization server does not know your
-      users, so the exchange happens twice: once at home, once there.
+      users, so there are two trades: one at home for a short-lived grant, and one there for a token.
+    </li>
+    <li>
+      <strong>A request passed between services inside your own infrastructure.</strong> One variant makes a single
+      exchange at the edge, for a short-lived token built to travel from service to service. What is never forwarded
+      is a token addressed to someone else.
     </li>
   </ul>
 </Lesson>

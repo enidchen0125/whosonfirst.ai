@@ -80,7 +80,7 @@ const checksScenario: ScenarioData = {
           note: "The request reads events, and `scope` allows `calendar.read`.",
         },
       ],
-      so: `All five pass, so the API believes the claims: these are Alice’s events, for the app she approved. **It did not have to ask anyone, and it did not have to trust the agent.** The signature is the proof.`,
+      so: `All five pass, so the API believes the claims: these are Alice’s events, for the app she approved. **It did not have to ask anyone at the moment of the request, and it did not have to trust the agent.** The signature is the proof.`,
     },
     {
       id: "edited",
@@ -142,7 +142,7 @@ const checksScenario: ScenarioData = {
     },
     {
       id: "more",
-      name: "The agent asks for more",
+      name: "The agent tries to delete an event",
       hops: ["a request to delete an event, with the token"],
       exhibits: [
         claims(),
@@ -230,8 +230,8 @@ const checks: CheckQuestion[] = [
     question: "Why do access tokens usually last minutes and not months?",
     options: [
       {
-        text: "Because signatures wear out over time.",
-        why: "A signature is just as valid a year later. The expiry is a choice the issuer makes.",
+        text: "Because the issuer’s signing key changes every few minutes.",
+        why: "Signing keys are replaced far less often than that. The expiry is a choice the issuer makes for each token.",
       },
       {
         text: "Because a copied token works for whoever holds it, and a short life limits how long that is.",
@@ -240,7 +240,7 @@ const checks: CheckQuestion[] = [
       },
       {
         text: "To make users sign in more often.",
-        why: "The user is not asked again. The agent renews the token on its own, which the next lesson covers.",
+        why: "The user is usually not asked again. With a refresh token the agent renews on its own, which the next lesson covers.",
       },
     ],
   },
@@ -282,9 +282,7 @@ const checks: CheckQuestion[] = [
     An <strong>access token</strong> is the card. The front desk is called an <strong>authorization server</strong>:
     the one service that checks who people are, asks what they agree to, and issues tokens. The door is the API.
   </p>
-  <p>
-    That is as far as the picture needs to go. What makes a token work is not plastic. It is a signature.
-  </p>
+  <p>That is as far as the picture needs to go. What makes a token work is a signature.</p>
 
   <h2>What is written on it</h2>
   <p>
@@ -304,7 +302,7 @@ const checks: CheckQuestion[] = [
       <span>The statement itself</span>
     </div>
     <div>
-      <code>MEUCIQDm0J8sXv3k…</code>
+      <code>q7Zl2mXk3vT9qLz0aB7r…</code>
       <strong>Signature</strong>
       <span>The issuer’s seal over the other two parts</span>
     </div>
@@ -350,8 +348,8 @@ const checks: CheckQuestion[] = [
 
   <Mixup belief="A token is encrypted, so it is safe to put things in it and safe to leave it lying around.">
     <p>
-      A JWT is signed, not encrypted. Anyone who holds one can read every claim; paste one into any decoder and
-      see. The signature stops a token being changed. It does nothing to stop it being read, or used.
+      A JWT like this one is signed, not encrypted. Anyone who holds one can read every claim; paste one into any
+      decoder and see. The signature stops a token being changed. It does nothing to stop it being read, or used.
     </p>
   </Mixup>
 
@@ -405,8 +403,10 @@ const checks: CheckQuestion[] = [
 
   <p>
     One more thing you will run into. Not every token can be read. Some are random strings that mean nothing by
-    themselves, and the API asks the authorization server what each one stands for. The checks are the same; they
-    just happen somewhere else.
+    themselves, and the API asks the authorization server what each one stands for. Most of the checks then happen
+    there, and comparing the scope with the request stays with the API. Asking is also how an API learns that a
+    token was withdrawn early: one that only checks the signature goes on accepting a withdrawn token until it
+    expires.
   </p>
 </Lesson>
 
