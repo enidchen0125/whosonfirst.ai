@@ -136,6 +136,9 @@ a:hover {
 main :is(p, li, dd, td, figcaption, .eyebrow, h4) a:not(.btn, .card, .term) {
   color: var(--accent);
   text-decoration-thickness: 1px;
+  /* A link whose text is an address can be longer than a phone is wide. It
+     breaks where it must, and only then. */
+  overflow-wrap: break-word;
 }
 main
   :is(p, li, dd, td, figcaption, .eyebrow, h4)
