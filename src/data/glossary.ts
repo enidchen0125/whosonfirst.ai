@@ -75,7 +75,7 @@ export const glossary: Term[] = [
   },
   {
     term: "Bearer token",
-    def: "A token that works for whoever presents it, like cash. Contrast with a sender-constrained token.",
+    def: "A token that works for whoever presents it, like cash. A sender-constrained token is the kind that does not.",
     see: { href: "/flows/dpop/", label: "Sender-constrained tokens" },
   },
   {
@@ -95,7 +95,7 @@ export const glossary: Term[] = [
   },
   {
     term: "Client assertion",
-    def: "A short-lived JWT that a client signs with its own private key and presents to the authorization server in place of a client secret.",
+    def: "A short-lived JWT presented to the authorization server in place of a client secret. The client signs it with its own private key, or the platform it runs on signs it.",
     see: { href: "/flows/client-credentials/", label: "Client credentials" },
   },
   {
@@ -215,7 +215,7 @@ export const glossary: Term[] = [
   {
     term: "JWT",
     aka: ["JSON Web Token"],
-    def: "A compact, signed set of claims. The common format for access tokens, ID tokens, grants and proofs.",
+    def: "A compact, signed set of claims, written as three chunks of text joined by dots. The common format for access tokens and ID tokens.",
   },
   {
     term: "Mandate",
@@ -226,6 +226,11 @@ export const glossary: Term[] = [
     term: "MCP",
     aka: ["Model Context Protocol"],
     def: "A protocol that connects AI applications to tools and data. Its authorization specification is a profile of OAuth 2.1.",
+    see: { href: "/flows/mcp-authorization/", label: "MCP authorization" },
+  },
+  {
+    term: "Mix-up attack",
+    def: "An attack on a client that deals with more than one authorization server: it is led to send a code or a token meant for one of them to another. Checking who answered, by the issuer, prevents it.",
     see: { href: "/flows/mcp-authorization/", label: "MCP authorization" },
   },
   {
@@ -241,7 +246,7 @@ export const glossary: Term[] = [
   },
   {
     term: "OAuth",
-    def: "A framework that lets one program obtain limited access to something, for a person or for itself, without being given a password. OAuth 2.0 is the published standard; OAuth 2.1 is the draft that consolidates it.",
+    def: "A framework that lets one program obtain limited access to something, for a person or for itself. When it acts for a person, it never handles that person’s password. OAuth 2.0 is the published standard; OAuth 2.1 is the draft that consolidates it.",
     see: { href: "/learn/getting-a-token/", label: "Getting a token" },
   },
   {
@@ -258,7 +263,7 @@ export const glossary: Term[] = [
   {
     term: "OpenID Connect",
     aka: ["OIDC"],
-    def: "A layer on top of OAuth that tells an application who signed in, with an ID token. It is what a “Sign in with” button runs.",
+    def: "A layer on top of OAuth that tells an application who signed in, with an ID token. It is what most “Sign in with” buttons run.",
   },
   {
     term: "PKCE",
@@ -307,12 +312,16 @@ export const glossary: Term[] = [
     def: "The `resource` request parameter, naming the API a token is wanted for so the authorization server can restrict the audience.",
   },
   {
+    term: "Resource owner",
+    def: "The specifications’ name for the user: the person whose data an API holds, and who can approve access to it.",
+  },
+  {
     term: "Resource server",
     def: "The API or service that accepts access tokens. An MCP server is a resource server.",
   },
   {
     term: "Scope",
-    def: "A string naming a permission a token carries. Coarse by design.",
+    def: "A name for a permission that a token carries, such as `calendar.read`. Scopes are coarse on purpose: they name kinds of access, not single actions.",
   },
   {
     term: "Security token service",
@@ -344,6 +353,14 @@ export const glossary: Term[] = [
     see: { href: "/flows/spiffe-workload-identity/", label: "SPIFFE + mTLS" },
   },
   {
+    term: "State",
+    def: "A random value a client sends with an authorization request and expects back with the code, so that it can tell the answer belongs to the sign-in it started.",
+    see: {
+      href: "/flows/authorization-code-pkce/",
+      label: "Authorization code + PKCE",
+    },
+  },
+  {
     term: "Step-up",
     def: "An API’s demand for stronger or fresher authentication, or a broader scope, before it will perform a sensitive action.",
     see: {
@@ -354,7 +371,7 @@ export const glossary: Term[] = [
   {
     term: "Subject",
     aka: ["sub"],
-    def: "Who or what a token is about: the principal.",
+    def: "Who or what a token is about: the person an agent is acting for, or the agent itself when it acts alone.",
   },
   {
     term: "SVID",
@@ -386,6 +403,14 @@ export const glossary: Term[] = [
   {
     term: "Trust domain",
     def: "A set of systems that share a root of trust and one administrative authority for identities.",
+  },
+  {
+    term: "Trust rule",
+    def: "In workload identity federation, the configuration on the receiving side that says which outside identities it accepts and what each one may do.",
+    see: {
+      href: "/flows/workload-identity-federation/",
+      label: "Workload identity federation",
+    },
   },
   {
     term: "Web Bot Auth",
