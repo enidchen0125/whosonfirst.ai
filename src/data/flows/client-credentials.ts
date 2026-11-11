@@ -55,10 +55,11 @@ The grant is trivial. The hard part is the credential the agent uses to authenti
       kind: "self",
       label: "Sign a client assertion",
       title: "The agent creates a signed proof of its identity",
-      body: `Instead of sending a shared secret, the agent signs a short-lived JWT with its private key. Issuer and subject are both the client ID; the audience is the authorization server; \`jti\` lets the server refuse a second use, if it keeps track, and the short expiry limits a copy either way. Keep the private key where the runtime can ask for a signature and cannot read the key: a key management service, a hardware module or a platform keystore. A key in a file or an environment variable leaks the same way a client secret does.`,
+      body: `Instead of sending a shared secret, the agent signs a short-lived JWT with its private key. Issuer and subject are both the client ID; the audience is the authorization server; \`jti\` lets the server refuse a second use, if it keeps track, and the short expiry limits a copy either way. The \`typ\` header marks it as a client authentication JWT, as RFC 10070 recommends. Keep the private key where the runtime can ask for a signature and cannot read the key: a key management service, a hardware module or a platform keystore. A key in a file or an environment variable leaks the same way a client secret does.`,
       code: {
         lang: "json",
-        text: `{
+        text: `// header: { "alg": "ES256", "typ": "client-authentication+jwt" }
+{
   "iss": "invoice-agent",
   "sub": "invoice-agent",
   "aud": "https://auth.example",
@@ -86,7 +87,7 @@ grant_type=client_credentials
 &scope=invoices.read invoices.reconcile
 &resource=https://erp.example/api
 &client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
-&client_assertion=eyJhbGciOiJFUzI1NiJ9…`,
+&client_assertion=eyJhbGciOiJFUzI1NiIs…`,
       },
     },
     {
@@ -111,6 +112,8 @@ grant_type=client_credentials
   "client_id": "invoice-agent",
   "aud": "https://erp.example/api",
   "scope": "invoices.read invoices.reconcile",
+  "jti": "5f0a2c9e-7d41-4b83-a6e2-91c3d8b7f054",
+  "iat": 1794268800,
   "exp": 1794269400
 }`,
       },
@@ -143,6 +146,7 @@ grant_type=client_credentials
   standards: [
     "rfc6749",
     "rfc7523",
+    "rfc10070",
     "rfc8707",
     "rfc9068",
     "mcp-client-credentials",

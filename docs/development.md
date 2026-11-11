@@ -120,7 +120,7 @@ They restate the flow's own page. Do not put a fact in an overview that the page
 
 **A line break before an inline element loses its space.** In an `.astro` template, text that ends a line followed by `<strong>`, `<a>`, `<em>` or `<code>` on the next runs into it on the page. Write `{' '}` at the end of the first line. `npm run check:rendered` finds any that slip through.
 
-**Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`. The first standard a flow lists is shown at the top of its page as the primary specification, with its status and revision, so list the one the flow follows most closely first.
+**Add or update a standard.** Edit `src/data/standards.ts`. Flows refer to standards by `id`. The first standard a flow lists is shown at the top of its page as the primary specification, with its status and revision, so list the one the flow follows most closely first. A pattern that no specification defines sets `noBasis` to a few words saying so, and its page names no primary specification.
 
 **Classify a flow's references.** A flow can give each standard it lists a role in `roles`: `required`, `optional`, `background` or `unresolved`. Its rating is then that of its least mature required reference; the rule is on the About page under "How flows are rated" and in `src/data/rating.ts`. If the flow implements more than one specification, name them in `basis`. The build fails if a flow with `roles` leaves a listed standard unclassified, has a basis that is not required, or declares a `maturity` other than the one its required references give it.
 

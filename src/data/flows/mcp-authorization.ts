@@ -79,7 +79,7 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
       kind: "resp",
       label: "401 + resource_metadata",
       title: "The server says where to look",
-      body: `The \`WWW-Authenticate\` header can carry the URL of the server’s protected resource metadata and the scopes needed for this request. The header is optional. If it is missing, the client constructs the well-known URL itself, trying the path-specific form before the root.`,
+      body: `The \`WWW-Authenticate\` header can carry the URL of the server’s protected resource metadata and the scopes needed for this request. The \`resource_metadata\` parameter is optional: a server may leave it out if it serves the document at a well-known URL. The client then constructs that URL itself, trying the path-specific form before the root.`,
       code: {
         lang: "http",
         text: `HTTP/1.1 401 Unauthorized
@@ -242,18 +242,22 @@ grant_type=authorization_code
       kind: "back",
       label: "MCP request + Bearer token",
       title: "The client retries with the token",
-      body: `The token goes in the \`Authorization\` header on every request. As of 2026-07-28 MCP has no sessions and no initialization handshake, so the bearer token is the only thing identifying the caller from one request to the next. The \`Mcp-Method\` and \`Mcp-Name\` headers let a gateway apply per-tool policy without parsing the body.`,
+      body: `The token goes in the \`Authorization\` header on every request. As of 2026-07-28 MCP has no sessions and no initialization handshake, so the bearer token is the only thing identifying the caller from one request to the next. For the same reason every request states its protocol version, in the \`MCP-Protocol-Version\` header and again in \`_meta\`, where it also declares the client’s capabilities. The \`Mcp-Method\` and \`Mcp-Name\` headers let a gateway apply per-tool policy without parsing the body.`,
       code: {
         lang: "http",
         text: `POST /mcp HTTP/1.1
 Host: mcp.example.com
 Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9…
+Accept: application/json, text/event-stream
+Content-Type: application/json
+MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
 Mcp-Name: search_files
-Content-Type: application/json
 
 {"jsonrpc":"2.0","id":2,"method":"tools/call",
- "params":{"name":"search_files","arguments":{"query":"Q3 plan"}}}`,
+ "params":{"name":"search_files","arguments":{"query":"Q3 plan"},
+  "_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+           "io.modelcontextprotocol/clientCapabilities":{}}}}`,
       },
     },
     {
@@ -350,7 +354,7 @@ If your server has to call something else for the user, it gets a token of its o
   notes: [
     {
       title: "Why this flow is rated emerging",
-      body: `The 2026-07-28 revision is published and current, but two things this page draws rest on IETF working-group drafts. The revision requires authorization servers to implement OAuth 2.1 and cites draft -13; the current draft is -17. It recommends Client ID Metadata Documents, which steps 4 to 8 use, and cites draft -00; the current draft is -03. Either draft can still change. The rating describes those dependencies. It is not a judgment on how safe the flow is.`,
+      body: `The 2026-07-28 revision is published and current, but two things this page draws rest on IETF working-group drafts. The revision requires authorization servers to implement OAuth 2.1 and cites draft -13; the current draft is -17. It recommends Client ID Metadata Documents, which steps 4 to 8 use, and cites draft -00; the current draft is -03. Both current drafts require the authorization server to send \`iss\`, which the revision only recommends (step 9). Either draft can still change. The rating describes those dependencies. It is not a judgment on how safe the flow is.`,
     },
     {
       title: "How the specification got here",
@@ -360,7 +364,9 @@ If your server has to call something else for the user, it gets a token of its o
 
 **2025-11-25.** Client ID Metadata Documents became the preferred way to identify a client and Dynamic Client Registration became optional. Step-up through \`insufficient_scope\` challenges and URL-mode elicitation were added.
 
-**2026-07-28.** The protocol became stateless. Dynamic Client Registration was deprecated, issuer validation (RFC 9207) was added, client credentials were bound to their issuer, and the client-credentials and enterprise-managed authorization extensions were declared stable.`,
+**2026-07-28.** The protocol became stateless. Dynamic Client Registration was deprecated, issuer validation (RFC 9207) was added, and client credentials were bound to their issuer.
+
+The two official authorization extensions are kept in their own repository and became stable on their own dates: enterprise-managed authorization in June 2026 and client credentials in October 2026.`,
     },
     {
       title: "When no human is present",

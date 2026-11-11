@@ -17,7 +17,7 @@ export const aauth: Flow = {
 
 AAuth starts from the other end. It is not an OAuth extension. It is a separate protocol, written by the editor of the OAuth 2.0 specification. Each agent has its own key pair and an identifier that anyone can check, and it signs every request it makes. Every token in the protocol is bound to that key, so none of them is a bearer token. The user is represented by a **person server**, which they choose. It tells an API which person the agent acts for, asks that person when something needs their approval, and issues the token that records the answer.
 
-AAuth is an individual draft in its eleventh revision, which is why this page is rated experimental. An unrelated OAuth draft, the Agentic Authorization Grant, goes by the same short name. This page is not about that one.`,
+AAuth is an individual draft in its eleventh revision, which is why this page is rated experimental. An unrelated OAuth draft, titled “AAuth - Agentic Authorization OAuth 2.1 Extension”, goes by the same short name. This page is not about that one.`,
   fits: [
     "Agents that find APIs at runtime, in organizations where they were never registered.",
     "APIs that want to know which person a request is for without keeping a registry of agents or running a sign-in of their own.",
@@ -61,7 +61,7 @@ AAuth is an individual draft in its eleventh revision, which is why this page is
     ps: "Checks the agent’s signature and agent token on every call, and keeps each agent bound to exactly one person. Issues a person token for one API at a time, under an identifier it uses for that person at that API. When the agent brings a resource token, checks that it matches the person token and the agent’s key, asks the user if it needs to, and issues an auth token that lasts no longer than the tokens behind it. Publishes its keys where any API can fetch them.",
     agent:
       "Generates a key pair and keeps the private key outside the model’s reach. Gets an agent token from its provider and renews it. Signs every request, presenting the token the recipient needs: the agent token to the person server, the person token and then the auth token to the API. Checks each resource token before passing it on: that it came from the API just called, and that it names the agent’s own key and person server. Treats `202` from any endpoint as an instruction to poll.",
-    api: "Verifies the signature on every request, then the token presented with it: its type, its issuer’s published keys, that it was issued for this API, and that its key is the one that signed. Issues a resource token only after verifying a person token or an auth token. On the call itself, requires an auth token and not a person token, then applies its own policy to the person and scope it names. Says which parts of a request must be signed beyond the method, host and path. Needs no registry of agents and no sign-in page.",
+    api: "Verifies the token presented with every request, by its type and its issuer’s published keys, then the request’s signature with the key the token carries. Checks that the token was issued for this API. Issues a resource token only after verifying a person token or an auth token. On the call itself, requires an auth token and not a person token, then applies its own policy to the person and scope it names. Says which parts of a request must be signed beyond the method, host and path. Needs no registry of agents and no sign-in page.",
   },
   participants: [
     { id: "user", label: "User", sub: "AAuth: person", role: "human" },
@@ -149,7 +149,7 @@ Signature: sig=:hELT5RcN9P3baUmWh6xAAh6d+Ui+bGFKorz+GKROlOVu/ez0WmWEAjC0ISJtB8wC
       label: "Person token for this API",
       title: "The person server names the person, to this API only",
       // §7.1, §7.1.1, §7.1.2, §13.8, §13.14, §14.1
-      body: `The person server checks the signature, checks the agent token against the provider’s published keys, and looks up which person this agent is bound to. Each agent is bound to exactly one. Alice connected this agent earlier and has let it act for her at the calendar API before, so the answer comes at once. For an API she has not used, the person server should ask her first, in the way steps 7 to 9 show.
+      body: `The person server checks the agent token against the provider’s published keys, checks the signature with the key in it, and looks up which person this agent is bound to. Each agent is bound to exactly one. Alice connected this agent earlier and has let it act for her at the calendar API before, so the answer comes at once. For an API she has not used, the person server should ask her first, in the way steps 7 to 9 show.
 
 A **person token** says who, and nothing about what. It has no scope. \`aud\` is one API. \`sub\` is the identifier the person server uses for Alice at that API, and the draft recommends a different one for each. \`cnf\` holds the agent’s key. It lasts an hour at most, and it does not name the agent.`,
       code: {
@@ -367,8 +367,8 @@ Signature: sig=:Vm2IefOv9exvy+TCf9aiDSCHN0khqpfE2uvNprUZqnfJVWUYdyoc6JSfGA43tJfG
       kind: "resp",
       label: "Verify, then 200 OK",
       title: "The API checks the token, the key and its own policy",
-      // §9.4.3, §13.7, §13.11
-      body: `The API verifies the signature, then the token: it is an auth token and not a person token, signed by keys its issuer publishes, issued for this API, and bound to the key that signed the request. It matches the issuer and subject to its record of Alice, or makes one. Then it applies its own rules. The person server vouched for who she is and what she agreed to. What \`calendar.read\` allows is still the API’s decision.
+      // §9.4.3, §11.3.4 (the key is obtained from the token, then the signature is verified), §13.7, §13.11
+      body: `The API verifies the token first, because the key that checks the signature is inside it: it is an auth token and not a person token, and it is signed by keys its issuer publishes. It then verifies the request’s signature with the token’s key, and checks that the token was issued for this API. It matches the issuer and subject to its record of Alice, or makes one. Then it applies its own rules. The person server vouched for who she is and what she agreed to. What \`calendar.read\` allows is still the API’s decision.
 
 The API now knows which person this is for, what she approved, and that the caller holds the key. It does not know which agent the caller is.`,
     },
@@ -473,7 +473,7 @@ Companion drafts cover how an agent enrolls with its provider, authorization des
     },
     {
       title: "Where it stands",
-      body: `Both documents the diagram depends on are individual drafts: the protocol at revision -11 and HTTP Signature Keys at -09, each dated September 2026. A call for the HTTP working group to adopt the second was issued, and its outcome is not confirmed. The protocol’s author reports that the work is moving to a new working group at the OpenID Foundation.
+      body: `Both documents the diagram depends on are individual drafts: the protocol at revision -11 and HTTP Signature Keys at -09, each dated September 2026. A call for the HTTP working group to adopt the second ended in September 2026. The datatracker records: “WG doesn’t have consensus to adopt at this time.” The protocol’s author says AAuth has been adopted as a working group at the OpenID Foundation, and that specification work will migrate there.
 
 Read it, and prototype with it. For something further along: [MCP authorization](/flows/mcp-authorization/) does without registration, [DPoP](/flows/dpop/) binds a token to a key, and [CIBA](/flows/ciba/) reaches a user who is somewhere else.`,
     },

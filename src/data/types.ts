@@ -108,7 +108,10 @@ export interface Flow {
   watchOut: string[];
   participants: Participant[];
   steps: Step[];
-  /** ids from data/standards.ts. The first is the page's stated basis unless `basis` says otherwise. */
+  /**
+   * ids from data/standards.ts. The first is the page's stated basis unless `basis` says
+   * otherwise or `noBasis` says there is none.
+   */
   standards: string[];
   /**
    * The role of each listed standard, for flows reviewed reference by reference.
@@ -117,6 +120,12 @@ export interface Flow {
   roles?: Record<string, RefRole>;
   /** The specifications the page says the flow implements, when there is more than one. Each must be required. */
   basis?: string[];
+  /**
+   * For a pattern that no specification defines: what the page says where its basis would be,
+   * e.g. "No standard defines this pattern". The page then names no primary specification.
+   * Not for a flow with `roles` or a `basis`: those have required references.
+   */
+  noBasis?: string;
   related: string[];
   /**
    * The steps in a few plain parts: what a reader sees before the diagram, and the

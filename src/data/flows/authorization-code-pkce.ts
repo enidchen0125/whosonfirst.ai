@@ -19,7 +19,7 @@ If an agent acts for a person and that person is at the keyboard, start here.`,
   ],
   watchOut: [
     "Consent fatigue. An agent that connects to twenty tools produces twenty consent screens, and people stop reading them. Ask for narrow scopes, late.",
-    "The token is the user’s authority minus nothing unless scopes are narrow. An agent with `mail.readwrite` can do anything the user can do to mail.",
+    "Unless the scopes are narrow, the token carries the user’s full authority. An agent with `mail.readwrite` can do anything the user can do to mail.",
     "Refresh tokens outlive the conversation. Decide where they are stored and who can revoke them before you ship.",
     "Desktop and CLI agents are public clients. Use a loopback redirect and PKCE; do not embed a client secret in a binary.",
   ],
@@ -111,7 +111,7 @@ Host: auth.example`,
       kind: "front",
       label: "Redirect with code",
       title: "The browser returns to the agent with an authorization code",
-      body: `The code is single-use and expires in about a minute. The agent checks that \`state\` matches what it sent and, where the server provides it, that \`iss\` matches the authorization server it meant to talk to. That second check defeats mix-up attacks, which are a real risk for agents that deal with many authorization servers.`,
+      body: `The code is single-use and short-lived: RFC 6749 requires it to expire shortly after it is issued and recommends a lifetime of no more than ten minutes. The agent checks that \`state\` matches what it sent and, where the server provides it, that \`iss\` matches the authorization server it meant to talk to. That second check defeats mix-up attacks, which are a real risk for agents that deal with many authorization servers.`,
       code: {
         lang: "http",
         text: `GET /callback?code=SplxlOBeZQQYbYS6WxSbIA
@@ -282,13 +282,13 @@ grant_type=refresh_token
   notes: [
     {
       title: "What this page follows",
-      body: `The flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching; a token restricted to one audience; and no implicit or password grant.`,
+      body: `The flow as published: the OAuth 2.0 authorization code grant (RFC 6749) with PKCE (RFC 7636), run the way the security best current practice (RFC 9700) sets out. That means PKCE, which it requires of a public client like this one; exact redirect URI matching, except for the port of a loopback redirect like this page’s, which is chosen when the app runs; a token restricted to one audience; and no implicit or password grant.`,
     },
     {
       title: "How OAuth 2.1 relates",
-      body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated October 30, 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behavior as it does.
+      body: `OAuth 2.1 (\`draft-ietf-oauth-v2-1\`) is an Internet-Draft of the IETF OAuth working group, at revision -17 dated October 31, 2026. It is not an RFC. It gathers RFC 6749, RFC 6750, RFC 7636, RFC 8252, RFC 9700 and RFC 10017 into one document and changes some behavior as it does.
 
-Two of its changes touch this page. A token request no longer carries \`redirect_uri\`, and the PKCE \`plain\` method is removed. This page shows the published RFCs, so step 7 still sends \`redirect_uri\`. A flow built on the draft, such as [MCP authorization](/flows/mcp-authorization/), leaves it out.`,
+Three of its changes touch this page. A token request no longer carries \`redirect_uri\`, the PKCE \`plain\` method is removed, and the authorization server must send \`iss\` in its response. This page shows the published RFCs, so step 7 still sends \`redirect_uri\`, and step 6 and the part on hosted apps allow for a server that sends no \`iss\`. A flow built on the draft, such as [MCP authorization](/flows/mcp-authorization/), leaves \`redirect_uri\` out.`,
     },
   ],
 };

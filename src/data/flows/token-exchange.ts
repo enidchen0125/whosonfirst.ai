@@ -110,7 +110,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "resp",
       label: "Token B: sub=user, act=tool",
       title: "A new token that records the delegation",
-      body: `Token B is addressed to the warehouse. Its subject is still Alice. The \`act\` claim says the tool server is the party actually presenting it. If the tool calls yet another service and exchanges again, the previous actor is nested inside the new one, so the chain is preserved.`,
+      body: `Token B is addressed to the warehouse. Its subject is still Alice. The \`act\` claim names the tool server as the party now acting for her. If the tool calls yet another service and exchanges again, the previous actor is nested inside the new one, so the chain is preserved.`,
       code: {
         lang: "json",
         text: `{

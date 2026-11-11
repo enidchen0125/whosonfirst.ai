@@ -9,7 +9,7 @@ export const identityChaining: Flow = {
   maturity: "emerging",
   tagline:
     "Carry who-is-this-for across an organizational boundary, with each side keeping control of its own tokens.",
-  summary: `Token exchange works inside one trust domain, where a single authorization server can mint a token for any hop. Agent workflows do not stay inside one domain. An agent in company A calls a service run by company B. Company B will not accept company A’s tokens, and should not.
+  summary: `Token exchange works inside one trust domain, where a single authorization server (AS) can mint a token for any hop. Agent workflows do not stay inside one domain. An agent in company A calls a service run by company B. Company B will not accept company A’s tokens, and should not.
 
 Identity chaining combines two existing pieces to cross the boundary. In its home domain, the agent uses token exchange to obtain a short-lived **JWT authorization grant** addressed to the other domain’s authorization server. It then presents that grant to the other side using the JWT bearer grant, and receives an access token that the second domain issued under its own policy. Each domain validates only what it issued or explicitly agreed to trust, and the pattern repeats for every further boundary.
 
@@ -47,7 +47,7 @@ The specification is through IETF approval and waiting in the RFC Editor’s que
   ],
   parts: {
     agent:
-      "Trades its domain A token at its home authorization server for a short-lived grant, presents the grant at domain B’s token endpoint, and calls the API with the token domain B issues. It also authenticates to domain B as a client that domain B knows.",
+      "Trades its domain A token at its home authorization server for a short-lived grant, presents the grant at domain B’s token endpoint, and calls the API with the token domain B issues. It also authenticates to domain B as a client if domain B requires that.",
     asa: "Decides what crosses its boundary: which clients may obtain grants for which external domains, and which claims about the user are released. Signs a short-lived grant whose only audience is domain B’s authorization server. It can end the arrangement by refusing to issue grants.",
     asb: "Verifies the grant against keys it has agreed to trust for domain A, checks that it is the audience, and maps the incoming subject and claims to its own. Then issues its own access token, and is free to grant less than was asked. The trust between the two authorization servers is set up in advance: the specification does not create it for you.",
     api: "Validates a token from its own authorization server. It sees nothing issued by domain A.",
@@ -122,7 +122,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "back",
       label: "JWT bearer grant",
       title: "The agent presents the grant across the boundary",
-      body: `An RFC 7523 assertion grant at domain B’s token endpoint. The agent also authenticates as a client known to domain B.`,
+      body: `An RFC 7523 assertion grant at domain B’s token endpoint. Whether the agent must also authenticate as a client is domain B’s decision. The request shown carries no client credentials. Requiring them is one of the draft’s defenses against a copied grant: only a client domain B knows can then redeem it.`,
       code: {
         lang: "http",
         text: `POST /token HTTP/1.1

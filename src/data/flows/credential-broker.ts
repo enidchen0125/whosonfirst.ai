@@ -170,6 +170,8 @@ key=__PLACEHOLDER_REPORTS_KEY__`,
     },
   ],
   standards: ["rfc9449", "spiffe", "k8s-agent-sandbox", "agentgateway"],
+  // None of these defines the pattern, so the page names no primary specification.
+  noBasis: "No standard defines this pattern",
   related: [
     "url-elicitation",
     "workload-identity-federation",
