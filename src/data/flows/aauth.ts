@@ -30,7 +30,7 @@ AAuth is an individual draft in its eleventh revision, which is why this page is
     "**Check the token’s type.** A person token and an auth token from the same person server carry the same issuer, audience, subject and key. Only `typ` tells them apart. An API that skips that check treats “this is Alice’s agent” as “Alice approved this.” The draft says to test for the mistake, because it fails open.",
     "**Any person server can speak to any API.** Nothing is arranged between them beforehand. A person token shows that the same person is back, under the same issuer and subject. It does not show who they are, or that anyone checked. Key your records on issuer and subject together, and decide what a newcomer may do.",
     "**The agent writes its own justification**, and the user reads it when deciding. The person server has to show it as the agent’s claim, apart from the API’s own description of the access. An agent that has been talked into something will still give a reasonable-sounding reason.",
-    "**The signature covers less than it seems.** By default: the method, the host, the path and the token presented. The query string and the body are covered only if the API says they must be.",
+    "**The signature covers less than it seems.** On a call to an API it covers, by default, the method, the host, the path and the token presented. The query string and the body are covered only if the API says they must be. Requests that carry a body to a person server or an access server, and requests to revoke a token, are stricter: the signature must also cover a digest of the body and its content type.",
   ],
   lesson: "whose-authority",
   phases: [
@@ -122,8 +122,10 @@ Anyone can verify the token by fetching the provider’s keys from a well-known 
       kind: "back",
       label: "Ask for a person token",
       title: "The agent asks for a person token for this API",
-      // §6.4, §7.1, §11.2.4 (access_mode), §11.3.3.1 (covered components)
-      body: `The calendar API publishes metadata saying it expects an auth token, which means the first call has to carry a person token. An API that publishes nothing says the same with a \`401\`. So the agent asks its person server for one, naming the API.
+      // §6.4, §7.1, §11.2.4 (access_mode is advisory; jwks_uri is required of a resource that issues resource tokens), §11.5.2, §11.3.3.1 (covered components)
+      body: `The calendar API’s metadata declares \`access_mode\` as \`auth-token\`, which means the first call has to carry a person token. That declaration is optional. An API that leaves it out says the same at the first call, with \`401\` and \`AAuth-Requirement: requirement=person-token\`. So the agent asks its person server for a person token, naming the API.
+
+The rest of the metadata is not optional for this API. It names the API as an issuer and says where its keys are, and the person server needs both to verify the resource token of step 5.
 
 The request is signed. \`Signature-Key\` carries the agent token. \`Signature-Input\` lists what the signature covers, with the time it was made. \`Signature\` is the signature. Every request in this flow has all three; the later listings show only \`Signature-Key\`, until the last call.`,
       code: {
@@ -461,7 +463,7 @@ The API now knows which person this is for, what she approved, and that the call
       title: "What is not drawn",
       body: `Most of the draft is outside this diagram.
 
-**Missions.** The agent proposes a description of a whole task, the user approves it at the person server, and every later request is judged against it and logged under it.
+**Missions.** The agent proposes a description of a whole task, and the user approves it at the person server. After that, the person server judges each request the agent brings it under the mission against that description and against what came before, and keeps a log of those requests. It does not see every call. Once an auth token is issued, the agent calls the API directly until the token expires, and it is the API that enforces what the token grants. An agent can also report to the person server what it did. That report is optional.
 
 **Access servers.** An API that wants a policy engine of its own names one in the resource token, and the person server obtains the auth token there.
 
