@@ -37,14 +37,29 @@ const MUTED = "#434850";
 const BORDER = "#cfd2d7";
 const ACCENT = "#0b3fc4";
 
-/** The site's mark, as in public/favicon.svg, in the light theme's colors. */
-const MARK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <path d="M16 3.5 28.5 16 16 28.5 3.5 16Z" fill="none" stroke="${FG}" stroke-width="1.8" stroke-linejoin="round"/>
-  <rect x="13.6" y="1.1" width="4.8" height="4.8" transform="rotate(45 16 3.5)" fill="${BG}" stroke="${FG}" stroke-width="1.5"/>
-  <rect x="1.1" y="13.6" width="4.8" height="4.8" transform="rotate(45 3.5 16)" fill="${BG}" stroke="${FG}" stroke-width="1.5"/>
-  <rect x="13.6" y="26.1" width="4.8" height="4.8" transform="rotate(45 16 28.5)" fill="${BG}" stroke="${FG}" stroke-width="1.5"/>
-  <rect x="25.2" y="12.7" width="6.6" height="6.6" transform="rotate(45 28.5 16)" fill="${ACCENT}" stroke="${ACCENT}" stroke-width="1.5"/>
-</svg>`;
+/**
+ * The site's mark, from public/favicon.svg, in the light theme's colors. That
+ * file is the one drawing of it. It colors itself with a style sheet that
+ * follows the reader's color scheme; here each shape is given its color
+ * outright, so nothing depends on how a drawing library reads a style sheet.
+ */
+const INK = { i: `stroke="${FG}"`, c: `fill="${ACCENT}"` };
+const MARK = readFileSync(
+  new URL("../../public/favicon.svg", import.meta.url),
+  "utf8",
+)
+  .replace(/<!--[\s\S]*?-->/g, "")
+  .replace(/<style>[\s\S]*?<\/style>/, "")
+  .replace(/class="([^"]*)"/g, (_, names) =>
+    names
+      .split(/\s+/)
+      .map((name) => INK[name] ?? `class="${name}"`)
+      .join(" "),
+  );
+if (/class=|<style/.test(MARK))
+  throw new Error(
+    "public/favicon.svg colors a shape in a way the cards have no color for",
+  );
 const MARK_URI = `data:image/svg+xml;base64,${Buffer.from(MARK).toString("base64")}`;
 
 /** What kind of page this is, where its address says: the small label at the top right. */
@@ -98,7 +113,17 @@ function card({ site, descriptor, title, description, kind, address }) {
         },
         [
           el("div", { alignItems: "center" }, [
-            { type: "img", props: { src: MARK_URI, width: 46, height: 46 } },
+            // drawn taller than the line of text it sits on, and pulled back
+            // by the difference, so the rule under the row stays where it was
+            {
+              type: "img",
+              props: {
+                src: MARK_URI,
+                width: 56,
+                height: 56,
+                style: { marginTop: -5, marginBottom: -5 },
+              },
+            },
             el(
               "div",
               {
