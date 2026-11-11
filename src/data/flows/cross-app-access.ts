@@ -46,7 +46,7 @@ No browser redirect, no consent prompt, and one place where access is granted, l
   ],
   parts: {
     client:
-      "Signs the user in once through the company identity provider. For each application it needs, asks the identity provider for a short-lived grant, trades it at that application’s authorization server for an access token, and uses the token like any other MCP access token. It authenticates to that authorization server as a client, either registered in advance or identified by a URL.",
+      "Signs the user in once through the company identity provider. For each application it needs, asks the identity provider for a short-lived grant, trades it at that application’s authorization server for an access token, and uses the token like any other MCP access token. It authenticates to that authorization server as a client, either registered in advance or identified by a URL, and in both cases with a credential of its own.",
     idp: "Signs the user in, then decides each request by the administrator’s policy: may this client reach that application, for this user, with these scopes? Issues a short-lived grant or refuses. An administrator configures the answer, and the user is not asked.",
     as: "Validates the grant: the identity provider’s signature, that it is the intended audience, that the client matches, and that the grant has not expired or been used. Then issues an ordinary access token restricted to the MCP server the grant names. It trusts the identity provider because the company’s tenant was configured for single sign-on with it.",
     mcp: "Validates the access token exactly as it would one obtained through an interactive flow. It does not need to know the difference.",
@@ -109,7 +109,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "resp",
       label: "ID-JAG (5 minutes)",
       title: "The IdP issues the grant",
-      body: `A signed JWT with its own type, so it cannot be mistaken for an ID token or an access token. It is not usable at the MCP server. Its only purpose is to be presented to the application’s authorization server.`,
+      body: `A signed JWT with its own type. A receiver that checks the type cannot mistake it for an ID token or an access token. It is not usable at the MCP server. Its only purpose is to be presented to the application’s authorization server.`,
       code: {
         lang: "json",
         text: `// header: { "typ": "oauth-id-jag+jwt" }
@@ -121,7 +121,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "resource": "https://mcp.chat.example/",
   "client_id": "f53f191f9311af35",
   "scope": "chat.read chat.history",
-  "exp": 1311281970,
+  "exp": 1311281270,
   "iat": 1311280970
 }`,
       },
@@ -133,7 +133,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "back",
       label: "JWT bearer grant with ID-JAG",
       title: "The agent presents the grant to the app’s authorization server",
-      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID.`,
+      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID. A URL as \`client_id\` says who the client claims to be and proves nothing by itself, so the request also carries a signed assertion or a registered secret. Where a client has no credential, the grant should be bound to a key the client proves it holds. Otherwise anyone who copies the grant can redeem it.`,
       code: {
         lang: "http",
         text: `POST /oauth2/token HTTP/1.1
@@ -141,8 +141,10 @@ Host: auth.chat.example
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
-&assertion=eyJhbGciOiJIUzI1NiIsI…
-&client_id=https://client.example.com/client.json`,
+&assertion=eyJhbGciOiJFUzI1NiIs…
+&client_id=https://client.example.com/client.json
+&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
+&client_assertion=eyJhbGciOiJFUzI1NiIs…`,
       },
       lose: [["client", "ID-JAG (aud: resource AS)"]],
     },
@@ -151,7 +153,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
       kind: "self",
       label: "Verify IdP signature and audience",
       title: "The app’s authorization server validates the grant",
-      body: `It trusts the enterprise IdP because the company’s tenant was configured for single sign-on with it. It checks the signature, that it is the intended audience, that the client matches, and that the grant has not expired or been used.`,
+      body: `It trusts the enterprise IdP because the company’s tenant was configured for single sign-on with it. It checks the signature and the token type, that it is the intended audience, that the client matches, and that the grant has not expired or been used.`,
     },
     {
       from: "as",
@@ -176,7 +178,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
       kind: "resp",
       label: "Result",
       title: "The application responds",
-      body: `When the employee leaves, or the administrator withdraws the agent’s access to this application, the identity provider stops issuing grants. Nothing has to be revoked application by application.`,
+      body: `When the employee leaves, or the administrator withdraws the agent’s access to this application, the identity provider stops issuing grants. Access tokens an application has already issued keep working until they expire. Keep them short, issue no refresh tokens for this grant, and revoke at the application as well when the cut-off has to be immediate.`,
     },
   ],
   standards: [
