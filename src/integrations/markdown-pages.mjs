@@ -79,6 +79,7 @@ const CHROME = [
   "flow-controls",
   "flow-progress",
   "gl-tools", // the glossary's filter and its row of letters
+  "compare-narrow", // a comparison laid out for a narrow screen; the table beside it says the same
   "fl-filter", // the flows index's filter
   "sx-filters", // the standards tracker's search and filters
   "sx-empty",
@@ -94,6 +95,8 @@ const CHROME = [
 ];
 /** Facts set side by side in a row. In a line of text they need something between them. */
 const ROW = [
+  "what", // what a reader is building, and
+  "where", // the page that covers it
   "doc-fact",
   "chip",
   "ref",
@@ -181,7 +184,7 @@ function terms(list) {
               : [name, say(": "), ...node.children],
           ),
         );
-        term = undefined;
+        // a term can have more than one entry under it: each is given the term
       }
     }
   };
@@ -302,6 +305,12 @@ function prepare(main, page, site) {
   // 1. What is not content goes.
   visit(main, "element", (node, index, parent) => {
     const p = node.properties ?? {};
+    // A place where a line may break, between a label and what follows it, is
+    // a space in text. Left as it is, it joins the two with a character no one sees.
+    if (is(node, "wbr")) {
+      parent.children.splice(index, 1, say(" "));
+      return [SKIP, index];
+    }
     if (
       DRAWN.includes(node.tagName) ||
       p.hidden !== undefined ||
@@ -388,6 +397,8 @@ function prepare(main, page, site) {
       node.children = [element("strong", {}, node.children)];
     }
     if (has(node, "dg-num", "ck-num")) node.children.push(say("."));
+    // "Then", set small before the question it leads to, wants a colon to be read with it.
+    if (has(node, "au-next")) node.children.push(say(":"));
     // A note beside a fact, and the steps a part covers, are asides.
     if (has(node, "doc-note", "ov-r", "ov-steps", "aka"))
       node.children = [say("("), ...node.children, say(")")];
