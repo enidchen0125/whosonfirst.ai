@@ -3,6 +3,13 @@ import Base from "../../layouts/Base.astro";
 
 const places = [
   {
+    href: "/deployments/web-apps/",
+    title: "Hosted apps and backends",
+    blurb:
+      "An agent behind a web app, on servers you run, working for whoever is signed in. It can keep a secret, and it holds every user’s tokens in one place.",
+    chips: ["Confidential clients", "Per-user tokens", "Unattended work"],
+  },
+  {
     href: "/deployments/kubernetes/",
     title: "Kubernetes",
     blurb:
@@ -33,6 +40,15 @@ const places = [
 ];
 
 const rows = [
+  {
+    where: "Hosted app or backend",
+    identity:
+      "A registered confidential client, and the cloud’s identity for the workload",
+    user: "Authorization code with PKCE: one grant per user, kept on the server",
+    secrets:
+      "Refresh tokens encrypted in your database; the rest in a secrets manager",
+    risk: "Every user’s tokens in one place; fetching a token for the wrong user",
+  },
   {
     where: "Kubernetes",
     identity: "ServiceAccount token, pod certificate or SPIFFE ID",

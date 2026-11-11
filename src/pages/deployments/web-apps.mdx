@@ -1,0 +1,94 @@
+---
+layout: ../../layouts/Article.astro
+title: Hosted apps and backends
+description: An agent that runs on your own servers and works for whoever is signed in. It can keep a secret, and it holds every user's tokens in one place. How to sign users in, where their tokens live, and what changes when the work outlives the request.
+lede: The most common shape of all. An agent behind a web app, on servers you run, working for whoever is signed in. It can keep a secret, which is an advantage. It also holds every user's tokens in one place, and that is the thing to design around.
+section:
+  label: Deployments
+  href: /deployments/
+---
+
+## The short answer
+
+For each thing the agent calls, settle [whose authority](/learn/whose-authority/) the call uses. Then:
+
+- **For the signed-in user**, such as their calendar, their repositories or their documents: [authorization code with PKCE](/flows/authorization-code-pkce/), with the app registered as a confidential client. Each user grants access once per service, and the tokens stay on your server, filed under that user.
+- **As itself**, such as its own database, its queue or a knowledge base everyone shares: the identity your cloud gives the workload, through [workload identity federation](/flows/workload-identity-federation/), or a [client credential](/flows/client-credentials/) where that is not available.
+- **Not** one API key or one service account standing in for every user at a service that holds each user's data. The service then sees one caller, and nothing but your code keeps one user out of another's records. [Lesson 1](/learn/what-the-api-sees/) shows why.
+
+## Two identities, kept apart
+
+A hosted agent has an identity of its own and borrows its users'. Most trouble in this deployment comes from letting the two blur.
+
+**The app's identity** says which application is calling. It is the client ID you registered, and whatever the app proves it with.
+
+**The user's grant** says which person the call is for, and what they approved. It is recorded at the authorization server when they consent, and it is what a token's `sub` and `scope` come from.
+
+A token issued through authorization code carries both: `client_id` names your app, and `sub` names the user. An API can limit either one without the other.
+
+## Signing users in, and connecting their accounts
+
+These are two jobs, and it helps to build them as two.
+
+**Signing in to your app** answers "who is this?" It gives your app an ID token and a session. It does not, on its own, let the agent do anything anywhere else.
+
+**Connecting a service** answers "what may the agent do there, for this user?" It is a second authorization, to that service's authorization server, and it gives your backend an access token and usually a refresh token.
+
+Both run the same exchange, and in both the backend is a **confidential client**: it runs where its operator controls it, so it can keep a secret.
+
+- **Prove which app it is when it trades the code.** With a client secret, or better, with a key the app holds and a signed assertion, so that no shared secret has to be stored on both sides.
+- **Use PKCE as well.** The [security best current practice](/standards/#rfc9700) recommends it for every client, and it costs nothing.
+- **Register exact redirect addresses.** The code is sent to that address and no other.
+- **Ask for scopes when a task needs them.** An agent that asks for everything at sign-up holds everything from then on.
+
+## Where the tokens live
+
+One table, with one row for each user and each service they have connected. Everything else follows from treating that table as the most sensitive thing you store.
+
+- **Refresh tokens stay on the server.** Encrypted, with the key held somewhere other than the database. Not in the browser, not in a log, not in an error report.
+- **File them by user and by issuer.** A token obtained from one authorization server is never offered to another.
+- **The browser holds a session for your app and nothing else.** The page talks to your backend, and your backend talks to the service.
+- **The acting user comes from the session.** When the agent needs a token, your code looks it up for the user whose session started the task. It never takes a user ID from the model's output, or from text the agent read.
+
+Refresh tokens need a little care in use:
+
+- An authorization server may hand back a **new refresh token** each time one is used. Save the new one before doing anything else. Two workers refreshing the same grant at once is the usual way to lose it.
+- A refresh can fail for good: the user withdrew consent, or an administrator revoked the grant. Treat that as "ask the user to connect again," not as an error to retry.
+- When a user disconnects a service, [revoke](/standards/#rfc7009) the tokens at the authorization server and delete the row.
+
+## Keeping tokens away from the model
+
+The model chooses which tool to call and with what arguments. Your code makes the call.
+
+- The token is attached by your code, after the model has decided, and is never part of the prompt, the tool's description or the tool's result.
+- Watch the places that record requests: logs, traces and error reports often capture headers.
+- Where the agent also runs code it wrote or was given, keep credentials out of that environment altogether. See [sandboxes](/deployments/sandboxes/) and the [credential broker](/flows/credential-broker/) pattern.
+
+## When the work outlives the request
+
+A reply in a chat window is done in seconds, with the user watching. A report that runs every morning, or a task handed off to a queue, uses the same grant with nobody there. That is [the arrangement to be most careful with](/learn/whose-authority/).
+
+- **Narrow the scope for unattended work.** A job that files receipts does not need permission to send mail.
+- **Record which job used which grant.** If something goes wrong at three in the morning, the token's `sub` will say the user did it.
+- **Make the person reachable for anything that cannot be undone.** [Backchannel approval](/flows/ciba/) asks them on a device of their own, and [step-up](/flows/step-up-authorization/) asks for one specific approval.
+- **Show users what is connected**, and let them disconnect it.
+
+## The agent's own access
+
+Some of what the agent touches belongs to you and not to any user: its database, its storage, the model provider's API.
+
+- Where your cloud can vouch for the workload, use that identity, so that nothing long-lived has to be stored for it. [Kubernetes](/deployments/kubernetes/) and the major clouds each have a way.
+- Where a service only offers an API key, keep the key in a secrets manager and out of the image, the repository and the model's context. One key for one owner is what an API key is for.
+- When the agent calls your own internal services for a user, do not forward the user's token. Get a token for that hop with [token exchange](/flows/token-exchange/), so that each service holds something that works in one place.
+
+## Checklist
+
+<ul class="checklist">
+  <li>Each user's connection to each service is a separate grant. No shared key stands in for users.</li>
+  <li>The app authenticates as a confidential client when it trades a code, and uses PKCE as well.</li>
+  <li>Refresh tokens are stored on the server, encrypted, filed by user and by issuer.</li>
+  <li>The user a token is fetched for comes from the session, never from model output.</li>
+  <li>Tokens do not appear in prompts, tool results, logs or traces.</li>
+  <li>Unattended work runs on narrow scopes, is attributable to a job, and can be switched off by the user.</li>
+  <li>The app's own access uses the platform's identity where one is offered.</li>
+</ul>
