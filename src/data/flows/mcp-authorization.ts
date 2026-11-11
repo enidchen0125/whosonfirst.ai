@@ -25,7 +25,7 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
     "Every URL in the discovery steps comes from a server the client has never seen. A client that runs on your servers should refuse any that are not HTTPS or that resolve to private, loopback or link-local addresses, including after a redirect. Before opening the authorization endpoint, check that it is an `https:` URL, and hand it to the browser without passing it through a shell.",
     "Client credentials must be stored per issuer and never reused with a different authorization server. A server that changes its metadata to point somewhere new is the start of a mix-up attack.",
     "A Client ID Metadata Document proves control of a URL, not that the software on the user’s machine is the genuine client. Authorization servers must show the redirect host on the consent screen for this reason.",
-    "Scopes are whatever the server defines. The core specification has no per-tool permission model; fine-grained control is left to the server, a gateway, or an external policy engine.",
+    "Scopes are whatever the server defines. The core specification has no per-tool permission model; fine-grained control is left to the server, a [gateway](/deployments/gateways/), or an external policy engine.",
   ],
   lesson: "getting-a-token",
   like: {

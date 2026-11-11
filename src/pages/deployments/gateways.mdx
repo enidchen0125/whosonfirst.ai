@@ -1,0 +1,225 @@
+---
+layout: ../../layouts/Article.astro
+title: MCP and LLM gateways
+description: A gateway in front of MCP servers and a gateway in front of model providers do different jobs. What each one checks, which credential it uses on the far side, and what the server or provider behind it can still tell about the caller.
+lede: A gateway is a proxy that an agent's calls go through on the way to its tools or to a model. It is a good place to put rules. It is also a new party in every call, and whatever sits behind it now sees the gateway where it used to see the agent.
+section:
+  label: Deployments
+  href: /deployments/
+---
+
+## The short answer
+
+Two different proxies share the name, and they carry different authority.
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: The two gateways compared">
+
+| For each gateway | MCP gateway | LLM gateway |
+| --- | --- | --- |
+| Sits in front of | The MCP servers your agents use | The model providers your agents use |
+| What goes through it | Tool calls | Prompts, and the model's replies |
+| Whose authority a call uses | Usually a user's | Usually the organization's account with the provider |
+| What it is, in the terms this site uses | A resource server to the agent, and a client to each server behind it | A [credential broker](/flows/credential-broker/) with one kind of destination |
+| The thing to design around | Getting the user across the hop | The key an agent uses to reach the gateway |
+
+</div>
+
+Three things hold for both.
+
+- **The agent's credential stops at the gateway.** It is addressed to the gateway, the gateway checks it, and it goes no further.
+- **The gateway uses a different credential on the far side**, made for the one server or provider it is calling.
+- **A gateway governs only the calls that go through it.** Either nothing else can reach what is behind it, or what is behind it checks every caller itself.
+
+Neither gateway is a place an agent runs. An agent on a laptop, in a pod or on a managed platform can sit behind both, and the other [deployment guides](/deployments/) still apply to it.
+
+## The MCP gateway
+
+An MCP gateway is one address in front of many MCP servers. The agent connects to the gateway. The gateway lists the tools of every server behind it as if they were its own, sends each call to the server that owns the tool, applies a rule about who may call which tool, and keeps one log. Teams adopt one so that those things are done once, and not again in every agent and every server.
+
+### One box, two roles
+
+**To the agent, the gateway is the MCP server.** Everything on the [MCP authorization](/flows/mcp-authorization/) page applies to it as written. It answers a request that has no token with a pointer to its own protected resource metadata. That metadata names the gateway's address as the resource. The token the agent then obtains has the gateway as its audience, and the gateway checks that on every request.
+
+One sign-in now covers every server behind the gateway. That is the convenience, and it is why the other role matters.
+
+**To each server behind it, the gateway is a client.** The token it just accepted says "for the gateway." It is not addressed to the ticketing server or to the wiki server. The MCP specification covers this case directly: a server that calls something upstream acts as a client there, uses a separate token issued for that upstream, and must not pass on the token it received.
+
+So the gateway needs a credential of its own for each server, and the one it uses decides what that server can know.
+
+### What the server behind it can tell
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: What the gateway presents and what the server can tell">
+
+| The gateway presents | The server can tell | Fits |
+| --- | --- | --- |
+| A token it got by [token exchange](/flows/token-exchange/), addressed to this server | Which user the call is for. Also that the gateway is acting for them, if your authorization server writes the `act` claim | Servers that trust your authorization server |
+| A token from the server's own authorization server, issued on your identity provider's word: [ID-JAG](/flows/cross-app-access/) or [identity chaining](/flows/identity-chaining/) | The user, as the server's own issuer names them | A server run by someone else, whose issuer trusts yours |
+| The user's own grant at that service, which the gateway keeps | The user, and the gateway as the app they approved | A third-party service with an ordinary OAuth sign-in |
+| One key or one service account for everybody | The gateway. Every call looks the same, whoever asked | Data that is the same for every user |
+| The agent's token, passed along | A token that was addressed to someone else | Nothing. This is token passthrough |
+
+</div>
+
+Here is the first row with one user, one agent and a ticketing server.
+
+**What the agent sends the gateway:**
+
+```json
+{
+  "iss": "https://auth.example",
+  "sub": "user:alice",
+  "client_id": "support-agent",
+  "aud": "https://mcp.example/mcp",
+  "scope": "tools"
+}
+```
+
+**What the gateway sends the ticketing server, after an exchange:**
+
+```json
+{
+  "iss": "https://auth.example",
+  "sub": "user:alice",
+  "aud": "https://tickets.example/mcp",
+  "scope": "tickets.read",
+  "act": {
+    "sub": "https://mcp.example/mcp"
+  }
+}
+```
+
+The ticketing server gets a token that works in one place, names Alice, and names the gateway as the party acting for her. Three things about this arrangement are worth checking in your own.
+
+- **What your authorization server really issues.** An exchange can return a token with the user as its subject and no actor. The server then believes Alice called it directly, which is [impersonation](/concepts/#delegation).
+- **Which agent started the call.** `client_id` named it in the first token. Nothing in the second token does, and an exchange does not carry it across unless your authorization server is set up to. If the server's rules or its audit log need the agent, look for it in a real token.
+- **Who may exchange.** Let the gateway, and not the agents, exchange tokens for the servers' audiences. An agent that goes around the gateway then has no token the server will accept, as long as the server checks its own audience.
+
+### One key for everybody
+
+The fourth row is the easiest to set up: one API key for each server, written into the gateway's configuration. It is also where a gateway most often goes wrong.
+
+The server now sees one caller. Nothing but the gateway's own rules keeps one user out of another's records, and the gateway has become the [confused deputy](/concepts/#delegation): it holds broad authority and uses it for whoever asks. [Lesson 1](/learn/what-the-api-sees/) draws the same problem with one agent and one key.
+
+That is acceptable for a server that searches public documentation. It is not acceptable for a mailbox, a ticket queue or anything else that holds each user's own data.
+
+### When the gateway keeps users' grants
+
+In the third row each user connects a third-party service once, through the gateway, and the gateway stores the refresh token. It is now a token store with a row for every user at every service, and [where the tokens live](/deployments/web-apps/#where-the-tokens-live) on a hosted app applies to it line for line. MCP has a way to send the user to that sign-in in the middle of a tool call: [URL elicitation](/flows/url-elicitation/).
+
+The MCP security guidance has a rule for this arrangement, which it calls an MCP proxy server. The trouble starts when three things are true at once: the gateway signs users in to the third party under one client ID of its own, it accepts any MCP client that registers with it, and the third party remembers that the user has already approved the gateway.
+
+An attacker registers a client with the gateway and sends the user a link. The third party recognizes the user, skips its consent screen, and the gateway hands the attacker's client a code. The user approved nothing.
+
+The guidance requires the gateway to ask the user itself, on a page of its own, before it sends them on. That page names the MCP client and shows where the code will be sent. The gateway records the approval for that client, and does not treat it as "this user has consented."
+
+### Rules at the gateway
+
+The core MCP specification has no permissions for individual tools. A token that is good for the gateway is good for every tool behind it, until the gateway's own policy says otherwise. That policy is the authorization, so what it reads matters.
+
+- **The user and the client come from the token** the gateway validated. Never from a header the agent set, and never from an argument the model wrote.
+- **The tool comes from the request.** Since the 2026-07-28 revision, an MCP request over HTTP repeats its method and its tool name in the `Mcp-Method` and `Mcp-Name` headers, so that a proxy can route without reading the body. The body is still what the server acts on. A gateway that decides from the headers has to compare them with the body, or be sure the server behind it does. The specification requires that of a server, and advises a proxy to refuse a request whose protocol version is too old to require it. Otherwise an agent can name one tool in the header and call another in the body.
+- **Narrow at the exchange.** Ask for the scope the tool being called needs, and nothing wider.
+
+The gateway also ends the agent's TLS connection. A client certificate does not arrive at the server, which now authenticates the gateway. If the server has to know which workload called as well, that is what [workload identity tokens](/flows/wimse-workload-tokens/) are being standardized for.
+
+### A gateway that only forwards
+
+Some gateways can pass requests through untouched to a server that runs OAuth itself. Products call the setting passthrough, which is not always the thing the specification forbids.
+
+The test is whose address is in the token's audience.
+
+- **One server behind one public address.** The token is addressed to that address, and the server checks it. The gateway is a hop on the network, like a load balancer. It can log and block, and it is not a party to the authorization. This is sound.
+- **Several servers behind one audience.** The gateway accepts the token as its own and then sends it on. This is token passthrough. Every server behind the gateway receives a token it could present at the gateway, to call the other servers as that user.
+
+## The LLM gateway
+
+An LLM gateway, often sold as an AI gateway, is one address in front of the model providers. Agents and apps send it model requests in one format. It picks a provider, adds that provider's credential, counts usage against a budget, and logs the exchange. Platform teams adopt one to keep provider keys in one place and to know who is spending what.
+
+Start with [whose authority](/learn/whose-authority/) a call uses. A model call normally uses the organization's account with the provider, and no user's. It reads and changes nothing that belongs to a user. That makes this the simpler of the two gateways, with the same two hops.
+
+### From the agent to the gateway
+
+Most LLM gateways hand out **virtual keys**. The gateway issues a key to a team or an app, with a budget and a list of models, and swaps it for the provider's key on the way out. This is a real improvement on giving every team the provider's key. One caller can be cut off without rotating anything, and the provider's key sits in one place.
+
+A virtual key is still an [API key](/learn/what-the-api-sees/). It is long-lived, it works for anyone who holds a copy, and it has to be stored wherever the agent runs. In an agent that reads untrusted content, it is one more secret an injected instruction can send somewhere.
+
+Where the gateway can check a token, the agent has nothing to store.
+
+- **A workload** presents the identity its platform already gives it: on [Kubernetes](/deployments/kubernetes/), a ServiceAccount token whose audience is the gateway, and in a pipeline, the [job's OIDC token](/deployments/local/#in-ci).
+- **A person's tool**, such as a coding agent on a laptop, presents a token from the person's own sign-in with the company identity provider. Usage is then filed under a person, and it ends when their account does.
+
+### From the gateway to the provider
+
+On this side the gateway is a credential broker. The provider's key lives in the gateway and is attached on the way out, and the agent never sees it. What the [sandboxes](/deployments/sandboxes/) page says about that pattern applies, including that the gateway is now the most sensitive part of the system. It holds every provider key.
+
+The better case has no key at all. Model services run by the cloud providers accept the cloud's own identities. A gateway can trade its workload identity for short-lived credentials there, through [federation](/flows/workload-identity-federation/) when it runs somewhere else. Then nothing long-lived is stored at either hop.
+
+### What the provider sees, and what only the gateway knows
+
+The provider sees one account. Which team, which agent and which person made a call is known only to the gateway. For model calls that is usually fine: one key for one owner is what an API key is for. It has two consequences.
+
+- **The gateway's log is the only record of who called.** Write the caller into it from the credential the gateway checked, not from a field the caller filled in.
+- **That log holds every prompt and every reply**, and so whatever the agents read: documents, tool results, customer data. If a credential ever lands in a prompt, it is now in the gateway's log as well.
+
+### What it cannot decide
+
+An LLM gateway sees the model ask for a tool call. It does not see the tool call happen. The agent's runtime makes that call afterwards, somewhere else. A filter on prompts and replies can catch some things, and it is not authorization. What an agent may do is decided where the action happens: at the MCP gateway, or at the API.
+
+There is one case where a user's authority does pass through. Some model APIs call remote MCP servers themselves and take the user's access token for that server inside the model request, as [agent platforms](/deployments/agent-platforms/#model-platforms-hosted-agents) describes. The LLM gateway then carries a user's token in a request body. Keep that token short-lived and narrow, and keep that field out of the gateway's logs.
+
+## One proxy for both
+
+Several products do both jobs in one process, and that is a reasonable way to run them. Keep the two questions apart inside it.
+
+- **Model traffic** authenticates a workload or a person's tool, and spends the organization's account.
+- **Tool traffic** has to carry a user.
+
+A key that opens models should not open tools as well. A key names an account. Every tool call made with it is the account's, and no user's.
+
+## Where it is implemented
+
+No standard defines either gateway. The MCP specification sets rules that an MCP gateway has to follow, because to a client it is an MCP server. Nothing standardizes virtual keys.
+
+These are implementations, described as their own documentation describes them in November 2026. Nothing here was tested.
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Where it is implemented">
+
+| Implementation | From the agent to the gateway | From the gateway to what is behind it |
+| --- | --- | --- |
+| agentgateway (open source) | For MCP, acts as the resource server: it validates tokens and serves the protected resource metadata. For models, virtual keys or JWTs | Removes the caller's credential by default. For each backend: a stored key, RFC 8693 token exchange, ID-JAG, a cloud provider's credentials, or the caller's token passed through |
+| Agent Router (open source, formerly Envoy AI Gateway) | MCP routes validate OAuth tokens and their audience. Callers of model routes are authenticated by Envoy Gateway | For MCP servers, a stored key for each backend, and named caller headers forwarded where configured. For Amazon Bedrock, Azure OpenAI and Vertex AI, short-lived credentials from the provider's identity system; stored keys for other providers |
+| LiteLLM (open source, with an enterprise edition) | Virtual keys with budgets and model lists, which can also grant access to MCP servers. Accepting an identity provider's JWT in place of a key is an enterprise feature | Provider keys stored by the gateway |
+| Cloudflare MCP server portals | Users sign in through your identity provider at one address in front of many servers | For each server, either each user's own OAuth grant, which is the default, or one administrator's credential shared by everyone who can reach the portal |
+
+</div>
+
+The last row shows the choice from [what the server behind it can tell](#what-the-server-behind-it-can-tell) as one setting. Find the equivalent in any product, and know which way it is set for each server.
+
+On Kubernetes, [gateways and policy](/deployments/kubernetes/#gateways-and-policy) covers the projects that are defining these controls as cluster APIs.
+
+## What a gateway does not solve
+
+**Calls that go around it.** A server that is reachable at its own address can be called there. Either close the path, as [Kubernetes](/deployments/kubernetes/#gateways-and-policy) does with a network policy, or have the server accept only tokens addressed to it. On a person's machine nothing forces a call through the gateway at all, and a [local server started over stdio](/deployments/local/#local-mcp-servers-over-stdio) never touches it.
+
+**Misuse of allowed access.** A hijacked agent can call every tool the policy allows for its user. For actions that cannot be undone, bring the person back with [step-up](/flows/step-up-authorization/) or [backchannel approval](/flows/ciba/).
+
+**A server that does not check.** A server that trusts anything arriving from the gateway's network address trusts everything that can reach that address. Where a server can validate a token addressed to it, have it do so. The gateway is an extra check, and the server's own check is the control.
+
+**Its own compromise.** An MCP gateway can obtain a token for any user at any server behind it, and an LLM gateway holds every provider key. Give the gateway a workload identity of its own, limit who can change its configuration, and keep a record of its exchanges at the authorization server, where the gateway cannot edit it.
+
+**Servers it starts itself.** A gateway that launches stdio MCP servers as child processes runs them with its own privileges, beside every credential it holds. The MCP security guidance asks a proxy that does this to sandbox what it starts and to limit its access to files.
+
+## Checklist
+
+<ul class="checklist">
+  <li>The gateway’s metadata names its own address as the resource, and it rejects a token addressed to anything else.</li>
+  <li>Where several servers share the gateway, no caller’s token is sent on to any of them.</li>
+  <li>Each server behind the gateway receives a credential made for it. Where the data belongs to users, that credential names the user.</li>
+  <li>Exchanged tokens name the gateway as actor, and only the gateway may exchange for the servers’ audiences.</li>
+  <li>Per-tool rules read the user and the client from the validated token, and a tool name that has been checked against the request body.</li>
+  <li>A gateway that keeps users’ grants at third-party services asks for consent for each MCP client before it sends the user on.</li>
+  <li>Agents reach the LLM gateway with a platform identity or a person’s sign-in where it supports one. Any virtual keys left are one for each caller, and open models only.</li>
+  <li>Provider credentials are short-lived where the provider accepts an identity. Stored keys exist only at the gateway.</li>
+  <li>Logs of prompts and replies are access-controlled, and tokens are kept out of them.</li>
+  <li>Nothing reaches the servers or the providers except through the gateway, or each one validates its callers itself.</li>
+</ul>
