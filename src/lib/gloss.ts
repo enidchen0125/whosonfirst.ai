@@ -53,11 +53,11 @@ for (const t of glossary) {
   }
 }
 
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // longest first, so "authorization server" wins over "authorization code" only where it is written
 const names = [...entries.keys()].sort((a, b) => b.length - a.length);
 const PATTERN = new RegExp(
-  `(?<![\\w-])(${names.map(escape).join("|")})(s?)(?![\\w-])`,
+  `(?<![\\w-])(${names.map(literal).join("|")})(s?)(?![\\w-])`,
   "gi",
 );
 
