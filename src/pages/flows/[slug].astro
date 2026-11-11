@@ -23,7 +23,7 @@ import {
   REF_ROLE_TITLE,
   STATUS_LABEL,
 } from "../../data/types";
-import type { Flow, RefRole } from "../../data/types";
+import type { Flow, RefRole, Standard } from "../../data/types";
 import { codeThemes } from "../../lib/code-themes.mjs";
 import { gloss } from "../../lib/gloss";
 import { block, inline } from "../../lib/md";
@@ -62,9 +62,14 @@ const prev = flows[i - 1];
 const next = flows[i + 1];
 
 // What the page says the flow implements: `basis` if given, otherwise the first standard listed.
-const basis = (flow.basis ?? [flow.standards[0]]).map(std);
-const primary = basis[0];
-const firstSentence = primary.detail
+// A pattern that no specification defines names none, and says so in `noBasis`.
+if (flow.noBasis && (flow.basis || flow.roles))
+  throw new Error(
+    `[${flow.slug}] says it has no basis, and also names one or classifies its references`,
+  );
+const basis = flow.noBasis ? [] : (flow.basis ?? [flow.standards[0]]).map(std);
+const primary: Standard | undefined = basis[0];
+const firstSentence = primary?.detail
   ?.split(/(?<=\.)\s/)[0]
   .replaceAll("`", "")
   .replace(/\.$/, "");
@@ -74,7 +79,7 @@ const dated = /^([A-Z][a-z]+ \d{4})/.exec(firstSentence ?? "");
 // A flow that covers more than its diagram draws says so wherever its basis, its required
 // references and its rating are stated: all three belong to the arrangement drawn.
 const drawn = Boolean(flow.illustrated);
-const based = {
+const based = primary && {
   key: drawn ? "Diagram based on" : undefined,
   refs: basis.map((s) => ({ ref: s.ref, href: `/standards/#${s.id}` })),
   status:
@@ -167,6 +172,9 @@ const details = [
       .filter(Boolean)
       .join(" · "),
   })),
+  ...(flow.noBasis
+    ? [{ label: "Primary specification", value: "None", note: flow.noBasis }]
+    : []),
   flow.roles
     ? {
         label: `${counted.length} required references`,
@@ -220,7 +228,7 @@ const details = [
     <div class="wrap">
       <h1>{flow.title}</h1>
       <p class="lede">{flow.tagline}</p>
-      <DocMeta based={based} reviewed={REVIEWED} subject="Guide" details={details} />
+      <DocMeta based={based} lead={flow.noBasis} reviewed={REVIEWED} subject="Guide" details={details} />
     </div>
   </div>
 
