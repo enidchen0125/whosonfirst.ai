@@ -391,12 +391,12 @@ export const standards: Standard[] = [
   },
   {
     id: "id-jag",
-    name: "Identity Assertion Authorization Grant (ID-JAG)",
+    name: "Identity Assertion JWT Authorization Grant (ID-JAG)",
     ref: "draft-ietf-oauth-identity-assertion-authz-grant",
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -06, October 2026. OAuth working group document. Revisions -05 and -06 tightened audience rules and added key binding. The MCP extension pins -04.",
+      "Revision -06, October 2026. OAuth working group document. Revision -05 limited a token exchange request to one audience and added mutual TLS certificate binding as an alternative to DPoP. Revision -06 changed the error returned for a subject token that fails validation. The MCP extension pins -04.",
     topics: ["delegation"],
     summary:
       "An enterprise identity provider issues a short-lived grant that another application’s authorization server exchanges for an access token, with no user redirect. Also called Cross-App Access.",
@@ -582,7 +582,7 @@ export const standards: Standard[] = [
   },
   {
     id: "aauth-rosenberg",
-    name: "AAuth: Agentic Authorization Grant",
+    name: "AAuth: Agentic Authorization OAuth 2.1 Extension",
     ref: "draft-rosenberg-oauth-aauth",
     body: "IETF",
     status: "draft",
@@ -601,7 +601,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "draft",
     detail:
-      "Revision -11, September 2026. Individual draft with several companions. That revision added the person token and arranged access into five modes. Its author reports the work is moving to a new OpenID Foundation working group.",
+      "Revision -11, September 2026. Individual draft with several companions. That revision added the person token and arranged access into five modes. Its author’s repository says AAuth has been adopted as a working group at the OpenID Foundation, and that specification work will move there.",
     topics: ["proof-of-possession", "delegation", "agent-protocol"],
     summary:
       "Not an OAuth extension. Every agent has its own key and signs every request with HTTP Message Signatures; there are no bearer tokens and no pre-registration.",
