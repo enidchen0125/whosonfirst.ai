@@ -292,6 +292,9 @@ async function readFlow(slug) {
         count: text(one(".flow-stage-count", d)),
         width: lines.width,
         height: lines.height,
+        // the strip of participants above the sequence, as tall as the page draws it:
+        // a diagram with many participants is drawn smaller than its natural size
+        heads: one(".flow-heads", d).getBoundingClientRect().height,
         steps: all(".flow-step", d).map((li, i) => {
           const row = one('svg .step[data-step="' + i + '"] .hit', d).getBoundingClientRect();
           const who = all(".step-route .who", li);
@@ -852,19 +855,16 @@ const INNER = TALL.width - 2 * 72 - 2;
 /** How far down the sequence the window starts, so that step `i` sits near its middle. */
 function offset(flow, i) {
   const scale = INNER / flow.width;
-  const headsH = HEADS(flow) * scale;
+  const headsH = flow.heads * scale;
   const room = WINDOW - headsH;
   const tall = flow.height * scale;
   const want = flow.steps[i].at * tall - room * 0.46;
   return Math.max(0, Math.min(want, tall - room));
 }
-/** The strip of participants is a fixed height in the diagram's own units. */
-const HEADS = () => 64;
-
 function step(flow, i, y) {
   const s = flow.steps[i];
   const scale = INNER / flow.width;
-  const headsH = HEADS(flow) * scale;
+  const headsH = flow.heads * scale;
   const who = (p) => `<span class="who ${p.role}">${esc(p.label)}</span>`;
   return `
     <div class="flow-head">
