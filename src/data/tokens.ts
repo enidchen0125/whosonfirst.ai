@@ -66,7 +66,7 @@ export const tokens: TokenSpec[] = [
         text: '"iss": "https://auth.example",',
         indent: 1,
         cat: "meta",
-        note: "The authorization server that issued the token. The API must check it against the issuer it trusts; an agent that talks to many servers must check it against the one it meant to use.",
+        note: "The authorization server that issued the token. The API must check it against the issuer it trusts. The agent does not read it: a client must not inspect an access token (RFC 9068). An agent that talks to many servers checks the `iss` parameter of the authorization response instead (RFC 9207), against the server it sent the request to.",
       },
       {
         text: '"sub": "user:alice",',
