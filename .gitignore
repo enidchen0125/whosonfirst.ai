@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# what `npm run social:assets` draws
+social/
 .astro/
 .DS_Store
 *.log

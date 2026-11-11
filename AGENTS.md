@@ -63,7 +63,7 @@ Do not weaken, skip or delete a check to get it to pass. When a check fails, its
 - **Nothing loads from another origin.** The content security policy in `public/_headers` allows this origin only. Do not add analytics, an embed, a hosted font or a CDN script.
 - **No client-side framework, and no new dependency without asking.** Interactive pieces are small custom elements over HTML rendered at build time, and every page reads correctly with JavaScript off.
 - **Biome does not format `.mdx`.** Keep those files tidy by hand.
-- **Generated files are not edited.** `dist/` is not committed. The two pictures in `docs/images/` come from `npm run readme:figure`.
+- **Generated files are not edited.** `dist/` is not committed. The two pictures in `docs/images/` come from `npm run readme:figure`. The pictures for a post come from `npm run social:assets`, into `social/`, which is not committed either.
 
 ## Branches, commits and pull requests
 
