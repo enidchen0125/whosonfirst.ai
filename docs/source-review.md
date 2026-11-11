@@ -152,6 +152,17 @@ These pages describe products, and products change stage and name without notice
 
 **`src/pages/deployments/local.mdx`.** GitHub's default subject claim format for new repositories.
 
+**`src/pages/deployments/gateways.mdx`.** Two kinds of claim.
+
+The table under "Where it is implemented" states its own month. For each product, check its current documentation for its name, what it accepts from callers, and what it sends to what is behind it:
+
+- agentgateway: resource-server mode for MCP, virtual keys, the incoming credential removed by default, the backend authentication methods named, and the role session name and tags it can set from the caller's token when it assumes an AWS role
+- Agent Router: OAuth and audience validation on MCP routes, per-backend keys and forwarded headers, and which providers get short-lived credentials
+- LiteLLM: virtual keys, what else a key can grant, and which edition accepts an identity provider's JWT
+- Cloudflare MCP server portals: the setting that chooses between each user's own grant and a shared administrator credential, and its default
+
+What the page says the MCP specification requires belongs to the revision named in `mcp-authorization`. When the revision changes, reread: that a server calling upstream uses a separate token and must not pass on the one it received (authorization, security considerations); the consent rules for an MCP proxy server and for a proxy that starts stdio servers (security best practices); and the `Mcp-Method` and `Mcp-Name` headers, with who must reject a mismatch with the body (Streamable HTTP transport).
+
 ## Quarterly
 
 In January, April, July and October.

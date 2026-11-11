@@ -82,7 +82,7 @@ A reply in a chat window is done in seconds, with the user watching. A report th
 Some of what the agent touches belongs to you and not to any user: its database, its storage, the model provider's API.
 
 - Where your cloud can vouch for the workload, use that identity, so that nothing long-lived has to be stored for it. [Kubernetes](/deployments/kubernetes/) and the major clouds each have a way.
-- Where a service only offers an API key, keep the key in a secrets manager and out of the image, the repository and the model's context. One key for one owner is what an API key is for.
+- Where a service only offers an API key, keep the key in a secrets manager and out of the image, the repository and the model's context. One key for one owner is what an API key is for. When many apps and agents share a model provider's account, an [LLM gateway](/deployments/gateways/#the-llm-gateway) keeps that key in one place.
 - When the agent calls your own internal services for a user, do not forward the user's token. Get a token for that hop with [token exchange](/flows/token-exchange/), so that each service holds something that works in one place.
 
 ## Checklist

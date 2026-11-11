@@ -180,7 +180,7 @@ Where a gateway terminates TLS between agent and tool, the certificate does not 
 
 ## Gateways and policy
 
-Much of what this site describes can be enforced at a proxy, without touching agent code. That is attractive when agents are built by many teams on many frameworks.
+Much of what this site describes can be enforced at a proxy, without touching agent code. That is attractive when agents are built by many teams on many frameworks. What a gateway does to the identity of each call, in front of tools and in front of models, has [a page of its own](/deployments/gateways/). These are the projects that bring one to a cluster.
 
 - **agentgateway** is an open-source proxy for model, MCP and agent-to-agent traffic. It can act as the OAuth resource server for MCP, apply per-tool rules or ask an external policy engine through AuthZEN, perform token exchange and the enterprise ID-JAG flow on the agent's behalf, and run as an egress proxy. Istio can use it as a gateway or ambient waypoint, though that integration is marked experimental.
 - **Agent Router**, the project formerly called Envoy AI Gateway, offers MCP routes with OAuth validation, claim-based authorization and per-backend credential injection.

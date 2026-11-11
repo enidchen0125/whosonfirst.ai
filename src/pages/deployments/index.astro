@@ -37,6 +37,13 @@ const places = [
       "For agents that run untrusted code: keep credentials outside the sandbox and inject them at the network edge.",
     chips: ["Egress proxies", "Credential injection"],
   },
+  {
+    href: "/deployments/gateways/",
+    title: "MCP and LLM gateways",
+    blurb:
+      "Not a place an agent runs: a proxy its calls pass through, from any of the others. One in front of the tools, one in front of the models, and what the far side can still tell about the caller.",
+    chips: ["Token exchange", "Per-tool policy", "Virtual keys"],
+  },
 ];
 
 const rows = [

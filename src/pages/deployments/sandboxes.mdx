@@ -59,7 +59,7 @@ Hosted sandbox products and several newer open-source proxies offer the same ide
 
 **Misuse of live access.** While the sandbox runs, a hijacked agent can make any call the allow-list and credentials permit. If it may write to your repository, it can write something harmful. Injection stops the credential leaving; it does not make the agent trustworthy.
 
-**What the agent may do.** That is authorization, and it belongs at the resource or at a gateway that understands the request: per-tool policy, [transaction-bound approvals](/flows/step-up-authorization/), limits on amounts and rates.
+**What the agent may do.** That is authorization, and it belongs at the resource or at a [gateway](/deployments/gateways/) that understands the request: per-tool policy, [transaction-bound approvals](/flows/step-up-authorization/), limits on amounts and rates.
 
 **Data exfiltration through allowed hosts.** If the agent can write to any service on the allow-list, that service is a channel out.
 

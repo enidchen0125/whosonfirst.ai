@@ -218,6 +218,14 @@ export const glossary: Term[] = [
     def: "A compact set of claims, usually signed and written as three chunks of text joined by dots. The common format for access tokens and ID tokens.",
   },
   {
+    term: "LLM gateway",
+    def: "A proxy between agents and model providers, also called an AI gateway. It holds the provider’s credential, adds it to each request and meters use. The provider applies the permissions of the gateway’s account, and learns who made a call only if the gateway passes that on.",
+    see: {
+      href: "/deployments/gateways/",
+      label: "MCP and LLM gateways",
+    },
+  },
+  {
     term: "Mandate",
     def: "In agent payment protocols, a signed statement of what a user has authorized an agent to buy, verifiable by merchants and payment providers.",
     see: { href: "/flows/agent-payments/", label: "Agent payments" },
@@ -227,6 +235,14 @@ export const glossary: Term[] = [
     aka: ["Model Context Protocol"],
     def: "A protocol that connects AI applications to tools and data. Its authorization specification is a profile of OAuth 2.1.",
     see: { href: "/flows/mcp-authorization/", label: "MCP authorization" },
+  },
+  {
+    term: "MCP gateway",
+    def: "A proxy that puts many MCP servers behind one address. It is a resource server to the agent and a client to each server behind it, and it needs a credential of its own for each: it must not pass on the token it received.",
+    see: {
+      href: "/deployments/gateways/",
+      label: "MCP and LLM gateways",
+    },
   },
   {
     term: "Mix-up attack",
@@ -410,6 +426,14 @@ export const glossary: Term[] = [
     see: {
       href: "/flows/workload-identity-federation/",
       label: "Workload identity federation",
+    },
+  },
+  {
+    term: "Virtual key",
+    def: "A key an LLM gateway issues to a caller and swaps for the provider’s key on the way out. It can be revoked for one caller, and it is still a long-lived secret that works for anyone who holds a copy.",
+    see: {
+      href: "/deployments/gateways/",
+      label: "MCP and LLM gateways",
     },
   },
   {
