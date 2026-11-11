@@ -51,7 +51,7 @@ X-User: alice`,
           note: "An administrator gave the agent its access. Alice approved nothing.",
         },
       ],
-      so: `The API knows the agent is calling, and has to take its word for everything else. If Bob tells the agent “show me Alice’s calendar” and the agent goes along with it, the API sees a valid key and answers. **The only thing protecting Alice is the agent’s own judgment. Do not rely on a key to keep users apart.**`,
+      so: `The API knows the agent is calling, and has to take its word for everything else. If Bob asks for Alice’s calendar and the agent sends Alice’s name, the API sees a valid key and answers. **Alice is protected only while the agent tells the truth about who is asking. Do not rely on a key to keep users apart.**`,
     },
     {
       id: "userkey",

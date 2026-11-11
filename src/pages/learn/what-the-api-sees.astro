@@ -9,16 +9,16 @@ const checks: CheckQuestion[] = [
   {
     id: "bob",
     question:
-      "Bob types “show me Alice’s calendar.” The agent uses its own API key for every user. What stops Bob?",
+      "Bob types “show me Alice’s calendar.” The agent uses its own API key for every user, and adds a header naming who is asking. What keeps Bob out of Alice’s calendar?",
     options: [
       {
         text: "The calendar API, which can see that Bob is not Alice.",
-        why: "The API sees the agent’s key and a name the agent typed. Nothing in the request tells it that Bob is the one asking.",
+        why: "The API cannot see Bob. It sees the agent’s key and a name in a header, and the name is whatever the agent wrote there.",
       },
       {
-        text: "Only the agent’s own logic, if it thinks to check.",
+        text: "Only the agent’s word about who is asking.",
         correct: true,
-        why: "The key proves which software is calling and nothing about which person asked. Any per-user limit has to be enforced by the agent, which is the part most easily talked out of it.",
+        why: "The API can refuse Bob, if the agent says the request is Bob’s. But it has only the agent’s word for that. The same key would carry Alice’s name just as well, and the API could not tell the difference. The rule is checked at the API and decided by the agent, which is the part most easily talked out of it.",
       },
       {
         text: "The API key, which is tied to Alice.",
@@ -120,7 +120,8 @@ const checks: CheckQuestion[] = [
     An API key is what most of us reach for first. For a program with one owner it can be enough, as long as the key
     is kept where the model cannot read it and can do no more than the job needs. The trouble starts when one agent
     works for many people. One key is one identity, so every request looks the same to the API, whoever asked. The
-    agent can add a name to the request, but a name the sender typed is a claim, not evidence.
+    agent can add a name to the request, and the API can apply its rules to that name. But a name the sender typed is
+    a claim, not evidence: the API is still taking the agent’s word for whose request this is.
   </p>
   <p>
     In an agent that name is often filled in by the model, so text the model has read can choose whose data is
@@ -152,7 +153,7 @@ const checks: CheckQuestion[] = [
   <Mixup belief="The API knows which user this is, because my agent knows.">
     <p>
       What your agent knows stays in your agent. The API learns only what the credential proves. If the credential
-      is the same for every user, then to the API every user is the same.
+      is the same for every user, the API has only your agent’s word for which user this is.
     </p>
   </Mixup>
 
