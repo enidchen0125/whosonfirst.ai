@@ -297,6 +297,51 @@ Content-Type: application/json
     "cross-app-access",
     "step-up-authorization",
   ],
+  sections: [
+    {
+      id: "server",
+      title: "If you are writing the server",
+      intro: `Most of the fourteen steps belong to the client and the authorization server. A server author’s share is three of them, and a few decisions that come first.`,
+      parts: [
+        {
+          title: "Does a server need this at all?",
+          body: `Authorization is optional in MCP. A server that the client launches as a local process takes its credentials from its environment, and a server that exposes nothing private has nothing to protect.
+
+A remote server that acts on a user’s data is the case this flow is for. It has to know which user each request is for, from something it can check.`,
+        },
+        {
+          title: "Why not an API key?",
+          body: `There are two ways to use one, and they fail differently.
+
+**One key for the whole client** tells your server which application is calling and nothing about which person. Your server then cannot keep one user’s data from another. [Lesson 1](/learn/what-the-api-sees/) walks through that.
+
+**A key for each user, pasted into the client’s configuration**, does identify the user. But it is long-lived, it is often good for everything that user can do, it sits in a file on a machine you do not control, and nothing ties it to the one client it was pasted into.
+
+A token from this flow lasts minutes, carries only the scopes the user approved, and is accepted at your server alone.`,
+        },
+        {
+          title: "Where the authorization server comes from",
+          body: `It is a separate service, and you rarely write one. The sign-in system your company already runs can be it, or an identity product you host or subscribe to.
+
+Whichever it is, it has to do what the steps above ask of it: publish its metadata, support PKCE, honor the \`resource\` parameter so that a token is issued for your server alone, and, for clients that have never registered with it, accept a Client ID Metadata Document.`,
+        },
+        {
+          title: "What you build",
+          body: `**A 401 that points the way** (step 2). Answer a request that has no token with the address of your metadata.
+
+**A metadata document** (step 3). A small JSON file that names your authorization server and the scopes a client needs to get started.
+
+**Token validation on every request** (step 14). Signature, issuer, expiry and scope, and above all that the token was issued for your server. Reject anything else. A JWT library does the cryptography. The audience and scope checks are the part to get right.`,
+        },
+        {
+          title: "What you must not do",
+          body: `Do not pass the client’s token to the API behind you. It was issued for your server, and the next service should refuse it.
+
+If your server has to call something else for the user, it gets a token of its own: by [token exchange](/flows/token-exchange/) where both sit under one authorization server, or by sending the user to connect that account directly, which is [URL elicitation](/flows/url-elicitation/).`,
+        },
+      ],
+    },
+  ],
   notes: [
     {
       title: "Why this flow is rated emerging",
