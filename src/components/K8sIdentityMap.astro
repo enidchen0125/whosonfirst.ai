@@ -159,7 +159,7 @@ const layers: Layer[] = [
     name: "ServiceAccount token",
     tone: "amber",
     question: "Which pod is this?",
-    body: "The kubelet asks the API server’s TokenRequest API for a token bound to this pod, with an audience and expiry from the pod spec, and writes it into a projected volume. It replaces the file before it expires. The token stops validating when the pod is deleted.",
+    body: "The kubelet asks the API server’s TokenRequest API for a token bound to this pod, with an audience and expiry from the pod spec, and writes it into a projected volume. It replaces the file before it expires. The API server stops accepting the token once the pod is deleted. A receiver that only checks the signature does not see that, and accepts it until it expires.",
     goodFor:
       "Calling the Kubernetes API, and as the starting credential for everything else here.",
     limit:

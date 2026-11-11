@@ -38,7 +38,7 @@ How the thing being called comes to accept that identity depends on what it is.
 The fourth row is the one to start from when both ends are yours and there is no service mesh. A job that reconciles invoices calls a billing API in the same cluster.
 
 1. **The job asks for a token addressed to billing.** Its pod mounts a ServiceAccount token whose audience is `billing`, as in [the baseline pod](#a-baseline-pod). Kubernetes writes it to a file and replaces it before it expires.
-2. **The job sends it.** In the `Authorization` header, as a bearer token, read from the file each time.
+2. **The job sends it.** Over TLS, in the `Authorization` header, as a bearer token, read from the file each time.
 3. **The billing API asks the cluster whether the token is good.** It posts the token to the TokenReview API, naming its own audience. The cluster answers with the ServiceAccount the token belongs to, or says it is not valid: wrong audience, expired, or from a pod that no longer exists.
 4. **The billing API applies its own rule.** `system:serviceaccount:agents:invoice-job` may read invoices and nothing else. That rule is yours to write, and it is the whole of what this identity can do.
 
@@ -187,13 +187,13 @@ Much of what this site describes can be enforced at a proxy, without touching ag
 - **Kube Agentic Networking**, a SIG Network subproject, is defining Kubernetes APIs for agent traffic policy, including tool-level MCP authorization and SPIFFE-based agent identity. Early releases only.
 - A Kubernetes **AI Gateway working group** has proposed standardizing egress gateways with managed authentication and token injection for third-party AI APIs. Nothing has shipped.
 
-A gateway controls only the traffic that passes through it. Add a NetworkPolicy that denies all other egress from agent pods, including the cloud metadata address, or the control is advisory.
+A gateway controls only the traffic that passes through it. Add a NetworkPolicy that denies all other egress from agent pods, including the cloud metadata address, or the control is advisory. Check that your cluster's network plugin enforces NetworkPolicy, and test that a blocked call fails: a cluster that does not enforce it accepts the policy and does nothing.
 
 ## Sandboxed agents
 
 [Agent Sandbox](https://github.com/kubernetes-sigs/agent-sandbox) is a SIG Apps project that adds a `Sandbox` resource: an isolated, stateful, single-pod runtime for an agent, with templates, claims and pre-warmed pools. The project is at version 1.0, with an API still labeled `v1beta1`.
 
-Its defaults are a good statement of what an agent pod should look like. Sandboxes created from a template do not mount a ServiceAccount token, and get a generated NetworkPolicy that allows the public internet while blocking private address ranges and cloud metadata endpoints. Isolation itself is delegated to a sandboxed container runtime such as gVisor or Kata.
+Its defaults are a reasonable floor, not the target. Sandboxes created from a template do not mount a ServiceAccount token, and get a generated NetworkPolicy that blocks private address ranges and cloud metadata endpoints but still allows the whole public internet. For an agent that holds or can use any credential, replace that with egress through a proxy and a default-deny list, as in [sandboxes](/deployments/sandboxes/). Isolation itself is delegated to a sandboxed container runtime such as gVisor or Kata.
 
 It has no built-in credential broker. Credentials reach a sandbox the way they reach any pod, which for an agent executing untrusted code means you should bring your own: see [sandboxes](/deployments/sandboxes/).
 
