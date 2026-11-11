@@ -10,6 +10,31 @@ section:
 
 import K8sIdentityMap from '../../components/K8sIdentityMap.astro';
 
+## The short answer
+
+If someone asks what identity your agent runs as, a good answer has three parts.
+
+- **Its own ServiceAccount.** One for each agent, never shared, with no default API token mounted.
+- **A short-lived token for each thing it calls.** Kubernetes issues it for one audience and replaces it before it expires. No key sits in a Secret.
+- **Only the access that identity was given.** Whatever is being called decides what this ServiceAccount may do there.
+
+How the thing being called comes to accept that identity depends on what it is.
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Table: Which route for which destination">
+
+| The agent calls | Start with | Detail |
+| --- | --- | --- |
+| A cloud provider's API | The cloud's federation with the cluster | [Reaching the cloud](#reaching-the-cloud) |
+| A service behind your own authorization server | The pod's token as the agent's proof of identity, traded for an access token | [Reaching the cloud](#reaching-the-cloud), last paragraph |
+| Another workload in the cluster, and you run a service mesh | The mesh's mutual TLS, plus a policy naming who may call whom | [Workload-to-workload](#workload-to-workload) |
+| Another workload in the cluster, and you do not | A token whose audience is that workload, which it checks with the TokenReview API | [A baseline pod](#a-baseline-pod) |
+| A service that only takes an API key | A proxy that holds the key outside the pod | [Credential broker](/flows/credential-broker/) |
+| Anything, for a particular user | The user's own token, exchanged for each hop. The pod's identity is not the user's | [The five layers](#the-five-layers), layer five |
+
+</div>
+
+The rest of this page is the detail behind those rows.
+
 ## The five layers
 
 An agent on Kubernetes can draw on five distinct layers of identity. They answer different questions, and a production deployment usually needs several at once. Pick a layer to see which parts of the cluster are involved.
