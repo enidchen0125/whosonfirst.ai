@@ -385,7 +385,7 @@ export const cautions: Caution[] = [
   },
   {
     when: { target: ["web"], principal: ["user"] },
-    text: "Most websites have no way to accept a delegated token. An agent logging in with the user’s own password is impersonation, with all of the user’s power and none of the audit trail.",
+    text: "Most websites have no way to accept a delegated token. An agent signing in with the user’s own password is impersonation, with all of the user’s power and none of the audit trail. Never collect the password. Have the person sign in for themselves, keep the session out of the model’s reach, and put your own limits in front of it.",
   },
   {
     when: { runtime: ["local"] },

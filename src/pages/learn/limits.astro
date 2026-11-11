@@ -270,6 +270,41 @@ const checks: CheckQuestion[] = [
     </p>
   </Mixup>
 
+  <h2 id="no-other-way">When a password is the only way in</h2>
+  <p>
+    Lesson 1 said never to take a user’s password for another service. Some services leave no alternative: an old
+    internal system that knows only usernames and passwords, or a website with a sign-in page and no API. Signing in
+    there as a person is impersonation however carefully it is done. The service cannot tell the agent from the
+    person and will not limit it. So the work is to limit what that costs.
+  </p>
+  <ul>
+    <li>
+      <strong>Give the agent an account of its own</strong>, where the service allows one, with only the access the
+      job needs. Its actions are then recorded as the agent’s, and the account can be closed without locking a
+      person out.
+    </li>
+    <li>
+      <strong>Keep the password away from the model.</strong> It lives in a secrets store. Your code, or a proxy
+      outside the agent’s sandbox, fills it in. The model asks to be signed in and never sees what was typed.
+    </li>
+    <li>
+      <strong>If it has to be a person’s account, the person signs in.</strong> Show them the service’s own sign-in
+      page, and let the password and any code from their phone go from them to the service. Nothing they type
+      should pass through the model or be saved. What the agent holds afterward is a signed-in session, and while
+      it lasts that session can do what the password could. Keep it short, keep it out of the model’s reach, and
+      end it when the task is done.
+    </li>
+    <li>
+      <strong>Put your own limits in front.</strong> The service will refuse the agent nothing the account can do.
+      So the limit has to be in the code that drives the session, not in the prompt: which pages it may open, and
+      which actions wait for a person to approve.
+    </li>
+  </ul>
+  <p>
+    None of this makes the arrangement good. It makes it smaller. Check that the service allows automated use at
+    all, and where you have any say, ask its owner for the real thing: an API that accepts tokens with a scope.
+  </p>
+
   <h2>One rule under all of it</h2>
   <p>
     The agent is the part of your system that reads untrusted text and acts on it. So nothing that matters should

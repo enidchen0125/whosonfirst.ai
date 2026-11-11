@@ -56,6 +56,8 @@ X-User: alice`,
     {
       id: "password",
       name: "Alice’s password",
+      avoid:
+        "The agent would hold Alice’s whole account, and her password would sit in your database, your logs and anything the model is shown.",
       hops: ["hands over her password", "signs in as Alice"],
       exhibits: [
         {

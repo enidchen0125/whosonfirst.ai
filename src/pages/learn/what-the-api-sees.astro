@@ -1,4 +1,5 @@
 ---
+import Caution from "../../components/Caution.astro";
 import Lesson from "../../layouts/Lesson.astro";
 import Mixup from "../../components/Mixup.astro";
 import Scenario from "../../components/Scenario.astro";
@@ -76,7 +77,7 @@ const checks: CheckQuestion[] = [
   keep={[
     "An API sees a request and a **credential**. It does not see the user, the conversation or the intent.",
     "A credential is worth what it proves: **who is acting, for whom, and who said they could.**",
-    "An API key proves the first. A password proves the second, and hands over far too much. A token that a person approved can carry all three.",
+    "An API key proves the first. A user’s password proves the second and hands over the whole account: **never ask for one.** A token that a person approved can carry all three.",
     "A limit only counts where the agent cannot talk its way around it. That place is the API.",
   ]}
   names={[
@@ -125,8 +126,41 @@ const checks: CheckQuestion[] = [
     the agent does is recorded as her doing it, and nothing holds it to her calendar: a password opens the whole
     account, for as long as she does not change it.
   </p>
+
+  <Caution title="Never ask a user for their password to another service.">
+    <p>
+      The password is in the figure to show what it proves. It is not one of your options. What the API can tell is
+      the smaller half of the problem. The larger half is what your agent would be holding:
+    </p>
+    <ul>
+      <li>
+        <strong>The whole account</strong>, not the part the task needs, and any other site where she has reused
+        that password.
+      </li>
+      <li>
+        <strong>A secret the model can repeat.</strong> Once a password is in a conversation or a prompt, any web
+        page, email or document the agent reads can ask for it.
+      </li>
+      <li>
+        <strong>Copies you did not plan for</strong>, in your database, your logs and your error reports. Any one of
+        them leaking gives her account away.
+      </li>
+      <li><strong>Access nobody can take back</strong> without changing the password.</li>
+    </ul>
+    <p>
+      It also stops working the moment her account asks for a code from her phone, unless she hands those over too.
+      And it teaches your users to type their password into whatever asks, which is the habit phishing depends on.
+      OAuth once had a way for an app to collect a password and trade it for a token. The{' '}
+      <a href="/standards/#rfc9700">current security guidance</a> says it must not be used.
+    </p>
+    <p>
+      Some services offer nothing else: an old internal system, or a website with only a sign-in page. That is a
+      risk to contain, not a design to choose. <a href="/learn/limits/#no-other-way">The last lesson says how</a>.
+    </p>
+  </Caution>
+
   <p>
-    That matters more for an agent than for an ordinary program, because an agent can be talked into things. It reads
+    Both failures matter more for an agent than for an ordinary program, because an agent can be talked into things. It reads
     web pages, emails and documents, and any of them may contain text written to steer it. If the agent’s key can
     read everyone’s calendar, one successful trick reads everyone’s calendar.
   </p>
