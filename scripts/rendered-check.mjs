@@ -773,6 +773,10 @@ record(
     [/base-uri 'self'/.test(csp), "a fixed base address"],
     [/frame-ancestors 'none'/.test(csp), "no framing"],
     [SITE_HEADERS["x-content-type-options"] === "nosniff", "nosniff"],
+    [
+      /max-age=\d{7,}/.test(SITE_HEADERS["strict-transport-security"] ?? ""),
+      "HTTPS only, for months",
+    ],
     [!!SITE_HEADERS["referrer-policy"], "a referrer policy"],
   ]
     .filter(([ok]) => !ok)
