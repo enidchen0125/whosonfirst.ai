@@ -41,13 +41,6 @@ const top = 8;
 const y0 = top + boxH + 52;
 const rowH = 64;
 const LINE = 17; // line height of a two-line arrow label
-// A flow's phases divide the sequence into bands, each under a heading of its own.
-const phases = flow.phases ?? [];
-const phaseH = phases.length ? 34 : 0;
-/** The phase a step belongs to, both counting from 0. -1 where there are no phases. */
-const phaseAt = (i: number) => phases.findLastIndex((p) => i + 1 >= p.from);
-const yOf = (i: number) => y0 + i * rowH + (phaseAt(i) + 1) * phaseH;
-const H = yOf(steps.length - 1) + 40;
 // The participant boxes are drawn in a strip of their own, so that it can stay
 // in view while a long sequence scrolls beneath it.
 const headH = top + boxH + 8;
@@ -60,6 +53,54 @@ const idx = (id: string) => {
 const xOf = (id: string) => padX + gap * idx(id);
 const name = (id: string) => P[idx(id)].label;
 const who = (id: string) => P[idx(id)];
+
+/**
+ * Each step's label as it is drawn: on one line, or, on an arrow too short
+ * for that, split into two balanced lines. A local action's is never split.
+ */
+const labelLines = steps.map((s, i) => {
+  if (!s.to || s.to === s.from) return [s.label];
+  const room = Math.abs(xOf(s.to) - xOf(s.from)) - 26;
+  if (s.label.length * CHAR <= room) return [s.label];
+  const words = s.label.split(" ");
+  let best = [s.label];
+  let bestLen = Infinity;
+  for (let k = 1; k < words.length; k++) {
+    const a = words.slice(0, k).join(" ");
+    const b = words.slice(k).join(" ");
+    const len = Math.max(a.length, b.length);
+    if (len < bestLen) {
+      bestLen = len;
+      best = [a, b];
+    }
+  }
+  // a label may run past its arrow (it is clamped to the canvas below), but not by much
+  if (Math.max(...best.map((l) => l.length)) * CHAR > room + 70) {
+    console.warn(
+      `[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`,
+    );
+  }
+  return best;
+});
+
+// A flow's phases divide the sequence into bands, each under a heading of its own.
+const phases = flow.phases ?? [];
+const phaseH = phases.length ? 34 : 0;
+/** The phase a step belongs to, both counting from 0. -1 where there are no phases. */
+const phaseAt = (i: number) => phases.findLastIndex((p) => i + 1 >= p.from);
+// A label's second line rises into the room the row above leaves free. The row
+// that opens a phase has the phase's heading there instead, so that row is one
+// label line taller: the heading is as far above a two-line label as a one-line one.
+const lift = steps.map((_, i) =>
+  phases[phaseAt(i)]?.from === i + 1 && labelLines[i].length > 1 ? LINE : 0,
+);
+let lifted = 0;
+const rowY = steps.map((_, i) => {
+  lifted += lift[i];
+  return y0 + i * rowH + (phaseAt(i) + 1) * phaseH + lifted;
+});
+const yOf = (i: number) => rowY[i];
+const H = yOf(steps.length - 1) + 40;
 
 const KIND_LABEL: Record<StepKind, string> = {
   back: "Direct call",
@@ -86,7 +127,7 @@ const bands = phases.map((p, k) => {
     first,
     last,
     // the band sits directly above its first step's row
-    y: yOf(first) - rowH / 2 - phaseH + 6,
+    y: yOf(first) - rowH / 2 - lift[first] - phaseH + 6,
   };
 });
 
@@ -132,6 +173,9 @@ const rows = steps.map((s, i) => {
   })).filter((p) => p.items.length > 0 || p.spent.length > 0);
   const from = who(s.from);
 
+  // the band a pointer or the current step lights up: the whole of the row
+  const hit = { y: y - rowH / 2 - lift[i], h: rowH + lift[i] };
+
   // A step with no recipient, or addressed to its sender, is a local action.
   if (!to || to === s.from) {
     const w = Math.min(Math.max(118, s.label.length * CHAR + 54), W - 8);
@@ -140,6 +184,7 @@ const rows = steps.map((s, i) => {
       s,
       i,
       y,
+      hit,
       self: true as const,
       x1,
       nx,
@@ -154,31 +199,7 @@ const rows = steps.map((s, i) => {
 
   const x2 = xOf(to);
   const dir = x2 > x1 ? 1 : -1;
-  const span = Math.abs(x2 - x1);
-  // Labels that will not fit on one line are split into two balanced lines.
-  const room = span - 26;
-  let lines = [s.label];
-  if (s.label.length * CHAR > room) {
-    const words = s.label.split(" ");
-    let best = lines;
-    let bestLen = Infinity;
-    for (let k = 1; k < words.length; k++) {
-      const a = words.slice(0, k).join(" ");
-      const b = words.slice(k).join(" ");
-      const len = Math.max(a.length, b.length);
-      if (len < bestLen) {
-        bestLen = len;
-        best = [a, b];
-      }
-    }
-    lines = best;
-    // a label may run past its arrow (it is clamped to the canvas below), but not by much
-    if (Math.max(...lines.map((l) => l.length)) * CHAR > room + 70) {
-      console.warn(
-        `[${flow.slug}] step ${i + 1} label is too long for its arrow: "${s.label}"`,
-      );
-    }
-  }
+  const lines = labelLines[i];
   const tip = x2 - dir * 3;
   const head = `${tip},${y} ${tip - dir * 9},${y - 4.6} ${tip - dir * 9},${y + 4.6}`;
   // a label may run a little past its arrow, but never off the canvas
@@ -191,6 +212,7 @@ const rows = steps.map((s, i) => {
     s,
     i,
     y,
+    hit,
     self: false as const,
     x1,
     x2,
@@ -296,7 +318,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
           rows.map((r) =>
             r.self ? (
               <g class={`step kind-self role-${r.from.role}`} data-step={r.i} data-actors={r.s.from}>
-                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <rect class="hit" x="0" y={r.hit.y} width={W} height={r.hit.h} />
                 <rect class="note" x={r.nx} y={r.y - 15} width={r.w} height="30" rx="15" />
                 <circle class="badge" cx={r.nx + 16} cy={r.y} r="11" />
                 <text class="badge-num" x={r.nx + 16} y={r.y + 4.4} text-anchor="middle">
@@ -308,7 +330,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
               </g>
             ) : (
               <g class={`step kind-${r.s.kind} role-${r.from.role}`} data-step={r.i} data-actors={`${r.s.from} ${r.s.to}`}>
-                <rect class="hit" x="0" y={r.y - rowH / 2} width={W} height={rowH} />
+                <rect class="hit" x="0" y={r.hit.y} width={W} height={r.hit.h} />
                 <line class="arrow" x1={r.lineStart} y1={r.y} x2={r.lineEnd} y2={r.y} />
                 <polygon class="head" points={r.head} />
                 <circle class="badge" cx={r.x1} cy={r.y} r="11" />
