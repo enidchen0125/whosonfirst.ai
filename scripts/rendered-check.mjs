@@ -584,13 +584,18 @@ for (const theme of THEMES) {
               m.left >= 0 &&
               m.right <= innerWidth &&
               m.top >= 0;
-            const last = links[links.length - 1];
-            last.click();
+            const pick = links[Math.min(2, links.length - 1)];
+            pick.click();
             await frame();
-            const target = document.getElementById(last.hash.slice(1));
+            const target = document.getElementById(pick.hash.slice(1));
             const t = target.getBoundingClientRect().top;
             found.went =
               !menu.matches(":popover-open") && t >= 0 && t < innerHeight;
+            // and the list then marks that section, not the one before it
+            found.marked =
+              menu.querySelector("a[aria-current]") === pick &&
+              sec.querySelector(".here-sec-name").textContent ===
+                pick.textContent;
             history.replaceState(null, "", location.pathname);
           }
           scrollTo(0, 0);
@@ -607,9 +612,13 @@ for (const theme of THEMES) {
           record(
             where,
             "its button lists the page’s sections, and choosing one goes there",
-            !!line?.button && line.listed > 1 && line.menuFits && line.went,
+            !!line?.button &&
+              line.listed > 1 &&
+              line.menuFits &&
+              line.went &&
+              line.marked,
             line
-              ? `${line.listed ?? 0} listed${line.menuFits ? "" : ", list off screen"}${line.went ? "" : ", did not arrive"}`
+              ? `${line.listed ?? 0} listed${line.menuFits ? "" : ", list off screen"}${line.went ? "" : ", did not arrive"}${line.marked ? "" : ", wrong section marked"}`
               : "",
           );
           if (vp.name === "desktop")

@@ -201,7 +201,9 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
           let queued = false;
           const update = () => {
             queued = false;
-            const line = bar.getBoundingClientRect().bottom + 24;
+            // a section jumped to lands a little below the header, so the line it has
+            // to have passed is lower still: otherwise the one before stays marked
+            const line = bar.getBoundingClientRect().bottom + 48;
             let at = -1;
             heads.forEach((h, i) => {
               if (h.getBoundingClientRect().top <= line) at = i;
