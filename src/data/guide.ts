@@ -380,7 +380,7 @@ export const rules: Rule[] = [
     role: "add",
     weight: 4,
     when: {
-      runtime: ["local", "headless", "sandbox", "managed"],
+      runtime: ["local", "headless", "k8s", "sandbox", "managed"],
       target: ["api", "mcp", "agent"],
       risk: ["write", "irreversible"],
     },
