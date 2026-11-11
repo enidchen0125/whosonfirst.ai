@@ -1,0 +1,16 @@
+# Sent with every response. The site is static: it sets no cookies, takes no
+# input and loads nothing from another origin. These headers hold it to that.
+#
+# script-src and style-src allow inline code because the theme switch has to
+# run before the first paint, and code samples and diagrams are colored and
+# laid out with style attributes. Everything else must come from this origin.
+#
+# If something from another origin is ever added (analytics, an embed, a font),
+# it has to be allowed here as well. `npm run check:rendered` serves the built
+# site with these headers and fails if any page breaks them.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
