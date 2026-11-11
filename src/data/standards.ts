@@ -1199,7 +1199,7 @@ export const standards: Standard[] = [
     body: "OpenID Foundation",
     status: "wg-draft",
     detail:
-      "Draft 1, announced June 2026 with the protocol-neutral COAZ framework. Supersedes the earlier “AuthZEN profile for MCP.”",
+      "Draft 1. The AuthZEN working group approved a single COAZ profile for MCP as a working group draft in June 2026, then split it in two. This binding and the protocol-neutral COAZ Framework were announced in July 2026.",
     topics: ["authorization", "agent-protocol"],
     summary:
       "Maps MCP requests to AuthZEN authorization requests for parameter-level decisions, with mappings declared per tool.",
