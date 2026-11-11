@@ -5,9 +5,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
  *
  * contrast-check.mjs proves that declared color pairs pass. This script opens
  * the built site in a browser and measures what is actually drawn: the diagram
- * in each of its states, the size labels end up at, how long lines of prose
- * run, whether anything overflows, and whether the pieces a reader depends on
- * are present and work.
+ * in each of its states, the size labels end up at and whether they keep clear
+ * of the phase headings, how long lines of prose run, whether anything
+ * overflows, and whether the pieces a reader depends on are present and work.
  *
  *   npm run build && node scripts/rendered-check.mjs
  *   node scripts/rendered-check.mjs --verbose           list every measurement
@@ -214,6 +214,45 @@ const diagramLabels = () => {
   return out;
 };
 
+/**
+ * Every sequence diagram on the page: how many arrow labels it draws, how many
+ * phase headings, and which labels reach into a heading. A label is its text and
+ * the backing drawn behind it. One on two lines stands taller than its row, and
+ * the row that opens a phase has the phase's heading directly above it.
+ */
+const labelsOnHeadings = () => {
+  const hit = (a, c) =>
+    a.left < c.right - 0.5 &&
+    c.left < a.right - 0.5 &&
+    a.top < c.bottom - 0.5 &&
+    c.top < a.bottom - 0.5;
+  let labels = 0;
+  let headings = 0;
+  const on = new Set();
+  for (const svg of document.querySelectorAll(".flow-lines")) {
+    const bands = [...svg.querySelectorAll(".phase-band")].map((b) =>
+      b.getBoundingClientRect(),
+    );
+    headings += bands.length;
+    for (const step of svg.querySelectorAll(".step:not(.kind-self)")) {
+      labels++;
+      const parts = [...step.querySelectorAll(".arrow-label, .label-bg")].map(
+        (e) => e.getBoundingClientRect(),
+      );
+      if (parts.some((r) => !r.height)) on.add("a diagram that is not shown");
+      else if (parts.some((r) => bands.some((b) => hit(r, b))))
+        on.add(
+          `step ${Number(step.dataset.step) + 1} “${[
+            ...step.querySelectorAll(".arrow-label"),
+          ]
+            .map((t) => t.textContent.trim())
+            .join(" ")}”`,
+        );
+    }
+  }
+  return { labels, headings, on: [...on] };
+};
+
 /** Size and line length of running text. */
 const prose = () => {
   const out = [];
@@ -303,6 +342,13 @@ const built = [];
       built.push({ path: at, html: readFileSync(join(dir, d.name), "utf8") });
   }
 })(root, "/");
+
+// Every page that draws a sequence diagram: the flows, the lesson that walks
+// through one, and the style guide.
+const DIAGRAM_PAGES = built
+  .filter((p) => p.html.includes("<flow-diagram"))
+  .map((p) => p.path)
+  .sort();
 
 // The lessons in reading order, as the lessons index lists them.
 const LESSON_ORDER = [
@@ -1436,6 +1482,46 @@ for (const path of NARROW_PAGES) {
   );
 }
 await ctx.close();
+// every sequence diagram, beside its steps on a desktop and opened on a phone:
+// no arrow label reaches into the heading of the phase its step opens
+{
+  let headed = 0;
+  for (const vp of VIEWPORTS) {
+    const ctx = await browser.newContext({
+      viewport: { width: vp.width, height: vp.height },
+      isMobile: vp.isMobile,
+      hasTouch: vp.hasTouch,
+      reducedMotion: "reduce",
+    });
+    const page = await ctx.newPage();
+    for (const path of DIAGRAM_PAGES) {
+      await page.goto(`${origin}${path}`, { waitUntil: "networkidle" });
+      await page.evaluate(() => document.fonts.ready);
+      // on a phone a diagram stays closed until it is asked for
+      for (const closed of await page
+        .locator(".flow-stage:not([open]) > summary")
+        .all())
+        await closed.click();
+      const seen = await page.evaluate(labelsOnHeadings);
+      headed += seen.headings;
+      record(
+        `${vp.name} ${path}`,
+        "diagram: no arrow label overlaps a phase heading",
+        seen.labels > 0 && seen.on.length === 0,
+        seen.on.length
+          ? seen.on.join("; ")
+          : `${seen.labels} labels, ${seen.headings} headings`,
+      );
+    }
+    await ctx.close();
+  }
+  record(
+    "diagrams",
+    "some diagram has phase headings for a label to overlap",
+    headed > 0,
+    `${headed} headings`,
+  );
+}
 // color theme: the page follows the system setting, live, and a theme picked
 // with the header button lasts only until the system setting next changes
 {
