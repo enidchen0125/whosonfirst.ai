@@ -502,6 +502,15 @@ record(
         prose,
       );
     if (tag) copies.push(`${p.path} (markup in the text: ${tag[0]})`);
+    // Three things a conversion leaves behind when it has gone wrong: a
+    // character no one sees where a space should be, a list entry whose term
+    // is missing, and one heading printed twice.
+    if (/[\u200b\u200c\u2060]/.test(md))
+      copies.push(`${p.path} (an invisible character in the text)`);
+    if (/^- : /m.test(md)) copies.push(`${p.path} (an entry with no term)`);
+    const headings = md.match(/^#{2,3} .+$/gm) ?? [];
+    const twice = headings.find((h, i) => headings.indexOf(h) !== i);
+    if (twice) copies.push(`${p.path} (a heading printed twice: ${twice})`);
     // every section of the page is a section of the copy
     const sections = [...main.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) =>
       plain(m[1]),
