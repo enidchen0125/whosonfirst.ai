@@ -10,7 +10,6 @@ import FlowDiagram from "../../components/FlowDiagram.astro";
 import FlowCard from "../../components/FlowCard.astro";
 import TokenInspector from "../../components/TokenInspector.astro";
 import LastHop from "../../components/LastHop.astro";
-import Caution from "../../components/Caution.astro";
 import Check from "../../components/Check.astro";
 import Mixup from "../../components/Mixup.astro";
 import Scenario from "../../components/Scenario.astro";
@@ -582,15 +581,6 @@ grant_type=client_credentials
         <Mixup belief="A token is encrypted.">
           <p>A JWT is signed, not encrypted. Anyone who holds one can read it.</p>
         </Mixup>
-
-        <h3 class="sg-gap">A warning, for what must not be built</h3>
-        <Caution title="Never ask a user for their password to another service.">
-          <p>
-            For an approach a lesson shows only for comparison and that would do harm if built. The title is the
-            instruction, and the text says what goes wrong. Used rarely: a page where everything is a warning has
-            none.
-          </p>
-        </Caution>
 
         <h3 class="sg-gap">A term, defined where it is used</h3>
         <div

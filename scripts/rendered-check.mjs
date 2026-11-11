@@ -448,27 +448,42 @@ record(
   );
 }
 
-// A figure that shows an agent being handed a password is a comparison, and a
-// reader can take a comparison for a menu. Wherever that figure appears, the
-// choice itself and its panel say not to build it.
+// A figure choice that must not be built is marked three times over: a warning
+// sign on its button, the words and the reason at the head of its panel, and its
+// row in the comparison table. Lesson 5's forwarded token is one, so this check
+// always has something to look at.
 {
-  const shown = built.filter((p) => p.html.includes('data-option="password"'));
-  const unmarked = shown
-    .filter(
-      (p) =>
-        !/value="password"[^>]*>\s*<span[^>]*>[\s\S]{0,240}?class="[^"]*\bsc-flag\b/.test(
-          p.html,
-        ) ||
-        !/data-option="password"[^>]*>[\s\S]{0,600}?class="[^"]*\bsc-avoid\b/.test(
-          p.html,
-        ),
-    )
-    .map((p) => p.path);
+  const count = (html, re) => (html.match(re) ?? []).length;
+  const flagged = built
+    .map((p) => ({
+      path: p.path,
+      panels: count(p.html, /class="[^"]*\bsc-avoid\b/g),
+      buttons: count(
+        p.html,
+        /<span class="[^"]*\bsc-flag\b[^"]*"[^>]*\btitle=/g,
+      ),
+      rows: count(
+        p.html,
+        /<span class="[^"]*\bsc-flag\b[^"]*"(?![^>]*\btitle=)/g,
+      ),
+      table: /class="[^"]*\bsc-glance\b/.test(p.html),
+    }))
+    .filter((p) => p.panels > 0);
+  const wrong = flagged.filter(
+    (p) => p.buttons !== p.panels || (p.table && p.rows !== p.panels),
+  );
   record(
     "lessons",
-    "handing an agent a password is marked “do not build” wherever it is shown",
-    shown.length > 0 && unmarked.length === 0,
-    shown.length ? unmarked.join(" ") : "the figure was not found on any page",
+    "a figure choice that must not be built is marked on its button, in its panel and in its table",
+    flagged.length > 0 && wrong.length === 0,
+    flagged.length
+      ? wrong
+          .map(
+            (p) =>
+              `${p.path}: ${p.panels} panels, ${p.buttons} buttons, ${p.rows} rows`,
+          )
+          .join("; ")
+      : "no figure marks a choice at all",
   );
 }
 

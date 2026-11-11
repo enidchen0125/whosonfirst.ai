@@ -54,37 +54,33 @@ X-User: alice`,
       so: `The API knows the agent is calling, and has to take its word for everything else. If Bob tells the agent “show me Alice’s calendar” and the agent goes along with it, the API sees a valid key and answers. **The only thing protecting Alice is the agent’s own judgment. Do not rely on a key to keep users apart.**`,
     },
     {
-      id: "password",
-      name: "Alice’s password",
-      avoid:
-        "The agent would hold Alice’s whole account, and her password would sit in your database, your logs and anything the model is shown.",
-      hops: ["hands over her password", "signs in as Alice"],
+      id: "userkey",
+      name: "A key Alice made",
+      hops: ["gives it a key from her account", "Alice’s key"],
       exhibits: [
         {
           caption: "What arrives at the API",
           lang: "http",
-          text: `POST /login HTTP/1.1
+          text: `GET /events?day=tomorrow HTTP/1.1
 Host: calendar.example
-Content-Type: application/x-www-form-urlencoded
-
-username=alice&password=correct-horse-battery`,
+X-API-Key: sk_user_2b9e41d…`,
         },
       ],
       findings: [
         {
           verdict: "no",
-          note: "It looks like Alice herself. Nothing shows that software is involved.",
+          note: "The key is Alice’s. Nothing shows which software is using it, or that software is involved at all.",
         },
         {
           verdict: "yes",
-          note: "Alice’s account, because the password is hers.",
+          note: "Alice’s account, because the key is hers.",
         },
         {
-          verdict: "no",
-          note: "A password is all or nothing. It cannot say “read the calendar, and only that.”",
+          verdict: "partly",
+          note: "Alice made the key, so she agreed to something. Most keys open the whole account and never expire.",
         },
       ],
-      so: `As far as the API can tell, the agent *is* Alice. It can do anything she can, the logs will say she did it, and the only way to stop it is to change her password. **This is the arrangement that delegated access was invented to replace.**`,
+      so: `The API can now tell Alice’s requests from Bob’s. But as far as it can tell, the agent *is* Alice: whatever it does is recorded as her doing it, and the key usually allows everything her account can do, for as long as it exists. **It names the person and hides the software.**`,
     },
     {
       id: "token",

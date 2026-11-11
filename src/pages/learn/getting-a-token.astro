@@ -242,7 +242,7 @@ const checks: CheckQuestion[] = [
   lede="Alice has to say yes, and the agent must never see her password. OAuth is the routine that makes both true. You have clicked through it a hundred times."
   checks={checks}
   keep={[
-    "The user signs in and approves at the **authorization server**, never in the agent.",
+    "The user signs in and approves at the **authorization server**, never in the agent. **Never ask a user for their password.**",
     "What comes back through the browser is a one-time **code**. The token itself only ever travels on a direct connection.",
     "**PKCE** ties the code to the app that asked for it.",
     "A **refresh token** lets the agent carry on without the user. Guard it as if it were the user’s access, because it is.",
@@ -298,8 +298,16 @@ const checks: CheckQuestion[] = [
   <p>Each one answers a question people ask the first time they see this.</p>
   <p>
     <strong>Why send Alice to another site?</strong> So that her password goes to one place: the service that
-    already has it. An app that collects passwords can do anything with them, and teaches people to type their
-    password into whatever asks.
+    already has it. An agent that took her password would hold her whole account and not the part the task needs,
+    with no way to take that back short of changing the password. Copies would sit in your database and your logs.
+    And anything typed into a conversation, the model can be asked to repeat by the next page it reads.
+  </p>
+  <p>
+    So for a service that offers this exchange the rule has no exceptions: never ask a user for their password. It
+    also teaches people to type it into whatever asks, which is the habit phishing depends on. OAuth once had a way
+    for an app to collect a password and trade it for a token, and the{' '}
+    <a href="/standards/#rfc9700">current security guidance</a> says it must not be used. For a service that offers
+    nothing else, see <a href="/learn/limits/#no-other-way">the last lesson</a>.
   </p>
   <p>
     <strong>Why a code first, and not the token?</strong> Because the trip back runs through the browser, and a
