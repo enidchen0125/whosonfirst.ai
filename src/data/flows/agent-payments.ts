@@ -22,7 +22,7 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
   watchOut: [
     "This is pre-1.0 and changing. The mandate model was redesigned between the first and second versions, and stewardship has moved to a standards body where work is only starting.",
     "There are several competing and overlapping efforts from card networks, payment processors and AI vendors. None has settled as the standard.",
-    "An open mandate is a signed blank cheque with limits. The limits are the security: amount, merchant, items, expiry.",
+    "An open mandate is a signed blank check with limits. The limits are the security: amount, merchant, items, expiry.",
     "The user’s consent must be captured on a surface the agent does not control. If the agent draws the approval screen, the signature proves nothing.",
   ],
   lesson: "limits",
@@ -74,7 +74,10 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       label: "Sign open mandates",
       title: "The user approves constraints, not a purchase",
       body: `“Buy these running shoes in size 43 if the price drops below €120, this month.” The user reviews and signs on a **trusted surface**, a piece of interface that the protocol requires to be non-agentic. The result is a pair of open mandates, checkout and payment, that carry the constraints and the public key of the agent allowed to act on them.`,
-      gain: [["agent", "open mandates (user-signed)"]],
+      gain: [
+        ["agent", "agent key"],
+        ["agent", "open mandates (user-signed)"],
+      ],
     },
     {
       from: "agent",
@@ -82,7 +85,6 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       label: "Later: finds a matching offer",
       title: "The agent works alone",
       body: `Days later, with the user absent, the agent finds an offer that satisfies the constraints.`,
-      gain: [["agent", "agent key"]],
     },
     {
       from: "agent",
@@ -114,14 +116,14 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       to: "cp",
       kind: "back",
       label: "Present payment mandate",
-      title: "The agent asks the payment side for a credential",
+      title: "The agent asks the credential provider for a payment credential",
       body: `The credential provider holds the user’s payment methods. It receives the payment mandate and only the details it needs.`,
     },
     {
       from: "cp",
       kind: "self",
       label: "Verify chain and limits",
-      title: "The payment side checks the delegation",
+      title: "The credential provider checks the delegation",
       body: `Is the open mandate genuinely signed by the user? Does it name this agent’s key? Is the closed mandate inside the constraints? The protocol requires this to be done by deterministic code, not by a model.`,
     },
     {
@@ -139,7 +141,7 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       kind: "back",
       label: "Checkout mandate + payment",
       title: "The agent completes the purchase",
-      body: `The merchant receives the checkout mandate, proof that this agent is entitled to complete this checkout, together with the payment credential.`,
+      body: `The merchant receives the payment credential and the checkout mandate. The mandate shows that this agent is authorized to complete this checkout.`,
     },
     {
       from: "merchant",
@@ -147,7 +149,7 @@ The diagram shows the second case: the human approves the boundaries, leaves, an
       kind: "resp",
       label: "Signed receipt",
       title: "Receipts close the loop",
-      body: `The merchant returns a checkout receipt and the processor a signed payment receipt. With the mandates, they form the evidence trail if the purchase is ever disputed.`,
+      body: `The merchant returns a signed checkout receipt. The merchant’s payment processor, which is not drawn here, returns a signed payment receipt. With the mandates, they form the evidence trail if the purchase is ever disputed.`,
       lose: [["agent", "payment credential (this purchase)"]],
     },
   ],
