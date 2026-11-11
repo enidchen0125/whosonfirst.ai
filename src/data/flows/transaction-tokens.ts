@@ -11,9 +11,9 @@ export const transactionTokens: Flow = {
     "Inside your own infrastructure, replace the access token with a short-lived token that pins down one transaction and travels the whole call chain.",
   summary: `A request arrives at your edge with an access token. Behind the edge are an agent, the tools it calls, and the services those tools call. If the access token is passed along, every one of those services holds a credential that works at the front door. If each hop calls the others with only its own service identity, the downstream services have no idea who the request is for.
 
-A transaction token sits between those two failures. At the edge, the external token is exchanged for a signed, short-lived token that records who the request is for, which workload asked, and the fixed details of what was requested. That token is passed unchanged from service to service inside one trust domain. Services can read it and make decisions on it, but they cannot alter the context, and the token is useless outside.
+A transaction token sits between those two failures. At the edge, the external token is exchanged for a signed, short-lived token that records who the request is for, which workload asked, and the fixed details of what was requested. That token is passed unchanged from service to service inside one trust domain. Services can read it and make decisions on it, but they cannot alter the context, and the token is not valid outside that trust domain.
 
-For agent systems this is a way to keep the user’s intent attached to a request as an LLM fans it out across tools, without handing the model’s surroundings a reusable credential.`,
+For agent systems this is a way to keep the user’s intent attached to a request as an LLM fans it out across tools, without giving the agent or its tools the access token. What they hold instead covers one transaction and expires within minutes.`,
   fits: [
     "Multi-service backends where an agent’s tool calls fan out through several internal hops.",
     "You need every hop to know the original user and request, and to be unable to change them.",
@@ -41,7 +41,7 @@ For agent systems this is a way to keep the user’s intent attached to a reques
     },
   ],
   parts: {
-    edge: "Validates the caller’s access token, then authenticates as a workload and exchanges that token, with details of the request, for a transaction token. Forwards the request with the transaction token in the `Txn-Token` header and drops the access token. This is the last place the access token should be seen.",
+    edge: "Validates the caller’s access token, then authenticates as a workload and exchanges that token, with details of the request, for a transaction token. Forwards the request with the transaction token in the `Txn-Token` header and drops the access token. The transaction token service is the only other place the access token should be seen.",
     tts: "Checks the access token and the requester, then writes the request’s context into the short-lived token it signs. Every request depends on this service, and it must be told the truth about request context.",
     agent:
       "Verifies the token’s signature, audience and expiry, and reads from it who the request is for and what was approved. Calls the tool service as itself, with its workload identity, and attaches the transaction token unmodified. The transaction token does not say which service is calling: the workload identity does.",
@@ -59,7 +59,7 @@ For agent systems this is a way to keep the user’s intent attached to a reques
       kind: "self",
       label: "Request arrives + access token",
       title: "An external request reaches the edge",
-      body: `The gateway validates the caller’s access token in the normal way. This is the last place that token should be seen.`,
+      body: `The gateway validates the caller’s access token in the normal way. Past here, only the transaction token service should see that token.`,
       gain: [["edge", "external access token"]],
     },
     {
