@@ -1,4 +1,5 @@
-# Sent with every response. The site is static: it sets no cookies, takes no
+# Sent with every page and file the site serves. (The host does not add them to
+# its own "not found" response.) The site is static: it sets no cookies, takes no
 # input and loads nothing from another origin. These headers hold it to that.
 #
 # script-src and style-src allow inline code because the theme switch has to

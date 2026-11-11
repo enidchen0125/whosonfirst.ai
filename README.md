@@ -163,7 +163,7 @@ Two checks cover this:
 
 ## Response headers
 
-`public/_headers` is sent with every response: a content security policy that allows this origin and nothing else, and headers that forbid framing, content sniffing and the device features the site never uses. The build adds its cache rule for `/_astro/` to the same file.
+`public/_headers` is sent with every page and file the site serves: a content security policy that allows this origin and nothing else, and headers that forbid framing, content sniffing and the device features the site never uses. The build adds its cache rule for `/_astro/` to the same file. Cloudflare does not add these headers to its own “not found” response.
 
 The policy allows inline scripts and styles, because the theme switch runs before the first paint and code samples and diagrams carry style attributes. It does not allow anything from another origin. Analytics, an embed or a hosted font would be refused until it is added there, and `npm run check:rendered` fails on any page that breaks the policy.
 
