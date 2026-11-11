@@ -6,7 +6,7 @@
  * The card says what the page's title and description say, in the site's type
  * and colors. Text is drawn as outlines, so nothing depends on installed fonts.
  *
- * Also writes /apple-touch-icon.png from the site's icon.
+ * Also writes /apple-touch-icon.png and /favicon.ico from the site's icon.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -53,6 +53,29 @@ const KINDS = [
   [/^\/flows\/[^/]+\/$/, "Flow"],
   [/^\/deployments\/[^/]+\/$/, "Deployment guide"],
 ];
+
+/**
+ * An .ico file: a count, a line for each picture saying how big it is and where
+ * it starts, then the pictures. Each picture may be a PNG.
+ */
+function ico(pictures) {
+  const count = Buffer.alloc(6);
+  count.writeUInt16LE(1, 2);
+  count.writeUInt16LE(pictures.length, 4);
+  let at = count.length + 16 * pictures.length;
+  const lines = pictures.map(({ size, png }) => {
+    const line = Buffer.alloc(16);
+    line.writeUInt8(size, 0);
+    line.writeUInt8(size, 1);
+    line.writeUInt16LE(1, 4);
+    line.writeUInt16LE(32, 6);
+    line.writeUInt32LE(png.length, 8);
+    line.writeUInt32LE(at, 12);
+    at += png.length;
+    return line;
+  });
+  return Buffer.concat([count, ...lines, ...pictures.map((p) => p.png)]);
+}
 
 const el = (type, style, children, props = {}) => ({
   type,
@@ -253,6 +276,22 @@ export default function socialCards() {
           .png({ compressionLevel: 9 })
           .toBuffer();
         writeFileSync(join(root, "apple-touch-icon.png"), icon);
+        // A page names the SVG icon. A browser that does not read one, and
+        // anything that asks for /favicon.ico without reading the page, gets
+        // the mark at the three sizes such a file is expected to hold, on a
+        // background of its own for the same reason as above.
+        const small = await Promise.all(
+          [16, 32, 48].map(async (size) => ({
+            size,
+            png: await sharp(Buffer.from(MARK), { density: 72 * (size / 32) })
+              .resize(size, size)
+              .flatten({ background: BG })
+              .ensureAlpha()
+              .png({ compressionLevel: 9 })
+              .toBuffer(),
+          })),
+        );
+        writeFileSync(join(root, "favicon.ico"), ico(small));
         logger.info(
           `${pages.length} cards in /og/, ${Math.round(bytes / pages.length / 1024)} kB each on average`,
         );
