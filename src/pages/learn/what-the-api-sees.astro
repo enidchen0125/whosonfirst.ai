@@ -102,7 +102,7 @@ const checks: CheckQuestion[] = [
     can prove up to three things:
   </p>
   <ul>
-    <li><strong>Who is acting?</strong> Which piece of software sent this request.</li>
+    <li><strong>Who is acting?</strong> Which piece of software the credential was given to.</li>
     <li><strong>For whom?</strong> Which person it is working for, if any.</li>
     <li><strong>Who said they could?</strong> What was approved, and by whom.</li>
   </ul>
@@ -164,7 +164,9 @@ const checks: CheckQuestion[] = [
     and the API can check all of that without taking the agent’s word for anything.
   </p>
   <p>
-    How a few lines of text manage that is the next lesson. One caution to carry with you: a key and a token share a
-    weakness. Each works for whoever holds a copy. The final lesson comes back to that.
+    How a few lines of text manage that is the next lesson. One caution to carry with you. A “yes” under{' '}
+    <em>who is acting</em> means the credential names the software it was given to. None of the three shows that the
+    software sending it is that one: a key and a token share a weakness, and each works for whoever holds a copy.
+    The next lesson shows that happen, and the final lesson shows what can be done about it.
   </p>
 </Lesson>

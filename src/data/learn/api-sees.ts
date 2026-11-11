@@ -106,7 +106,7 @@ signed by:  auth.example`,
       findings: [
         {
           verdict: "yes",
-          note: "The token names the app it was issued to.",
+          note: "The token names the app it was issued to. Like a key, it works for whoever holds a copy.",
         },
         {
           verdict: "yes",
