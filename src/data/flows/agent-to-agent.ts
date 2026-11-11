@@ -2,7 +2,7 @@ import type { Flow } from "../types";
 
 export const agentToAgent: Flow = {
   slug: "agent-to-agent",
-  title: "Agent-to-agent (A2A)",
+  title: "Agent to agent (A2A)",
   short: "Agent to agent (A2A)",
   group: "agent-to-agent",
   human: "any",
@@ -91,7 +91,7 @@ Two parts of version 1.0 matter for trust. Agent Cards can be signed, so a calle
   "securityRequirements": [
     { "schemes": { "corp": { "list": ["openid", "travel.book"] } } }
   ],
-  "signatures": [ { "protected": "eyJhbGciOiJFUzI1NiIsImtpZCI6Ii4uLiJ9", "signature": "QFdkNLNszlGj3z3u0YQGt_T9LixY3qtdQpZmsTdDHDe3fXV9y9-B3m2-XgCpzuhiLt8E0tV6HXoZKHv4GtHgKQ" } ],
+  "signatures": [ { "protected": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJrZXktMSJ9", "signature": "QFdkNLNszlGj3z3u0YQGt_T9…" } ],
   "skills": [ { "id": "book-flight", "name": "Book a flight" } ]
 }`,
       },
