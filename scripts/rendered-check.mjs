@@ -1010,6 +1010,36 @@ for (const theme of THEMES) {
               linked.active === 1,
             JSON.stringify(linked),
           );
+          // the last part starts a screen or more down the diagram: its row has to be
+          // brought into view too, not only the top of the diagram
+          await page.evaluate(() => scrollTo(0, 0));
+          await page.click(".ov-phases li:last-child a");
+          await page.waitForTimeout(200);
+          const late = await page.evaluate(() => {
+            const row = document
+              .querySelector("svg .step.is-active .hit")
+              .getBoundingClientRect();
+            const canvas = document
+              .querySelector(".flow-canvas")
+              .getBoundingClientRect();
+            const header = document
+              .querySelector(".site-header")
+              .getBoundingClientRect().bottom;
+            const top = Math.max(header, canvas.top);
+            const bottom = Math.min(innerHeight, canvas.bottom);
+            return {
+              count: document.querySelector(".flow-count").textContent,
+              inView: row.top >= top - 1 && row.bottom <= bottom + 1,
+              row: [Math.round(row.top), Math.round(row.bottom)],
+              window: [Math.round(top), Math.round(bottom)],
+            };
+          });
+          record(
+            where,
+            "a link to a late part leaves that step\u2019s row in view in the diagram",
+            late.inView && late.count.startsWith(`Step ${ov.starts.at(-1)} `),
+            JSON.stringify(late),
+          );
           await page.evaluate((n) => {
             location.hash = `#step-${n}`;
           }, count);

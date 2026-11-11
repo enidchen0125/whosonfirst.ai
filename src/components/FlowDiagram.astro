@@ -493,10 +493,12 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
         if (!m) return;
         this.go(Number(m[1]) - 1, false);
         // Beside the diagram only the current step exists on the page, so the
-        // browser has nowhere to scroll to. Bring the diagram into view instead.
+        // browser has nowhere to scroll to. Bring the diagram into view instead,
+        // from its top, and then the step's own row if that is still out of sight:
+        // a late step sits a screen or more below the first.
         if (!this.narrative && !this.all) {
-          const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          this.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' });
+          this.scrollIntoView({ block: 'start', behavior: 'instant' });
+          this.reveal();
         }
       };
       window.addEventListener('hashchange', fromHash);
@@ -559,35 +561,39 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
       this.querySelector('.flow-count')!.textContent = all ? `${this.count} steps` : `Step ${i + 1} of ${this.count}`;
 
       if (reveal && !all) {
-        const canvas = this.querySelector<HTMLElement>('.flow-canvas')!;
-        const g = this.querySelector<SVGGElement>(`svg .step[data-step="${i}"] .hit`);
-        if (g) {
-          // keep the active row visible inside the scrollable canvas without moving the page
-          const row = g.getBoundingClientRect();
-          const box = canvas.getBoundingClientRect();
-          if (row.top < box.top + 60 || row.bottom > box.bottom - 8) {
-            canvas.scrollTop += row.top - box.top - box.height / 2 + row.height / 2;
-          }
-          const mark = g.parentElement?.querySelector('.arrow, .note')?.getBoundingClientRect();
-          if (mark && (mark.left < box.left + 8 || mark.right > box.right - 8)) {
-            canvas.scrollLeft += mark.left + mark.width / 2 - (box.left + box.width / 2);
-          }
-          // Beside the panel the diagram is as tall as its sequence and the page scrolls it.
-          // Move the page just far enough to keep the current row below the pinned
-          // participant strip and above the bottom of the window.
-          if (canvas.scrollHeight <= canvas.clientHeight + 1) {
-            const now = g.getBoundingClientRect();
-            const heads = this.querySelector('.flow-heads')!.getBoundingClientRect();
-            const upper = Math.max(heads.bottom, 0) + 8;
-            const lower = window.innerHeight - 16;
-            const by = now.top < upper ? now.top - upper : now.bottom > lower ? now.bottom - lower : 0;
-            if (by) {
-              const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              window.scrollBy({ top: by, behavior: calm ? 'auto' : 'smooth' });
-            }
-          }
-        }
+        this.reveal();
         history.replaceState(null, '', `#step-${i + 1}`);
+      }
+    }
+
+    /** Brings the current step's row into view: inside the diagram's own frame where it has one, and on the page. */
+    reveal() {
+      const canvas = this.querySelector<HTMLElement>('.flow-canvas')!;
+      const g = this.querySelector<SVGGElement>(`svg .step[data-step="${this.index}"] .hit`);
+      if (!g) return;
+      // keep the active row visible inside the scrollable canvas without moving the page
+      const row = g.getBoundingClientRect();
+      const box = canvas.getBoundingClientRect();
+      if (row.top < box.top + 60 || row.bottom > box.bottom - 8) {
+        canvas.scrollTop += row.top - box.top - box.height / 2 + row.height / 2;
+      }
+      const mark = g.parentElement?.querySelector('.arrow, .note')?.getBoundingClientRect();
+      if (mark && (mark.left < box.left + 8 || mark.right > box.right - 8)) {
+        canvas.scrollLeft += mark.left + mark.width / 2 - (box.left + box.width / 2);
+      }
+      // Beside the panel the diagram is as tall as its sequence and the page scrolls it.
+      // Move the page just far enough to keep the current row below the pinned
+      // participant strip and above the bottom of the window.
+      if (canvas.scrollHeight <= canvas.clientHeight + 1) {
+        const now = g.getBoundingClientRect();
+        const heads = this.querySelector('.flow-heads')!.getBoundingClientRect();
+        const upper = Math.max(heads.bottom, 0) + 8;
+        const lower = window.innerHeight - 16;
+        const by = now.top < upper ? now.top - upper : now.bottom > lower ? now.bottom - lower : 0;
+        if (by) {
+          const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollBy({ top: by, behavior: calm ? 'auto' : 'smooth' });
+        }
       }
     }
 
