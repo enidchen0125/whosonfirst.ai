@@ -28,7 +28,7 @@ Three things hold for both.
 
 - **The agent's credential stops at the gateway.** It is addressed to the gateway, the gateway checks it, and it goes no further.
 - **The gateway uses a different credential on the far side**, made for the one server or provider it is calling.
-- **A gateway governs only the calls that go through it.** Either nothing else can reach what is behind it, or what is behind it checks every caller itself.
+- **A gateway governs only the calls that go through it.** Either nothing else can reach what is behind it, or what is behind it accepts the gateway alone, or it applies the same rules itself.
 
 Neither gateway is a place an agent runs. An agent on a laptop, in a pod or on a managed platform can sit behind both, and the other [deployment guides](/deployments/) still apply to it.
 
@@ -92,7 +92,7 @@ The ticketing server gets a token that works in one place, names Alice, and name
 
 - **What your authorization server really issues.** An exchange can return a token with the user as its subject and no actor. The server then believes Alice called it directly, which is [impersonation](/concepts/#delegation).
 - **Which agent started the call.** `client_id` named it in the first token. Nothing in the second token does, and an exchange does not carry it across unless your authorization server is set up to. If the server's rules or its audit log need the agent, look for it in a real token.
-- **Who may exchange.** Let the gateway, and not the agents, exchange tokens for the servers' audiences. An agent that goes around the gateway then has no token the server will accept, as long as the server checks its own audience.
+- **Who can get a token for a server.** Let the gateway, and not the agents, exchange tokens for the servers' audiences, and hold every other way your authorization server issues a token for them to the same rule. That narrows who can hold such a token. It does not, on its own, keep callers behind the gateway: see [calls that go around it](#what-a-gateway-does-not-solve).
 
 ### One key for everybody
 
@@ -101,6 +101,8 @@ The fourth row is the easiest to set up: one API key for each server, written in
 The server now sees one caller. Nothing but the gateway's own rules keeps one user out of another's records, and the gateway has become the [confused deputy](/concepts/#delegation): it holds broad authority and uses it for whoever asks. [Lesson 1](/learn/what-the-api-sees/) draws the same problem with one agent and one key.
 
 That is acceptable for a server that searches public documentation. It is not acceptable for a mailbox, a ticket queue or anything else that holds each user's own data.
+
+An agent that works as itself, with nobody signed in, is a different case. There is no user to carry, and the call rightly uses [the agent's own identity](/learn/whose-authority/). Give each agent its own, and take it across the hop as you would a user, so that the server can tell which agent called and not only that the gateway did.
 
 ### When the gateway keeps users' grants
 
@@ -117,8 +119,13 @@ The guidance requires the gateway to ask the user itself, on a page of its own, 
 The core MCP specification has no permissions for individual tools. A token that is good for the gateway is good for every tool behind it, until the gateway's own policy says otherwise. That policy is the authorization, so what it reads matters.
 
 - **The user and the client come from the token** the gateway validated. Never from a header the agent set, and never from an argument the model wrote.
-- **The tool comes from the request.** Since the 2026-07-28 revision, an MCP request over HTTP repeats its method and its tool name in the `Mcp-Method` and `Mcp-Name` headers, so that a proxy can route without reading the body. The body is still what the server acts on. A gateway that decides from the headers has to compare them with the body, or be sure the server behind it does. The specification requires that of a server, and advises a proxy to refuse a request whose protocol version is too old to require it. Otherwise an agent can name one tool in the header and call another in the body.
+- **The tool comes from the request.** Since the 2026-07-28 revision, an MCP request over HTTP repeats its method and its tool name in the `Mcp-Method` and `Mcp-Name` headers, so that a proxy can route without reading the body. The body is still what the server acts on, so an agent can name one tool in the header and another in the body. A rule that reads the header is only as good as the check that the two agree.
 - **Narrow at the exchange.** Ask for the scope the tool being called needs, and nothing wider.
+
+Who makes that check depends on what the gateway does with the request.
+
+- **It sends the request on unchanged**, headers and body exactly as they arrived. The server behind it compares the two, which the specification requires of every server that reads the body, and rejects a mismatch. The specification also advises a proxy to refuse a request whose protocol version is too old to require that comparison.
+- **It reads the body and writes a new request.** A gateway in front of several servers usually does, to choose the server and to rename the tool. It is then a server that reads the body, and the comparison is its own to make: on the request as it arrived, before it relies on the headers or the body. The server behind it cannot make it. The headers the gateway sends on are its own, written from the body, so they agree at the server whatever the agent sent.
 
 The gateway also ends the agent's TLS connection. A client certificate does not arrive at the server, which now authenticates the gateway. If the server has to know which workload called as well, that is what [workload identity tokens](/flows/wimse-workload-tokens/) are being standardized for.
 
@@ -146,7 +153,7 @@ A virtual key is still an [API key](/learn/what-the-api-sees/). It is long-lived
 Where the gateway can check a token, the agent has nothing to store.
 
 - **A workload** presents the identity its platform already gives it: on [Kubernetes](/deployments/kubernetes/), a ServiceAccount token whose audience is the gateway, and in a pipeline, the [job's OIDC token](/deployments/local/#in-ci).
-- **A person's tool**, such as a coding agent on a laptop, presents a token from the person's own sign-in with the company identity provider. Usage is then filed under a person, and it ends when their account does.
+- **A person's tool**, such as a coding agent on a laptop, presents a token from the person's own sign-in with the company identity provider. Usage is then filed under a person. Disabling their account stops new tokens. A token already issued is still good until it expires, unless the gateway [asks the authorization server](/standards/#rfc7662) about each one, so keep those tokens short-lived.
 
 ### From the gateway to the provider
 
@@ -154,11 +161,15 @@ On this side the gateway is a credential broker. The provider's key lives in the
 
 The better case has no key at all. Model services run by the cloud providers accept the cloud's own identities. A gateway can trade its workload identity for short-lived credentials there, through [federation](/flows/workload-identity-federation/) when it runs somewhere else. Then nothing long-lived is stored at either hop.
 
-### What the provider sees, and what only the gateway knows
+### What the provider sees, and what the gateway knows
 
-The provider sees one account. Which team, which agent and which person made a call is known only to the gateway. For model calls that is usually fine: one key for one owner is what an API key is for. It has two consequences.
+With one shared credential and nothing else sent, the provider sees one account. Which team, which agent and which person made a call is recorded at the gateway and nowhere else. For model calls that is usually fine: one key for one owner is what an API key is for.
 
-- **The gateway's log is the only record of who called.** Write the caller into it from the credential the gateway checked, not from a field the caller filled in.
+A gateway can pass that on. When agentgateway assumes an AWS role, for example, it can name and tag the session from the caller's token, and those values appear in AWS CloudTrail and in the cost report. That changes who can see the caller. It does not change whose permissions apply. The provider still enforces what the gateway's credential may do, and the label is the gateway's word for who asked.
+
+Two things follow.
+
+- **The gateway decides who the record says called**, in its own log and in anything it passes on. Take the caller from the credential the gateway checked, not from a field the caller filled in.
 - **That log holds every prompt and every reply**, and so whatever the agents read: documents, tool results, customer data. If a credential ever lands in a prompt, it is now in the gateway's log as well.
 
 ### What it cannot decide
@@ -172,9 +183,9 @@ There is one case where a user's authority does pass through. Some model APIs ca
 Several products do both jobs in one process, and that is a reasonable way to run them. Keep the two questions apart inside it.
 
 - **Model traffic** authenticates a workload or a person's tool, and spends the organization's account.
-- **Tool traffic** has to carry a user.
+- **Tool traffic** carries the authority the tool call uses. Where that is a user's, the call has to carry the user, as a delegation. Where an agent works as itself, its own identity is the right one, and no user is involved.
 
-A key that opens models should not open tools as well. A key names an account. Every tool call made with it is the account's, and no user's.
+Keep the permissions apart as well. Being allowed to use a model says nothing about which tools a caller may use, so a key issued for models should not open tools too. And a key names an account: a tool call made with it can be the account's own, and can never be a user's.
 
 ## Where it is implemented
 
@@ -199,11 +210,17 @@ On Kubernetes, [gateways and policy](/deployments/kubernetes/#gateways-and-polic
 
 ## What a gateway does not solve
 
-**Calls that go around it.** A server that is reachable at its own address can be called there. Either close the path, as [Kubernetes](/deployments/kubernetes/#gateways-and-policy) does with a network policy, or have the server accept only tokens addressed to it. On a person's machine nothing forces a call through the gateway at all, and a [local server started over stdio](/deployments/local/#local-mcp-servers-over-stdio) never touches it.
+**Calls that go around it.** A server that is reachable at its own address can be called there, and a rule that exists only at the gateway is then never applied. Checking the audience does not close this. It turns away a token made for somewhere else. It accepts a token that was properly issued for the server, whoever presents it and whichever way it came. If the gateway's rules have to apply to every call, one of three things has to be true.
+
+- **The path is closed.** Only the gateway can reach the server, as a network policy arranges on [Kubernetes](/deployments/kubernetes/#gateways-and-policy).
+- **The server accepts the gateway and nobody else.** It verifies that the gateway is the caller, by the gateway's [workload identity](/flows/spiffe-workload-identity/) on the connection or by a token [bound to a key](/flows/dpop/) that only the gateway holds. Requiring the gateway in the `act` claim helps as well, with a limit: that claim says who was authorized to act, not who is holding the token.
+- **The server applies the same rules itself**, so that a direct call gets the answer the gateway would have given.
+
+On a person's machine nothing forces a call through the gateway at all, and a [local server started over stdio](/deployments/local/#local-mcp-servers-over-stdio) never touches it.
 
 **Misuse of allowed access.** A hijacked agent can call every tool the policy allows for its user. For actions that cannot be undone, bring the person back with [step-up](/flows/step-up-authorization/) or [backchannel approval](/flows/ciba/).
 
-**A server that does not check.** A server that trusts anything arriving from the gateway's network address trusts everything that can reach that address. Where a server can validate a token addressed to it, have it do so. The gateway is an extra check, and the server's own check is the control.
+**A server that does not check.** A server that trusts anything arriving from the gateway's network address trusts everything that can reach that address. Where a server can validate a token addressed to it, have it do so as well. Closing the path and checking the token guard against different failures, and a server that holds users' data needs both.
 
 **Its own compromise.** An MCP gateway can obtain a token for any user at any server behind it, and an LLM gateway holds every provider key. Give the gateway a workload identity of its own, limit who can change its configuration, and keep a record of its exchanges at the authorization server, where the gateway cannot edit it.
 
@@ -214,12 +231,12 @@ On Kubernetes, [gateways and policy](/deployments/kubernetes/#gateways-and-polic
 <ul class="checklist">
   <li>The gateway’s metadata names its own address as the resource, and it rejects a token addressed to anything else.</li>
   <li>Where several servers share the gateway, no caller’s token is sent on to any of them.</li>
-  <li>Each server behind the gateway receives a credential made for it. Where the data belongs to users, that credential names the user.</li>
-  <li>Exchanged tokens name the gateway as actor, and only the gateway may exchange for the servers’ audiences.</li>
-  <li>Per-tool rules read the user and the client from the validated token, and a tool name that has been checked against the request body.</li>
+  <li>Each server behind the gateway receives a credential made for it. Where the call uses a user’s authority, that credential names the user.</li>
+  <li>Exchanged tokens name the gateway as actor, and only the gateway can obtain a token for the servers’ audiences, by exchange or by any other grant.</li>
+  <li>Per-tool rules read the user and the client from the validated token. A gateway that rewrites requests compares each one’s headers with its body as it arrived; only a gateway that forwards a request unchanged leaves that to the server.</li>
   <li>A gateway that keeps users’ grants at third-party services asks for consent for each MCP client before it sends the user on.</li>
-  <li>Agents reach the LLM gateway with a platform identity or a person’s sign-in where it supports one. Any virtual keys left are one for each caller, and open models only.</li>
+  <li>Agents reach the LLM gateway with a platform identity or a person’s sign-in where it supports one, on tokens short enough that a disabled account stops soon. Any virtual keys left are one for each caller, and open models only.</li>
   <li>Provider credentials are short-lived where the provider accepts an identity. Stored keys exist only at the gateway.</li>
   <li>Logs of prompts and replies are access-controlled, and tokens are kept out of them.</li>
-  <li>Nothing reaches the servers or the providers except through the gateway, or each one validates its callers itself.</li>
+  <li>Nothing reaches the servers or the providers except through the gateway. Where a direct path stays open, the server verifies that the gateway is the caller, or applies the gateway’s rules itself. Checking the audience alone does not do this.</li>
 </ul>

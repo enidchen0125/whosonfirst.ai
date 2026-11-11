@@ -156,7 +156,7 @@ These pages describe products, and products change stage and name without notice
 
 The table under "Where it is implemented" states its own month. For each product, check its current documentation for its name, what it accepts from callers, and what it sends to what is behind it:
 
-- agentgateway: resource-server mode for MCP, virtual keys, the incoming credential removed by default, and the backend authentication methods named
+- agentgateway: resource-server mode for MCP, virtual keys, the incoming credential removed by default, the backend authentication methods named, and the role session name and tags it can set from the caller's token when it assumes an AWS role
 - Agent Router: OAuth and audience validation on MCP routes, per-backend keys and forwarded headers, and which providers get short-lived credentials
 - LiteLLM: virtual keys, what else a key can grant, and which edition accepts an identity provider's JWT
 - Cloudflare MCP server portals: the setting that chooses between each user's own grant and a shared administrator credential, and its default

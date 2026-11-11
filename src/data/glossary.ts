@@ -219,7 +219,7 @@ export const glossary: Term[] = [
   },
   {
     term: "LLM gateway",
-    def: "A proxy between agents and model providers, also called an AI gateway. It holds the provider’s credential, adds it to each request and meters use. The provider sees one account, so who made a call is known only to the gateway.",
+    def: "A proxy between agents and model providers, also called an AI gateway. It holds the provider’s credential, adds it to each request and meters use. The provider applies the permissions of the gateway’s account, and learns who made a call only if the gateway passes that on.",
     see: {
       href: "/deployments/gateways/",
       label: "MCP and LLM gateways",
