@@ -17,12 +17,13 @@ Mutual TLS does the same job at the transport layer and is a good fit where a se
   fits: [
     "Any flow on this site that ends with an access token. DPoP is an add-on, not a grant type.",
     "Public clients (desktop, CLI, mobile) that cannot hold a client secret but can hold a key.",
-    "Refresh tokens that live for a long time in an agent runtime.",
+    "Refresh tokens held by public clients, such as desktop and CLI agents. A confidential client’s refresh token is tied to its own credentials, not to the DPoP key.",
   ],
   watchOut: [
     "DPoP protects the token, not the key. If the private key sits in the same file as the token, the thief takes both. Use a platform keystore or non-exportable key where one exists.",
     "It does not stop a compromised agent from *using* its own key. It stops a token from being useful somewhere else.",
     "Both the authorization server and the resource server must support it. A resource server that ignores the binding and accepts the token as a plain bearer token has gained nothing.",
+    "Keep the signing operation away from the model, not only the key. An agent that can be talked into signing can make proofs in advance for someone else to use. A nonce from the server closes this.",
     "Proofs are tied to method and URL, and servers may require a nonce. Clock skew and proxies that rewrite URLs are the usual sources of trouble.",
   ],
   lesson: "limits",
@@ -60,7 +61,7 @@ Mutual TLS does the same job at the transport layer and is a good fit where a se
       kind: "back",
       label: "Token request + DPoP proof",
       title: "The token request carries a proof",
-      body: `Any grant type works. The extra piece is the \`DPoP\` header: a JWT that includes the public key and is signed with the private key. It names the HTTP method and URL it is for, and has a unique \`jti\` so it cannot be replayed.`,
+      body: `Any grant type works. The extra piece is the \`DPoP\` header: a JWT that includes the public key and is signed with the private key. It names the HTTP method and URL it is for, and has a unique \`jti\`, which lets a server that keeps track refuse a second use.`,
       code: {
         lang: "http",
         text: `POST /token HTTP/1.1
@@ -141,7 +142,7 @@ DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7…`,
       kind: "resp",
       label: "200 OK",
       title: "The request succeeds",
-      body: `An attacker who copied the access token from a log gets nothing: they cannot produce a proof without the private key, and a captured proof is useless for any other method, URL or moment.`,
+      body: `An attacker who copied only the access token cannot use it at an API that enforces the binding: they cannot make a proof without the private key. A token and a proof copied together, which is what a log of request headers holds, can be replayed at the same method and URL until the proof ages out, unless the API remembers \`jti\` values or requires a nonce. The proof does not cover the query string or the body.`,
     },
   ],
   standards: ["rfc9449", "rfc8705", "rfc9700", "rfc7638"],

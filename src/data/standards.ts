@@ -124,7 +124,7 @@ export const standards: Standard[] = [
     summary:
       "The `resource` request parameter, which tells the authorization server which API a token is for so it can restrict the audience.",
     agents:
-      "Required by MCP. An agent talks to many servers; this is what stops a token for one being replayed at another.",
+      "Required by MCP. An agent talks to many servers; this is how a client asks for a token good at one server only. What stops replay is the authorization server honoring it and each API checking the audience.",
     url: rfc(8707),
   },
   {
@@ -622,7 +622,7 @@ export const standards: Standard[] = [
     summary:
       "Demonstrating Proof of Possession. Tokens are bound to a client key, and each request carries a signed proof.",
     agents:
-      "Makes a token copied from a log, a trace or a model’s context useless without the key.",
+      "A token copied alone from a log or a trace is refused by an API that checks the binding.",
     url: rfc(9449),
   },
   {

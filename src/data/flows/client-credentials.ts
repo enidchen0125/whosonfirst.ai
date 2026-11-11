@@ -55,7 +55,7 @@ The grant is trivial. The hard part is the credential the agent uses to authenti
       kind: "self",
       label: "Sign a client assertion",
       title: "The agent creates a signed proof of its identity",
-      body: `Instead of sending a shared secret, the agent signs a short-lived JWT with its private key. Issuer and subject are both the client ID; the audience is the authorization server; \`jti\` makes it single-use. The private key never leaves the agent.`,
+      body: `Instead of sending a shared secret, the agent signs a short-lived JWT with its private key. Issuer and subject are both the client ID; the audience is the authorization server; \`jti\` lets the server refuse a second use, if it keeps track, and the short expiry limits a copy either way. Keep the private key where the runtime can ask for a signature and cannot read the key: a key management service, a hardware module or a platform keystore. A key in a file or an environment variable leaks the same way a client secret does.`,
       code: {
         lang: "json",
         text: `{
