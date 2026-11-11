@@ -172,12 +172,15 @@ A **person token** says who, and nothing about what. It has no scope. \`aud\` is
       kind: "back",
       label: "Signed request, person token",
       title: "The agent calls the API as Alice’s agent",
-      // §6.5, §7.1.3
-      body: `Signed with the same key, and presenting the person token in place of the agent token. This is the first the API has heard of this agent. Nothing was registered beforehand, and nothing in the request says which agent it is.`,
+      // §6.5, §7.1.3, §11.7
+      body: `Signed with the same key, and presenting the person token in place of the agent token. This is the first the API has heard of this agent. Nothing was registered beforehand, and nothing in the request says which agent it is.
+
+\`AAuth-Capabilities\` tells the API what the agent can handle, so the API knows what it may ask of it.`,
       code: {
         lang: "http",
         text: `GET /events HTTP/1.1
 Host: calendar.example
+AAuth-Capabilities: interaction
 Signature-Key: sig=jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwidHlwIjoiYWEtcGVyc29uK2p3dCIs…"`,
       },
     },
@@ -215,10 +218,10 @@ A resource token is the API’s own signed statement of the request: which API, 
       kind: "back",
       label: "Ask for an auth token",
       title: "The agent takes the API’s request to the person server",
-      // §6.7.3, §7.2.1, §11.8.1
+      // §6.7.3, §7.2.1 (capabilities are per request outside a mission), §11.8.1
       body: `First the agent checks the resource token: that it came from the API it just called, and that it names the agent’s own key, its person server and the person token it presented. Then it sends both tokens to the person server, signed, and presenting its agent token again.
 
-\`justification\` is the agent’s own account of why it wants the access. The person server will show it to Alice as that and no more. \`Prefer: wait\` says how long the agent will hold the connection open for an answer.`,
+\`justification\` is the agent’s own account of why it wants the access. The person server will show it to Alice as that and no more. \`capabilities\` says the agent can get Alice to a page, and it is stated on each request. Without it, a person server with no channel of its own to her has to refuse. \`Prefer: wait\` says how long the agent will hold the connection open for an answer.`,
       code: {
         lang: "http",
         text: `POST /token HTTP/1.1
@@ -230,7 +233,8 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwidHlwIjoiYWEtYWdlbnQrand0…"
 {
   "resource_token": "eyJhbGciOiJFZDI1NTE5IiwidHlwIjoiYWEtcmVzb3VyY2Urand0…",
   "presented_token": "eyJhbGciOiJFZDI1NTE5IiwidHlwIjoiYWEtcGVyc29uK2p3dCIs…",
-  "justification": "Find a time next week when Alice and Bob are both free"
+  "justification": "Find a time next week when Alice and Bob are both free",
+  "capabilities": ["interaction"]
 }`,
       },
     },
@@ -348,6 +352,7 @@ The query string and the body are not covered unless the API says they must be.`
         lang: "http",
         text: `GET /events HTTP/1.1
 Host: calendar.example
+AAuth-Capabilities: interaction
 Signature-Key: sig=jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwidHlwIjoiYWEtYXV0aCtqd3QiLCJr…"
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key");
   created=1794268891
