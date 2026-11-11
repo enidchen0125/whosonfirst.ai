@@ -334,7 +334,7 @@ export const rules: Rule[] = [
     role: "consider",
     weight: 4,
     when: { runtime: ["k8s", "managed"], target: ["internal", "agent"] },
-    why: "If gateways terminate TLS between your workloads, a key-bound workload token with per-request proof survives the hop. Still experimental.",
+    why: "If gateways terminate TLS between your workloads, a key-bound workload token with per-request proof survives the hop. The specifications are still working-group drafts.",
   },
 
   // ── agents and the web ──
