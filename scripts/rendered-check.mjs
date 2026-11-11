@@ -154,7 +154,7 @@ const diagramLabels = () => {
     let alpha = 1;
     for (let n = el; n && n !== canvas; n = n.parentElement)
       alpha *= Number(getComputedStyle(n).opacity);
-    const group = el.closest(".step, .actor");
+    const group = el.closest(".step, .actor, .phase");
     // what is painted behind the label: the row band, a note pill, a filled badge or an actor box
     let ground = page;
     const band = group?.querySelector(".hit");
@@ -166,7 +166,9 @@ const diagramLabels = () => {
         ? ".badge"
         : cls.includes("actor-")
           ? ".actor-box"
-          : null;
+          : cls.includes("phase-")
+            ? ".phase-band"
+            : null;
     if (shape)
       ground = over(
         rgba(getComputedStyle(group.querySelector(shape)).fill),
@@ -842,6 +844,106 @@ for (const theme of THEMES) {
         const count = await page.evaluate(() =>
           Number(document.querySelector(".flow").dataset.count),
         );
+        // The overview: the steps in a few parts that between them cover every step,
+        // each party's part under its name, and both before the diagram.
+        const ov = await page.evaluate(() => {
+          const top = (sel) =>
+            document.querySelector(sel).getBoundingClientRect().top + scrollY;
+          const starts = [...document.querySelectorAll(".ov-phases a")].map(
+            (a) => Number(a.getAttribute("href").replace("#step-", "")),
+          );
+          const parties = [...document.querySelectorAll(".ov-parts > div")].map(
+            (d) => ({
+              name: d.querySelector("dt").textContent.trim(),
+              words: d.querySelector("dd > span").textContent.trim().length,
+              steps: d.querySelectorAll(".ov-steps a").length,
+            }),
+          );
+          return {
+            starts,
+            parties,
+            before: top("#in-short") < top("#walkthrough"),
+            bands: [...document.querySelectorAll("svg .phase")].map((g) => [
+              Number(g.dataset.first) + 1,
+              Number(g.dataset.last) + 1,
+            ]),
+          };
+        });
+        record(
+          where,
+          "overview: a few parts, in order, starting at step 1, before the diagram",
+          ov.before &&
+            ov.starts.length >= 2 &&
+            ov.starts[0] === 1 &&
+            ov.starts.every((n, i) => i === 0 || n > ov.starts[i - 1]) &&
+            ov.starts.at(-1) <= count,
+          `parts start at steps ${ov.starts.join(", ")} of ${count}`,
+        );
+        record(
+          where,
+          "overview: each party's part is said, with the steps it takes part in",
+          ov.parties.length >= 2 &&
+            ov.parties.every((p) => p.words > 20 && p.steps > 0),
+          ov.parties.map((p) => `${p.name} (${p.steps})`).join("; "),
+        );
+        record(
+          where,
+          "diagram is divided into the same parts, and they cover every step",
+          ov.bands.length === ov.starts.length &&
+            ov.bands.every(([first], i) => first === ov.starts[i]) &&
+            ov.bands.every(
+              ([, last], i) => last === (ov.starts[i + 1] ?? count + 1) - 1,
+            ),
+          ov.bands.map((b) => b.join("–")).join(" "),
+        );
+        // A glossary term in the text shows its definition in place, and goes away again.
+        const term = await page.evaluate(async () => {
+          const settle = () => new Promise((r) => setTimeout(r, 60));
+          const a = document.querySelector(".intro a.term");
+          if (!a) return null;
+          a.scrollIntoView({ block: "center" });
+          await settle();
+          a.click();
+          await settle();
+          const tip = document.querySelector("#term-tip");
+          const r = tip.getBoundingClientRect();
+          const open = {
+            shown: tip.matches(":popover-open"),
+            says: tip.querySelector(".term-tip-def")?.textContent.length ?? 0,
+            expanded: a.getAttribute("aria-expanded"),
+            inWindow:
+              r.left >= 0 &&
+              r.right <= innerWidth + 0.5 &&
+              r.top >= 0 &&
+              r.bottom <= innerHeight + 0.5,
+            more: tip.querySelector("a")?.getAttribute("href"),
+            href: a.getAttribute("href"),
+          };
+          a.click();
+          await settle();
+          return {
+            ...open,
+            terms: document.querySelectorAll("main a.term").length,
+            closed: !tip.matches(":popover-open"),
+            collapsed: a.getAttribute("aria-expanded"),
+          };
+        });
+        record(
+          where,
+          "a glossary term shows its definition in place, inside the window",
+          !!term &&
+            term.shown &&
+            term.says > 20 &&
+            term.expanded === "true" &&
+            term.inWindow &&
+            term.more === term.href,
+          term ? `${term.terms} terms marked on the page` : "no term marked",
+        );
+        record(
+          where,
+          "the definition goes away when its term is pressed again",
+          !!term && term.closed && term.collapsed === "false",
+        );
         if (vp.name === "desktop") {
           // the stepper: measure the diagram at its first, a middle and its last step
           for (const step of [1, Math.ceil(count / 2), count]) {
@@ -884,6 +986,34 @@ for (const theme of THEMES) {
               held.route ?? "",
             );
           }
+          // a link to a step (from the overview, or from elsewhere) brings the diagram into view
+          await page.evaluate(() => scrollTo(0, 0));
+          await page.click(".ov-phases li:nth-child(2) a");
+          await page.waitForTimeout(150);
+          const linked = await page.evaluate(() => {
+            const r = document.querySelector(".flow").getBoundingClientRect();
+            return {
+              count: document.querySelector(".flow-count").textContent,
+              inView: r.top < innerHeight * 0.5 && r.bottom > 0,
+              phase: document
+                .querySelector(".flow-step:not([hidden]) .step-phase-n")
+                ?.textContent.trim(),
+              active: document.querySelectorAll("svg .phase.is-active").length,
+            };
+          });
+          record(
+            where,
+            "a part's link shows its first step, with the diagram in view and the part marked",
+            linked.inView &&
+              linked.count.startsWith(`Step ${ov.starts[1]} `) &&
+              /^Part 2 of/.test(linked.phase ?? "") &&
+              linked.active === 1,
+            JSON.stringify(linked),
+          );
+          await page.evaluate((n) => {
+            location.hash = `#step-${n}`;
+          }, count);
+          await page.waitForTimeout(80);
           // keyboard: Left and Right step, Down is left to scrolling, and focus is never stranded
           // (the loop above ends on the last step, where Next is disabled and Previous is not)
           await page.focus('[data-act="prev"]');
