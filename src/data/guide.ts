@@ -180,7 +180,7 @@ export const rules: Rule[] = [
       human: ["present"],
       runtime: ["headless", "sandbox"],
     },
-    why: "There is no browser where the agent runs, so the user approves on another device. Mind the phishing risk: the approval screen must make clear what is being approved.",
+    why: "There is no browser where the agent runs, so the user approves on another device. Run this from the program that controls the agent, outside any sandbox, so the tokens never land where untrusted code runs. Show the user only a code your own program has just requested: a code that arrives any other way may belong to an attacker’s sign-in.",
   },
   {
     flow: "cross-app-access",
@@ -320,7 +320,7 @@ export const rules: Rule[] = [
     role: "start",
     weight: 9,
     when: { target: ["web"] },
-    why: "Sign requests so sites can tell which operator your agent belongs to. It identifies the agent; a user still needs to log in for anything personal.",
+    why: "Sign requests so sites can tell which operator your agent belongs to. It identifies the agent. For anything personal the user still has to sign in, and they do that themselves: the agent never collects their password.",
   },
   {
     flow: "agent-payments",
@@ -354,7 +354,7 @@ export const rules: Rule[] = [
       target: ["api", "mcp", "agent"],
       risk: ["write", "irreversible"],
     },
-    why: "Bind tokens to a key the agent holds. A token copied from a log or a model’s context is then useless on its own.",
+    why: "Bind tokens to a key held where the model cannot read it. A token copied from a log is then refused by any API that checks the binding.",
   },
   {
     flow: "dpop",
@@ -373,7 +373,7 @@ export interface Caution {
 export const cautions: Caution[] = [
   {
     when: { principal: ["self"], human: ["present", "reachable"] },
-    text: "If this agent serves several people under its own identity, the API cannot tell them apart. One user may be able to steer it into fetching another’s data. Consider carrying each user’s delegation instead.",
+    text: "If this agent serves several people under its own identity, the API cannot tell them apart. One user may be able to steer it into fetching another’s data. Carry each user’s delegation instead. Where you cannot, your code, not the model, has to keep users apart.",
   },
   {
     when: { principal: ["user"], human: ["absent"] },

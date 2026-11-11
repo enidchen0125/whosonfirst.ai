@@ -32,7 +32,7 @@ const modes: Mode[] = [
     hops: ["Session cookie", "Tool’s API key", "Tool’s API key"],
     marks: ["no", "partial", "yes", "no", "no"],
     verdict:
-      "The API sees one caller: whoever holds the key. Every user and every agent run looks the same, the key works from anywhere, and revoking it cuts off everyone at once. Still the most common setup in the wild.",
+      "The API sees one caller: whoever holds the key. Every user and every agent run looks the same, the key works from anywhere, and revoking it cuts off everyone at once. Common, and the reason one user’s request can reach another’s data.",
   },
   {
     id: "passthrough",
@@ -70,7 +70,7 @@ const modes: Mode[] = [
     ],
     marks: ["yes", "yes", "yes", "yes", "yes"],
     verdict:
-      "As above, and each token is bound to a key held by the caller. Copying a token out of a log or a model’s context gets an attacker nothing. This is where the standards are heading; few deployments are here yet.",
+      "As above, and each token is bound to a key held by the caller. A token copied alone out of a log is refused, as long as the API checks the proof and the key is kept where the model cannot read it. This is where the standards are heading; few deployments are here yet.",
     link: { href: "/flows/dpop/", text: "Sender-constrained tokens" },
   },
 ];
