@@ -18,9 +18,10 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request replaces the run before it. Runs on main finish.
+# A newer push to a pull request replaces the run before it. Every other run
+# is in a group of its own, by commit, so each change to main is checked.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -40,8 +41,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # `biome ci` is `npm run check` that cannot write, and it marks what it
-      # finds on the lines of the pull request.
+      # `biome ci` checks what `npm run check` checks, and marks what it finds
+      # on the lines of the pull request.
       - name: Format, lint and import order
         run: npx biome ci
       - name: Types, rating rule and contrast audit
