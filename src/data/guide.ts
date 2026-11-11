@@ -166,7 +166,7 @@ export const rules: Rule[] = [
     when: {
       principal: ["user"],
       human: ["present"],
-      target: ["api", "agent", "web"],
+      target: ["api", "agent", "web", "internal"],
       runtime: ["local", "k8s", "managed"],
     },
     why: "A person is present and a browser is available. This is the baseline everything else is measured against.",
