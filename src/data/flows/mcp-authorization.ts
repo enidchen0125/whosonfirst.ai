@@ -11,7 +11,7 @@ export const mcpAuthorization: Flow = {
     "How an MCP client that has never seen a server before discovers where to sign in, identifies itself, and gets a token good for that server alone.",
   summary: `The Model Context Protocol has a problem classic OAuth never had to solve: any client may meet any server, with no prior arrangement. A user pastes in a server URL, and the client has to work out which authorization server protects it, introduce itself to that server, and obtain a token, all at runtime.
 
-MCP answers this with a profile of OAuth 2.1 plus three discovery steps. The MCP server is an OAuth **resource server**. It points to its authorization server through protected resource metadata. The client identifies itself with a URL that the authorization server can fetch, called a Client ID Metadata Document, instead of registering in advance. Every token is bound to one MCP server through the \`resource\` parameter.
+MCP answers this with a profile of OAuth 2.1 plus three discovery steps. The MCP server is an OAuth **resource server**. It points to its authorization server through protected resource metadata. The client identifies itself with a URL that the authorization server can fetch, called a Client ID Metadata Document, instead of registering in advance. Every token request names one MCP server through the \`resource\` parameter.
 
 This page describes the **2026-07-28** revision of the specification. Authorization is optional in MCP and applies to HTTP transports; a server launched over stdio takes its credentials from its environment.`,
   fits: [
@@ -22,6 +22,7 @@ This page describes the **2026-07-28** revision of the specification. Authorizat
   watchOut: [
     "**Token passthrough is forbidden.** An MCP server must only accept tokens issued for itself, and must not forward the token it received to an upstream API. If it needs upstream access it gets its own token.",
     "Dynamic Client Registration is deprecated as of 2026-07-28 and kept only for compatibility. New clients should use Client ID Metadata Documents; new authorization servers should support them.",
+    "Every URL in the discovery steps comes from a server the client has never seen. A client that runs on your servers should refuse any that are not HTTPS or that resolve to private, loopback or link-local addresses, including after a redirect. Before opening the authorization endpoint, check that it is an `https:` URL, and hand it to the browser without passing it through a shell.",
     "Client credentials must be stored per issuer and never reused with a different authorization server. A server that changes its metadata to point somewhere new is the start of a mix-up attack.",
     "A Client ID Metadata Document proves control of a URL, not that the software on the user’s machine is the genuine client. Authorization servers must show the redirect host on the consent screen for this reason.",
     "Scopes are whatever the server defines. The core specification has no per-tool permission model; fine-grained control is left to the server, a gateway, or an external policy engine.",
@@ -93,7 +94,7 @@ WWW-Authenticate: Bearer
       kind: "back",
       label: "Get resource metadata",
       title: "The client reads the protected resource metadata",
-      body: `This document (RFC 9728) is the bridge between a resource and its authorization server. It must list at least one entry in \`authorization_servers\`. \`scopes_supported\` is meant to be the minimal set for basic use, not everything the server could ever ask for.`,
+      body: `This document (RFC 9728) is the bridge between a resource and its authorization server. It must list at least one entry in \`authorization_servers\`. The client checks that \`resource\` in this document is the server URL it called, and stops if it is not. The \`resource\` it later asks a token for is that same URL. \`scopes_supported\` is meant to be the minimal set for basic use, not everything the server could ever ask for.`,
       code: {
         lang: "json",
         text: `{
@@ -338,6 +339,8 @@ The specification requires it to implement OAuth 2.1, publish its metadata and s
         {
           title: "What you must not do",
           body: `Do not pass the client’s token to the API behind you. It was issued for your server, and the next service should refuse it.
+
+Do not turn your server into a silent front for someone else’s sign-in. If it accepts sign-ins from MCP clients and forwards them to a provider under one client ID of its own, it has to show its own consent screen for each client first, naming the client and where the code will be sent. Otherwise the provider’s remembered consent lets an attacker’s client collect a code the user never approved.
 
 If your server has to call something else for the user, it gets a token of its own: by [token exchange](/flows/token-exchange/) where both sit under one authorization server, or by sending the user to connect that account directly, which is [URL elicitation](/flows/url-elicitation/).`,
         },
