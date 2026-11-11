@@ -13,7 +13,7 @@ export const credentialBroker: Flow = {
 
 An agent that executes code, reads web pages and follows instructions found in documents can be manipulated. If it holds an API key, a successful prompt injection can print it, post it, or commit it. Shortening the key’s life and narrowing its scope help. Removing it from the agent’s reach helps more.
 
-In this pattern the agent runs in a sandbox whose only route to the network is a proxy the agent does not control. The real credentials live in a vault beside that proxy. When the agent makes a request to an allowed host, the proxy attaches the credential on the way out. The agent can *use* the access. It cannot *read* it, and it cannot send it anywhere else.
+In this pattern the agent runs in a sandbox whose only route to the network is a proxy the agent does not control. The real credentials live in a vault beside that proxy. When the agent makes a request to an allowed host, the proxy attaches the credential on the way out. The agent can *use* the access. It cannot *read* it from its own environment, and the proxy will not send it to any other host.
 
 There is no standard for this. It is an architecture, implemented in several managed agent platforms and open-source proxies, and it composes with everything else here.`,
   fits: [
@@ -24,7 +24,8 @@ There is no standard for this. It is an architecture, implemented in several man
   watchOut: [
     "It stops exfiltration of the credential, not misuse of the access. A hijacked agent can still make harmful calls to the allowed host while it runs.",
     "The proxy must see inside the request to add a header, so it terminates TLS. That makes it a high-value target and requires the sandbox to trust its certificate authority.",
-    "Scope each credential to specific hosts, and inject only into headers or bodies, never URLs. Otherwise an attacker can route the secret to a server that will echo it back.",
+    "Scope each credential to specific hosts, and fix where it goes: one named header or one named body field, set by the operator. Never a URL, and never wherever the agent happens to put a placeholder. An agent that chooses the position can write the key into a comment on the allowed API and read it back.",
+    "The agent cannot read the key from its own environment. It can still obtain one from an allowed host that echoes what it is sent, or that lets a caller create new keys. Check both for every API you add.",
     "Clients that validate a key’s format locally may reject placeholders.",
   ],
   lesson: "limits",
@@ -50,7 +51,7 @@ There is no standard for this. It is an architecture, implemented in several man
     agent:
       "Makes ordinary HTTPS requests with a placeholder, or nothing, where the key would be. Its sandbox is set up so that all outbound traffic goes through the proxy and so that it trusts the proxy’s certificate authority. A client that validates a key’s format locally may reject the placeholder.",
     proxy:
-      "Checks that the destination is on the allow-list and that a credential is scoped to that host, fetches the credential from the vault, swaps it for the placeholder and forwards the request. It refuses a host that is not on the list. It has to terminate TLS to do this, and it should inject only into headers or bodies, never URLs.",
+      "Checks that the destination is on the allow-list and that a credential is scoped to that host, fetches the credential from the vault, puts it in the one header or field the operator named, and forwards the request. It refuses a host that is not on the list, and it decides the destination from the connection it opens itself, not from a header the agent wrote. It has to terminate TLS to do this, and it never puts a credential in a URL.",
     vault:
       "Holds the real credentials, each with the hosts it may be sent to, and releases them to the proxy only. For OAuth-protected services it holds the refresh token and renews access tokens itself. An operator stores each credential ahead of time.",
     api: "Receives the request with the real key attached and answers it. An agent that has been talked into something can still make harmful calls to a host it is allowed to reach.",
@@ -132,7 +133,7 @@ Authorization: Bearer __PLACEHOLDER_REPORTS_KEY__`,
         lang: "http",
         text: `GET /v1/reports HTTP/1.1
 Host: api.example.com
-Authorization: Bearer sk_live_9f8a…`,
+Authorization: Bearer <the real key, from the vault>`,
       },
     },
     {
@@ -141,7 +142,7 @@ Authorization: Bearer sk_live_9f8a…`,
       kind: "resp",
       label: "Response (no secret in it)",
       title: "The response returns to the agent",
-      body: `The agent gets the data. At no point did the key enter the sandbox, the model’s context, or the agent’s logs.`,
+      body: `The agent gets the data. The key did not enter the sandbox, the model’s context or the agent’s logs, as long as the API does not echo it back in what it returns.`,
       lose: [["proxy", "API key (in memory)"]],
     },
     {

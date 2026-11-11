@@ -29,7 +29,7 @@ The step-by-step version, including what happens when an injected instruction tr
 
 **Scope every credential to hosts.** A credential that the proxy will attach to any request can be aimed at a server that echoes headers back. The allowed-hosts list is the control.
 
-**Inject into headers and bodies, not URLs.** URLs end up in logs, referrers and error messages on the far side.
+**Fix where the credential goes.** One named header or one named body field, set by the operator. Not a URL, which ends up in logs, referrers and error messages on the far side. And not wherever a placeholder happens to appear: an agent that chooses the position can write the key into a comment on the allowed service and read it back.
 
 **The proxy terminates TLS.** It has to, in order to add a header. The sandbox must therefore trust the proxy's certificate authority, and the proxy becomes the most sensitive component in the system. Treat it accordingly.
 
@@ -63,6 +63,8 @@ Hosted sandbox products and several newer open-source proxies offer the same ide
 
 **Data exfiltration through allowed hosts.** If the agent can write to any service on the allow-list, that service is a channel out.
 
+**Reading a key back through the service.** An allowed host that stores or echoes what it is sent, or that issues new keys to a caller, can hand the agent a credential it can read. Check both for every service you add.
+
 **Format-checking clients.** Some SDKs validate the shape of a key before sending it and will reject a placeholder. A dummy value in the expected format usually works.
 
 ## When there is nothing to inject
@@ -74,7 +76,7 @@ The best case is a destination that accepts identity instead of a secret. If the
 <ul class="checklist">
   <li>The sandbox has no network path that bypasses the proxy.</li>
   <li>No real credential is present in the sandbox's environment, files or image.</li>
-  <li>Every credential is scoped to named hosts and injected only into headers or bodies.</li>
+  <li>Every credential is scoped to named hosts and injected into one named header or field, never a URL and never a position the agent chose.</li>
   <li>The destination allow-list is default-deny.</li>
   <li>Credentials are per task or per session where the provider allows it, and revoked at exit.</li>
   <li>The proxy and vault authenticate each other with workload identity, not a shared secret.</li>
