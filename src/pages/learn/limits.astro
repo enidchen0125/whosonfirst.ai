@@ -129,13 +129,13 @@ const checks: CheckQuestion[] = [
       "An attacker copies a token that is bound to a key. They do not have the key. What can they do with the token?",
     options: [
       {
-        text: "Use it at that API until it expires, like any other token.",
-        why: "That is true of a plain bearer token. A bound token has to arrive with a fresh signature made by the private key.",
-      },
-      {
-        text: "Nothing. The API refuses a bound token that arrives without proof of the key.",
+        text: "Nothing. The API refuses a bound token without proof of the key.",
         correct: true,
         why: "Every request carries a signature made with the private key. The token names the matching public key, so a copy sent alone fails the check.",
+      },
+      {
+        text: "Use it at that API until it expires, like any other token.",
+        why: "That is true of a plain bearer token. A bound token has to arrive with a fresh signature made by the private key.",
       },
       {
         text: "Use it once, since each proof is single-use.",
@@ -153,13 +153,13 @@ const checks: CheckQuestion[] = [
         why: "The page’s text is competing with the prompt, and may win. A prompt is an instruction to the model, not a limit on it.",
       },
       {
-        text: "The calendar API. The token’s scope does not cover deleting.",
-        correct: true,
-        why: "The API checks scope on every request and refuses. It makes no difference why the agent tried.",
+        text: "The token’s short lifetime, which is over within minutes.",
+        why: "The token is valid when the agent uses it. A short life limits a thief, not the token’s rightful holder.",
       },
       {
-        text: "The token’s short lifetime.",
-        why: "The token is valid when the agent uses it. A short life limits a thief, not the token’s rightful holder.",
+        text: "The calendar API, which checks the token’s scope.",
+        correct: true,
+        why: "The token’s scope does not cover deleting, so the API refuses. It checks on every request, and it makes no difference why the agent tried.",
       },
     ],
   },
@@ -172,13 +172,13 @@ const checks: CheckQuestion[] = [
         why: "Code the agent runs there can read its environment, and so can anything that code was talked into running.",
       },
       {
-        text: "In each tool’s description, so the model knows which key goes with which tool.",
-        why: "A tool’s description is part of what the model reads, so it can be repeated to anyone whose text the model reads.",
-      },
-      {
-        text: "Held by the code around the model, or behind a proxy outside it, where the model cannot read them.",
+        text: "Outside the model’s reach: in the code around it, or behind a proxy.",
         correct: true,
         why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential. The model sees the result and never the secret.",
+      },
+      {
+        text: "In each tool’s description, so the model knows which key goes with which tool.",
+        why: "A tool’s description is part of what the model reads, so it can be repeated to anyone whose text the model reads.",
       },
     ],
   },

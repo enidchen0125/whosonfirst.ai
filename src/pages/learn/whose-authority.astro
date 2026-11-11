@@ -154,13 +154,13 @@ const checks: CheckQuestion[] = [
       "Your agent runs as a nightly job and calls an internal billing API. Security asks what identity it runs as. Which is the best answer?",
     options: [
       {
-        text: "A shared one: the API key we keep in an environment variable for our services.",
-        why: "That is a credential, not an identity. It usually has no expiry, it has to be stored and replaced by hand, and anyone who copies it is the job.",
+        text: "Its own: an identity the platform issues to that one job.",
+        correct: true,
+        why: "It names one workload, it is issued where the job runs so nothing long-lived has to be stored, and what it can reach is written down in one rule: here, billing and nothing else.",
       },
       {
-        text: "Its own: an identity the platform issues to that one job, good for billing and nothing else.",
-        correct: true,
-        why: "It names one workload, it is issued where the job runs so nothing long-lived has to be stored, and what it can reach is written down in one rule.",
+        text: "A shared one: the API key we keep in an environment variable for our services.",
+        why: "That is a credential, not an identity. It usually has no expiry, it has to be stored and replaced by hand, and anyone who copies it is the job.",
       },
       {
         text: "Mine: I set the job up, so it runs under my own account and permissions.",
@@ -198,13 +198,13 @@ const checks: CheckQuestion[] = [
         why: "That would be an inconvenience. The risk is in what the agent can do while it keeps working.",
       },
       {
-        text: "The agent holds a person’s access with nobody watching. Whatever it is talked into doing, it does as Alice.",
-        correct: true,
-        why: "A person’s authority, and no person present to notice. Narrow the scope, keep a way to reach Alice for anything that cannot be undone, and know how the grant is revoked.",
-      },
-      {
         text: "The mail service cannot tell which app is using Alice’s access.",
         why: "It can: the token names the client it was issued to. The trouble is how much that app can do while unsupervised.",
+      },
+      {
+        text: "Whatever the agent is talked into doing, it does as Alice, and nobody is watching.",
+        correct: true,
+        why: "A person’s authority, and no person present to notice. Narrow the scope, keep a way to reach Alice for anything that cannot be undone, and know how the grant is revoked.",
       },
     ],
   },

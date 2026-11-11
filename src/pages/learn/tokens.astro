@@ -195,13 +195,13 @@ const checks: CheckQuestion[] = [
         why: "The address matters as much as the signature. An API that accepts tokens meant for other services lets anyone who receives a token reuse it here.",
       },
       {
+        text: "Accept it, but only for read requests.",
+        why: "There is no partial credit. A token for a different audience says nothing about what its holder may do here.",
+      },
+      {
         text: "Reject it. The token was not issued for this API.",
         correct: true,
         why: "A token is addressed to one API. Checking `aud` is what stops a token issued for one service from being replayed at another.",
-      },
-      {
-        text: "Accept it, but only for read requests.",
-        why: "There is no partial credit. A token for a different audience says nothing about what its holder may do here.",
       },
     ],
   },
@@ -211,13 +211,13 @@ const checks: CheckQuestion[] = [
       "Before sending the token, the agent changes `calendar.read` to `calendar.write` in the claims. What happens?",
     options: [
       {
-        text: "The API accepts it, because the token came from a trusted issuer.",
-        why: "The issuer signed the original claims, not the edited ones. The signature no longer matches.",
-      },
-      {
-        text: "The API rejects it, because the signature no longer matches the claims.",
+        text: "The API rejects it. The signature no longer matches.",
         correct: true,
         why: "The signature covers every claim. Change one character and it fails, and only the issuer holds the key that could sign the new version.",
+      },
+      {
+        text: "The API accepts it, because the token came from a trusted issuer.",
+        why: "The issuer signed the original claims, not the edited ones. The signature no longer matches.",
       },
       {
         text: "The authorization server notices and revokes the token.",
@@ -234,7 +234,7 @@ const checks: CheckQuestion[] = [
         why: "Signing keys are replaced far less often than that. The expiry is a choice the issuer makes for each token.",
       },
       {
-        text: "Because a copied token works for whoever holds it, and a short life limits how long that is.",
+        text: "Because a copy works for whoever holds it, until it expires.",
         correct: true,
         why: "A bearer token cannot tell its rightful holder from a thief. Expiry is the simplest limit on what a stolen copy is worth.",
       },

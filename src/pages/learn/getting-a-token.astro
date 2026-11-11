@@ -207,7 +207,7 @@ const checks: CheckQuestion[] = [
         why: "A code cannot be sent to an API at all. It can only be traded for a token, once, by the app that holds the matching value.",
       },
       {
-        text: "It works once, for about a minute, and only with the value the agent kept.",
+        text: "It works once, and only with the value the agent kept.",
         correct: true,
         why: "That is PKCE. The half that travels through the browser is useless without the half that never left the agent.",
       },
@@ -219,7 +219,7 @@ const checks: CheckQuestion[] = [
       "The access token expires while the agent is still working. What happens next?",
     options: [
       {
-        text: "The agent shows its refresh token to the authorization server and gets a new access token.",
+        text: "The agent trades its refresh token for a new access token.",
         correct: true,
         why: "Alice is not asked again. That convenience is also why the refresh token is the thing most worth protecting.",
       },

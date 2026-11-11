@@ -138,7 +138,7 @@ const checks: CheckQuestion[] = [
       "A tool receives a token whose audience is the tool. To finish the job it has to call a billing API for the same user. What should it do?",
     options: [
       {
-        text: "Send the billing API the token it received.",
+        text: "Send the billing API the token it received, since it is about the same user.",
         why: "That token is addressed to the tool. The billing API should refuse it, and if it does not, any service holding a token can reuse it elsewhere.",
       },
       {

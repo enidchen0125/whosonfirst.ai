@@ -32,13 +32,13 @@ const checks: CheckQuestion[] = [
       "An agent signs in with Alice’s password. Later a meeting is deleted. What do the API’s logs say?",
     options: [
       {
-        text: "That the agent deleted it for Alice.",
-        why: "Nothing in a password sign-in says that software was involved. The API has no record of an agent at all.",
-      },
-      {
         text: "That Alice deleted it.",
         correct: true,
         why: "With her password, the agent cannot be told apart from Alice. Whatever it does is recorded as her doing it.",
+      },
+      {
+        text: "That the agent deleted it for Alice.",
+        why: "Nothing in a password sign-in says that software was involved. The API has no record of an agent at all.",
       },
       {
         text: "That the calendar-assistant app deleted it.",
