@@ -498,6 +498,12 @@ record(
       );
     if (!md.includes(`https://whosonfirst.ai${p.path}`))
       copies.push(`${p.path} (does not give the page's address)`);
+    // the footer is left out of a copy, and what it says about the review is not
+    const month = /Standards status last reviewed ([A-Z][a-z]+ \d{4})/.exec(
+      p.html,
+    )?.[1];
+    if (!month || !md.includes(`last reviewed ${month}`))
+      copies.push(`${p.path} (does not say when the site was last reviewed)`);
   }
   record(
     "markdown",
