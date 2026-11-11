@@ -43,7 +43,7 @@ const ACCENT = "#0b3fc4";
  * follows the reader's color scheme; here each shape is given its color
  * outright, so nothing depends on how a drawing library reads a style sheet.
  */
-const INK = { p: `fill="${BG}"`, i: `stroke="${FG}"`, c: `fill="${ACCENT}"` };
+const INK = { i: `stroke="${FG}"`, c: `fill="${ACCENT}"` };
 const MARK = readFileSync(
   new URL("../../public/favicon.svg", import.meta.url),
   "utf8",
@@ -113,7 +113,17 @@ function card({ site, descriptor, title, description, kind, address }) {
         },
         [
           el("div", { alignItems: "center" }, [
-            { type: "img", props: { src: MARK_URI, width: 46, height: 46 } },
+            // drawn taller than the line of text it sits on, and pulled back
+            // by the difference, so the rule under the row stays where it was
+            {
+              type: "img",
+              props: {
+                src: MARK_URI,
+                width: 56,
+                height: 56,
+                style: { marginTop: -5, marginBottom: -5 },
+              },
+            },
             el(
               "div",
               {
