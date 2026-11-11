@@ -31,3 +31,9 @@
   X-Robots-Tag: noindex
 /llms-full.txt
   X-Robots-Tag: noindex
+
+# The host sends a .txt file as text/plain and names no encoding, and a browser
+# then reads it as Windows-1252: every curly quote and dash comes out as three
+# wrong characters. These files are UTF-8, so say so.
+/*.txt
+  Content-Type: text/plain; charset=utf-8
