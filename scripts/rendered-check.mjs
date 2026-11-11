@@ -819,7 +819,13 @@ record(
 }
 
 /* ---------- run ---------- */
-const browser = await chromium.launch();
+// Chromium on Linux takes font hinting from the system's settings, and hinted
+// text runs a few pixels wider, so a line that just fits on one machine did not
+// on another. No hinting is what phones and Macs draw, and it is the same here
+// and in continuous integration.
+const browser = await chromium.launch({
+  args: ["--font-render-hinting=none"],
+});
 
 // Every built page, loaded once under the site's own headers.
 {

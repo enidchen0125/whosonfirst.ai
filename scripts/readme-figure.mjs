@@ -54,7 +54,10 @@ const server = createServer((req, res) => {
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const origin = `http://127.0.0.1:${server.address().port}`;
 
-const browser = await chromium.launch();
+// As the rendered checks do: the same picture whatever the machine's font settings.
+const browser = await chromium.launch({
+  args: ["--font-render-hinting=none"],
+});
 for (const colorScheme of ["light", "dark"]) {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 1000 },
