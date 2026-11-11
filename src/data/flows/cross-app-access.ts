@@ -11,7 +11,7 @@ export const crossAppAccess: Flow = {
     "The company identity provider decides which agents may reach which apps for which employees. No per-app consent screens.",
   summary: `Inside a company, per-user consent is the wrong control. An employee clicking “Allow” twenty times does not give the security team visibility into which AI tools are connected to which systems, and the employee is not the one who should be deciding.
 
-The Identity Assertion JWT Authorization Grant, or ID-JAG, moves the decision to the identity provider the company already uses for single sign-on. The agent signs the user in once. When it needs access to another application, it asks the identity provider for a short-lived assertion aimed at that application’s authorization server. The identity provider applies administrator policy and either issues it or refuses. The agent trades the assertion for an ordinary access token.
+The Identity Assertion JWT Authorization Grant, or ID-JAG, moves the decision to the identity provider (IdP) the company already uses for single sign-on. The agent signs the user in once. When it needs access to another application, it asks the identity provider for a short-lived assertion aimed at that application’s authorization server, which the draft calls the resource authorization server (resource AS). The identity provider applies administrator policy and either issues it or refuses. The agent trades the assertion for an ordinary access token.
 
 No browser redirect, no consent prompt, and one place where access is granted and logged, and where new access is cut off. Vendors market this as Cross App Access. In MCP it is the official **Enterprise-Managed Authorization** extension.`,
   fits: [
@@ -20,7 +20,7 @@ No browser redirect, no consent prompt, and one place where access is granted an
     "Security teams need central policy and audit over agent-to-app connections.",
   ],
   watchOut: [
-    "It only works when both sides are connected to the same identity provider. It is not a mechanism for consumer or cross-organization access.",
+    "It only works when both sides are connected to the same identity provider. The MCP extension is written for enterprise deployments. The draft is not limited to them: it says the same pattern can arise with customer and platform identity providers.",
     "The identity provider sees and controls token issuance. It does not see what the agent then does with the token.",
     "The underlying IETF specification is still a working group draft, and the MCP extension pins a specific revision. Expect changes.",
     "Support is uneven on both ends: the identity provider must issue ID-JAGs and each application’s authorization server must accept them.",
@@ -36,7 +36,8 @@ No browser redirect, no consent prompt, and one place where access is granted an
       from: 2,
     },
     {
-      title: "The agent trades the grant at the app’s authorization server",
+      title:
+        "The agent trades the grant at the application’s authorization server",
       from: 5,
     },
     {
@@ -48,7 +49,7 @@ No browser redirect, no consent prompt, and one place where access is granted an
     client:
       "Signs the user in once through the company identity provider. For each application it needs, asks the identity provider for a short-lived grant, trades it at that application’s authorization server for an access token, and uses the token like any other MCP access token. It authenticates to that authorization server as a client, either registered in advance or identified by a URL, and in both cases with a credential of its own.",
     idp: "Signs the user in, then decides each request by the administrator’s policy: may this client reach that application, for this user, with these scopes? Issues a short-lived grant or refuses. An administrator configures the answer, and the user is not asked.",
-    as: "Validates the grant: the identity provider’s signature, that it is the intended audience, that the client matches, and that the grant has not expired or been used. Then issues an ordinary access token restricted to the MCP server the grant names. It trusts the identity provider because the company’s tenant was configured for single sign-on with it.",
+    as: "Validates the grant: the identity provider’s signature, that it is the intended audience, that the client matches, and that the grant has not expired. It may accept each grant only once. Then issues an ordinary access token restricted to the MCP server the grant names. It trusts the identity provider because the company’s tenant was configured for single sign-on with it.",
     mcp: "Validates the access token exactly as it would one obtained through an interactive flow. It does not need to know the difference.",
   },
   participants: [
@@ -89,7 +90,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &requested_token_type=urn:ietf:params:oauth:token-type:id-jag
 &audience=https://auth.chat.example/
 &resource=https://mcp.chat.example/
-&scope=chat.read chat.history
+&scope=chat.read+chat.history
 &subject_token=eyJraWQiOiJzMTZ0cVNtODhwREo4VGZCXzdrSEtQ…
 &subject_token_type=urn:ietf:params:oauth:token-type:id_token
 &client_id=2ec954a1d60620116d36d9ceb7
@@ -132,8 +133,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       to: "as",
       kind: "back",
       label: "JWT bearer grant with ID-JAG",
-      title: "The agent presents the grant to the app’s authorization server",
-      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID. A URL as \`client_id\` says who the client claims to be and proves nothing by itself, so the request also carries an assertion signed with a key the client’s metadata document publishes. A client registered in advance may send its registered secret instead. Where a client has no credential, the grant should be bound to a key the client proves it holds. Otherwise anyone who copies the grant can redeem it.`,
+      title:
+        "The agent presents the grant to the application’s authorization server",
+      body: `A standard JWT bearer grant (RFC 7523). The agent authenticates as a client of this authorization server, either pre-registered or by using a Client ID Metadata Document URL as its client ID. A URL as \`client_id\` says who the client claims to be and proves nothing by itself, so the request also carries an assertion signed with a key the client’s metadata document publishes. A client registered in advance may send its registered secret instead. Revision -06 of the draft has the authorization server reject a request that comes with neither client authentication nor a grant bound to a key the client proves it holds. Without one of them, anyone who copies the grant can redeem it. The MCP extension, which cites revision -04, calls authenticating with the metadata document’s key optional.`,
       code: {
         lang: "http",
         text: `POST /oauth2/token HTTP/1.1
@@ -146,14 +148,13 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
 &client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
 &client_assertion=eyJhbGciOiJFUzI1NiIs…`,
       },
-      lose: [["client", "ID-JAG (aud: resource AS)"]],
     },
     {
       from: "as",
       kind: "self",
       label: "Verify IdP signature and audience",
-      title: "The app’s authorization server validates the grant",
-      body: `It trusts the enterprise IdP because the company’s tenant was configured for single sign-on with it. It checks the signature and the token type, that it is the intended audience, that the client matches, and that the grant has not expired or been used.`,
+      title: "The application’s authorization server validates the grant",
+      body: `It trusts the enterprise IdP because the company’s tenant was configured for single sign-on with it. It checks the signature and the token type, that it is the intended audience, that the client matches, and that the grant has not expired. Whether a grant can be used twice is this server’s choice: the draft lets a client present the same grant again when its access token expires, and lets the server accept each grant only once.`,
     },
     {
       from: "as",
