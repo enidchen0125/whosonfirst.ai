@@ -48,7 +48,7 @@ const failures: ScenarioData = {
         },
         {
           verdict: "yes",
-          note: "The copy is refused without the private key, and the key was never in the log.",
+          note: "An API that checks for the key refuses the token alone, and the key was never in the log. A proof caught beside it can repeat that one request, briefly.",
         },
         {
           verdict: "partly",
@@ -59,7 +59,7 @@ const failures: ScenarioData = {
           note: "Reading a calendar is not a step anyone would be asked about.",
         },
       ],
-      so: `A stolen token is a real token. Two things limit what it is worth: **time**, because it expires, and **proof**, because a token bound to a key is refused when it arrives without the key.`,
+      so: `A stolen token is a real token. Two things limit what it is worth: **time**, because it expires, and **proof**, because an API that checks the binding refuses a token that arrives without proof of the key.`,
     },
     {
       id: "misuse",
@@ -113,7 +113,7 @@ const failures: ScenarioData = {
         },
         {
           verdict: "yes",
-          note: "The model cannot repeat what it was never shown.",
+          note: "The model cannot repeat what it was never shown. It must not be able to choose where your code sends it, either.",
         },
         { verdict: "no", note: "Nobody is asked before text is sent." },
       ],
@@ -129,9 +129,9 @@ const checks: CheckQuestion[] = [
       "An attacker copies a token that is bound to a key. They do not have the key. What can they do with the token?",
     options: [
       {
-        text: "Nothing. The API refuses a bound token without proof of the key.",
+        text: "Nothing, at an API that checks the binding: it wants proof of the key.",
         correct: true,
-        why: "Every request carries a signature made with the private key. The token names the matching public key, so a copy sent alone fails the check.",
+        why: "Every request carries a signature made with the private key. The token names the matching public key, so a copy sent alone fails the check. The check is the API’s job: one that ignores the binding would accept the copy.",
       },
       {
         text: "Use it at that API until it expires, like any other token.",
@@ -172,9 +172,9 @@ const checks: CheckQuestion[] = [
         why: "Code the agent runs there can read its environment, and so can anything that code was talked into running.",
       },
       {
-        text: "Outside the model’s reach: in the code around it, or behind a proxy.",
+        text: "Outside the model’s reach: held by the program around it, or behind a proxy.",
         correct: true,
-        why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential. The model sees the result and never the secret.",
+        why: "The model asks for a tool to be called. Your code, or a proxy outside the sandbox, attaches the credential, and only for the address it was meant for. The model sees the result and never the secret.",
       },
       {
         text: "In each tool’s description, so the model knows which key goes with which tool.",
@@ -193,7 +193,8 @@ const checks: CheckQuestion[] = [
     "Plan for two failures: a credential leaks, and the agent is talked into something.",
     "**Time and proof** limit a leak: short lives, and tokens bound to a key.",
     "**Scope and approval** limit a tricked agent: narrow tokens, and a person asked at the API’s insistence.",
-    "Anything the model can read can be drawn out of it. Keep credentials where it cannot.",
+    "Anything the model can read can be drawn out of it. Keep credentials where it cannot, and let your code decide where they are sent.",
+    "No token setting stops an agent passing on what it was allowed to read. Limit where it can send.",
     "A limit in a prompt is a suggestion. A limit at the API is a control.",
   ]}
   names={[
@@ -241,18 +242,25 @@ const checks: CheckQuestion[] = [
     anything. It can still be talked into reading, so a narrow scope shrinks the damage without removing it.
   </p>
   <p>
+    And what it reads, it can be talked into sending somewhere else. No token setting stops that. Limit where the
+    agent can send things, and take most care with an agent that can do all three: read private data, read text
+    written by strangers, and send messages out.
+  </p>
+  <p>
     <strong>Bind the token to a key.</strong> The agent makes a key pair and keeps the private half. The token names
-    the public half, and every request carries a fresh signature made with the private one. A copy of the token is
-    then refused. This is a <strong>sender-constrained token</strong>. The signature is called{' '}
+    the public half, and every request carries a fresh signature made with the private one. An API that checks for
+    that signature then refuses a copy of the token sent alone. This is a <strong>sender-constrained token</strong>. The signature is called{' '}
     <strong>proof of possession</strong>, and one common way to do it is DPoP. The private key is held by your code or
     by the platform’s key store, never where the model can read it: a key the model could repeat would be no better
     than a token it could repeat.
   </p>
   <p>
     <strong>Keep credentials out of the model’s reach.</strong> The model decides which tool to call. Your code makes
-    the call and attaches the token. The model sees the result and never the secret. A stronger version puts the
-    secret outside the agent’s sandbox altogether, behind a proxy that adds it to outgoing requests and only for the
-    hosts it was meant for.
+    the call and attaches the token, and only to the API that token is for. The address comes from your code, never
+    from the model: a model that can choose where a request goes can be talked into sending the token there without
+    ever seeing it. Take secrets out of anything handed back to the model, error messages included. A stronger
+    version puts the secret outside the agent’s sandbox altogether, behind a proxy that adds it to outgoing requests
+    and only for the hosts it was meant for.
   </p>
   <p>
     <strong>Ask a person when it matters.</strong> For anything that cannot be undone, the API refuses the everyday

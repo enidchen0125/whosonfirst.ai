@@ -117,9 +117,15 @@ const checks: CheckQuestion[] = [
 
   <h2>Where the key and the password fall short</h2>
   <p>
-    An API key is what most of us reach for first, and for a program with one owner it is fine. The trouble starts
-    when one agent works for many people. One key is one identity, so every request looks the same to the API,
-    whoever asked. The agent can add a name to the request, but a name the sender typed is a claim, not evidence.
+    An API key is what most of us reach for first. For a program with one owner it can be enough, as long as the key
+    is kept where the model cannot read it and can do no more than the job needs. The trouble starts when one agent
+    works for many people. One key is one identity, so every request looks the same to the API, whoever asked. The
+    agent can add a name to the request, but a name the sender typed is a claim, not evidence.
+  </p>
+  <p>
+    In an agent that name is often filled in by the model, so text the model has read can choose whose data is
+    fetched. Where an API offers nothing but a key, your own code has to set the user from its signed-in session,
+    never from anything the model wrote, and check each request against that user before the key is used.
   </p>
   <p>
     Handing the agent Alice’s password fails the other way. The API now believes Alice herself is there. Everything
@@ -152,6 +158,10 @@ const checks: CheckQuestion[] = [
       And it teaches your users to type their password into whatever asks, which is the habit phishing depends on.
       OAuth once had a way for an app to collect a password and trade it for a token. The{' '}
       <a href="/standards/#rfc9700">current security guidance</a> says it must not be used.
+    </p>
+    <p>
+      The same goes for any secret. Never ask a user to paste a password, a key or a token into the conversation:
+      anything typed there, the model can be asked to repeat.
     </p>
     <p>
       Some services offer nothing else: an old internal system, or a website with only a sign-in page. That is a

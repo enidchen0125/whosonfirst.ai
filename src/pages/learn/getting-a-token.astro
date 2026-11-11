@@ -67,7 +67,7 @@ const walk: Pick<Flow, "slug" | "title" | "participants" | "steps" | "phases"> =
         kind: "front",
         label: "Sends Alice to sign in",
         title: "The agent sends Alice’s browser to the authorization server",
-        body: `The agent does not ask Alice for anything. It opens her browser on the authorization server’s own page, with a note in the address: which app is asking, what for, and where to send her back. This is the jump you have seen behind every “Sign in with” button.
+        body: `The agent does not ask Alice for anything. It opens her browser on the authorization server’s own page, with a note in the address: which app is asking, what for, which API the token is for, and where to send her back. This is the jump you have seen behind every “Sign in with” button.
 
 The agent also makes up a random value for this one sign-in and sends only a scrambled version of it, the \`code_challenge\`. It keeps the original, the \`code_verifier\`, to itself. That matters in step 5.`,
         code: {
@@ -75,6 +75,7 @@ The agent also makes up a random value for this one sign-in and sends only a scr
           text: `GET /authorize?response_type=code
   &client_id=calendar-assistant
   &scope=calendar.read
+  &resource=https://calendar.example
   &redirect_uri=https://assistant.example/callback
   &code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
   &code_challenge_method=S256 HTTP/1.1
@@ -114,7 +115,7 @@ Host: assistant.example`,
         kind: "back",
         label: "Code + the value it kept",
         title: "The agent trades the code for a token, directly",
-        body: `This call goes straight from the agent to the authorization server, not through the browser. The agent sends the code together with the \`code_verifier\` from step 2. The server scrambles it the same way and compares. Only the app that started the sign-in can finish it.
+        body: `This call goes straight from the agent to the authorization server, not through the browser. The agent sends the code together with the \`code_verifier\` from step 2. The server scrambles it the same way and compares. Only whoever started the sign-in can finish it.
 
 That check has a name, **PKCE** (said “pixie”). Someone who stole the code from the browser has half of what they need, and the half that never left the agent is the half that counts.`,
         lose: [
@@ -154,7 +155,7 @@ Often a second token comes with it. A **refresh token** is not sent to any API. 
         title: "The agent calls the API",
         body: `The token goes in the \`Authorization\` header, and the API runs its five checks.
 
-One habit to form now: the token belongs in your code, not in the model’s prompt or memory. A token the model can read is a token that text on a web page can ask it to repeat.`,
+One habit to form now: the token is held by your program and never shown to the model. Not in the prompt, not in the conversation, not in a log. A token the model can read is a token that text on a web page can ask it to repeat.`,
         code: {
           lang: "http",
           text: `GET /events?day=tomorrow HTTP/1.1
@@ -245,6 +246,7 @@ const checks: CheckQuestion[] = [
     "What comes back through the browser is a one-time **code**. The token itself only ever travels on a direct connection.",
     "**PKCE** ties the code to the app that asked for it.",
     "A **refresh token** lets the agent carry on without the user. Guard it as if it were the user’s access, because it is.",
+    "Tokens are held by your program and never shown to the model.",
   ]}
   names={[
     ["The whole routine", "OAuth"],
@@ -301,8 +303,9 @@ const checks: CheckQuestion[] = [
   </p>
   <p>
     <strong>Why a code first, and not the token?</strong> Because the trip back runs through the browser, and a
-    browser is a leaky place. The code is built to be worthless if it leaks. The token only ever travels on the
-    direct connection in step 6.
+    browser is a leaky place. The code is built to be worthless if it leaks, as long as the authorization server
+    insists on the value the agent kept. Current guidance requires every authorization server to. The token only
+    ever travels on the direct connection in step 6.
   </p>
   <p>
     <strong>Why does the token expire so fast?</strong> Because it is a bearer token, and a short life limits what a
@@ -380,6 +383,11 @@ const checks: CheckQuestion[] = [
     points to a document that names its authorization server, and the agent can identify itself by a web address it
     controls instead of a client ID registered in advance. The rule is that every token is requested for that one
     server. After that, it is the eight steps above.
+  </p>
+  <p>
+    One caution comes with it. A server nobody has vetted is telling your agent which addresses to fetch and where
+    to send the user. Connect only to servers the user chose, refuse addresses inside your own network, and show
+    the user which site they are about to sign in to.
   </p>
 </Lesson>
 

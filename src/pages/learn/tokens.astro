@@ -179,7 +179,7 @@ const checksScenario: ScenarioData = {
         { verdict: "yes", note: "`exp` is 10:10. It is 10:04." },
         { verdict: "yes", note: "`scope` allows `calendar.read`." },
       ],
-      so: `All five pass, and the API answers. **Nothing in this token says who is allowed to send it.** A token like this is called a *bearer* token: it works for whoever holds it, like cash. A short life limits how long a stolen copy is useful. The last lesson shows how to make a copy useless.`,
+      so: `All five pass, and the API answers. **Nothing in this token says who is allowed to send it.** A token like this is called a *bearer* token: it works for whoever holds it, like cash. A short life limits how long a stolen copy is useful. The last lesson shows how to make a copy worth far less.`,
     },
   ],
 };
@@ -348,8 +348,9 @@ const checks: CheckQuestion[] = [
 
   <Mixup belief="A token is encrypted, so it is safe to put things in it and safe to leave it lying around.">
     <p>
-      A JWT like this one is signed, not encrypted. Anyone who holds one can read every claim; paste one into any
-      decoder and see. The signature stops a token being changed. It does nothing to stop it being read, or used.
+      A JWT like this one is signed, not encrypted. Anyone who holds one can read every claim. Decode the example
+      above and see, on your own machine: a real token pasted into a website has been given to that website. The
+      signature stops a token being changed. It does nothing to stop it being read, or used.
     </p>
   </Mixup>
 
@@ -367,13 +368,20 @@ const checks: CheckQuestion[] = [
 
   <Scenario scenario={checksScenario} glance="All six at a glance" />
 
+  <p>
+    <strong>Do not write these checks yourself.</strong> Use a maintained library, and tell it in your own
+    configuration which issuer, which keys and which signing method to accept. Never take those from the token: one
+    that names its own key, or says it needs no signature, must be refused. Decoding a token is not checking it.
+  </p>
+
   <h2>When the API says no</h2>
   <p>The refusals in the figure are of two kinds, worth telling apart because they send you to different places.</p>
   <ul>
     <li>
       <strong>401</strong> means the API did not accept the token at all. One of the first four checks failed, or no
       token arrived. If sign-in has just succeeded and the first call still fails, a common cause is the audience:
-      the token was issued for a different address from the one the API knows itself by. Check, too, that the token
+      the token was issued for a different address from the one the API knows itself by. Fix what the token is
+      requested for, and never switch the audience check off to make the error go away. Check, too, that the token
       is being sent.
     </li>
     <li>

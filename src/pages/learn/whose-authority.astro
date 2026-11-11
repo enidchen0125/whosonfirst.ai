@@ -274,8 +274,9 @@ const checks: CheckQuestion[] = [
   <p>
     Which service plays the authorization server depends on where the agent runs. Inside a company it is usually
     the sign-in system its services already trust. In a cloud it is the cloud’s own token service. On Kubernetes
-    the cluster can play the part itself: it issues each pod a token, and an API in the cluster can accept that token as
-    it is, and ask the cluster whether it is good.
+    the cluster can play the part itself. The pod asks for a token addressed to the API it is going to call, and
+    that API asks the cluster whether the token is good and was meant for it. The token a pod gets by default is
+    addressed to the cluster itself: never send that one anywhere else.
   </p>
   <p>
     The interesting part is the first step. What does the agent prove itself <em>with</em>? There are three common
@@ -325,6 +326,11 @@ const checks: CheckQuestion[] = [
     The third column is called <strong>workload identity</strong>. The platform that started the agent already
     knows exactly what it started, so it can vouch for it. It hands the job a short, signed note saying what the job
     is, and replaces the note before it expires. The job trades that note for access.
+  </p>
+  <p>
+    Nothing had to be stored, but there is still something to take. Anything running inside the job can pick that
+    note up, including a command or a web request the model was talked into making. Keep it, and the platform’s own
+    metadata address, out of reach of the model’s tools.
   </p>
 
   <Scenario scenario={vouch} title="An identity nobody had to store for the agent" />
