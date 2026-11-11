@@ -129,7 +129,7 @@ That check has a name, **PKCE** (said “pixie”). Someone who stole the code f
         kind: "resp",
         label: "Access token (+ refresh)",
         title: "The authorization server issues the token",
-        body: `Back comes the access token from the last lesson: about Alice, issued to this app, for the calendar API, read only, good for ten minutes.
+        body: `Back comes the access token from the previous lesson: about Alice, issued to this app, for the calendar API, read only, good for ten minutes.
 
 Often a second token comes with it. A **refresh token** is not sent to any API. The agent keeps it and shows it to the authorization server when the access token runs out, to get a new one without sending Alice through sign-in again.`,
         code: {
@@ -309,7 +309,7 @@ const checks: CheckQuestion[] = [
     which is the habit phishing depends on. OAuth once had a way
     for an app to collect a password and trade it for a token, and the{' '}
     <a href="/standards/#rfc9700">current security guidance</a> says it must not be used. For a service that offers
-    nothing else, see <a href="/learn/limits/#no-other-way">the last lesson</a>.
+    nothing else, see <a href="/learn/limits/#no-other-way">the final lesson</a>.
   </p>
   <p>
     <strong>Why a code first, and not the token?</strong> Because the trip back runs through the browser, and a
