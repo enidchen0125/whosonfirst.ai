@@ -369,6 +369,21 @@ const checks: CheckQuestion[] = [
 
   <Scenario scenario={checksScenario} glance="All six at a glance" />
 
+  <h2>When the API says no</h2>
+  <p>The two refusals in the figure are worth telling apart, because they send you to different places.</p>
+  <ul>
+    <li>
+      <strong>401</strong> means the API did not accept the token at all. One of the first four checks failed, or no
+      token arrived. If sign-in has just succeeded and the first call still fails, a common cause is the audience:
+      the token was issued for a different address from the one the API knows itself by. Check, too, that the token
+      is being sent.
+    </li>
+    <li>
+      <strong>403</strong> means the token is good and does not cover this request. Retrying will not help. The agent
+      needs a wider grant, and that means asking whoever can give one.
+    </li>
+  </ul>
+
   <h2>What a valid token does not prove</h2>
   <p>
     The last button is the uncomfortable one. A token records what was granted. It does not record who is allowed to
