@@ -537,6 +537,64 @@ for (const theme of THEMES) {
       await page.evaluate(() => document.fonts.ready);
 
       record(where, "no script errors", errors.length === 0, errors.join("; "));
+
+      // The long pages say where the reader is on a line under the bar, and it
+      // has to still say so halfway down, which is when it is needed. The home
+      // page and the index pages are short, or are lists, and have none.
+      {
+        const lined = [
+          "lesson",
+          "flow",
+          "concepts",
+          "deployment guide",
+        ].includes(pg.name);
+        const line = await page.evaluate(async () => {
+          const nav = document.querySelector(".here-nav");
+          if (!nav) return null;
+          const frame = () =>
+            new Promise((r) =>
+              requestAnimationFrame(() => requestAnimationFrame(r)),
+            );
+          scrollTo(0, document.documentElement.scrollHeight * 0.5);
+          await frame();
+          const box = nav.getBoundingClientRect();
+          const name = nav.querySelector(".here-page");
+          const n = name.getBoundingClientRect();
+          const sec = nav.querySelector(".here-sec");
+          const found = {
+            name: name.textContent.trim(),
+            inView: box.top >= 0 && box.bottom <= innerHeight / 3,
+            nameShown: n.width >= 40 && n.right <= innerWidth,
+            section:
+              sec && !sec.hidden && sec.offsetParent ? sec.textContent : "",
+          };
+          scrollTo(0, 0);
+          await frame();
+          return found;
+        });
+        if (lined) {
+          record(
+            where,
+            "halfway down, the header still says which page this is",
+            !!line && line.inView && line.nameShown,
+            line ? line.name : "no line",
+          );
+          if (vp.name === "desktop")
+            record(
+              where,
+              "and, with room, which section",
+              !!line?.section,
+              line?.section ?? "",
+            );
+        } else {
+          record(
+            where,
+            "a page that is not a long read has no line under the header",
+            line === null,
+            line ? line.name : "",
+          );
+        }
+      }
       if (pg.name === "home") {
         const dest = [
           "/learn/",

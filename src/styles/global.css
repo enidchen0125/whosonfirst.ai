@@ -40,7 +40,12 @@ html {
   font-size: 106.25%;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scroll-padding-top: 5rem;
+  /* a jump to an anchor lands clear of the sticky header, and of the "you are
+     here" line under it on the pages that have one */
+  scroll-padding-top: calc(5rem + var(--here, 0rem));
+}
+:root[data-here] {
+  --here: calc(2rem + 1px);
 }
 
 /* A jump within the page glides, so the reader sees which way it went. Arriving

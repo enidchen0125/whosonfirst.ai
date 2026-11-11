@@ -654,8 +654,8 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
     }
     .flow-panel {
       position: sticky;
-      top: 4.6rem;
-      max-height: calc(100dvh - 5.4rem);
+      top: calc(4.6rem + var(--here, 0rem));
+      max-height: calc(100dvh - 5.4rem - var(--here, 0rem));
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
@@ -714,7 +714,7 @@ const usedKinds = [...new Set(steps.map((s) => s.kind))];
       min-width: 0;
     }
     .flow-heads {
-      top: calc(3.5rem + 1px);
+      top: calc(3.5rem + 1px + var(--here, 0rem));
     }
   }
   @media (min-width: 48rem) and (max-width: 67.99rem) {

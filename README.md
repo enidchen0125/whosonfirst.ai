@@ -64,6 +64,7 @@ Biome does not handle `.mdx`, so the deployment guides and the About page are no
 | `src/layouts/Lesson.astro`            | The shape every lesson shares                                                                      |
 | `src/components/Scenario.astro`       | A lesson's figure: a small cast, one thing that varies, the same questions asked of each variation |
 | `src/components/Check.astro`          | Questions with feedback that says why                                                              |
+| `src/components/Here.astro`           | The line under the site header that says which page this is, on the long pages                     |
 | `src/data/learn/api-sees.ts`          | The figure lesson 1 and the home page share                                                        |
 | `src/data/flows/*.ts`                 | One file per flow: participants, steps, example messages, cautions, and its overview               |
 | `src/components/FlowOverview.astro`   | “In short” and “Who does what”, before a flow's diagram                                            |
@@ -140,6 +141,8 @@ The site takes the structure of an Internet-Draft, not its typewriter: fine rule
 
 **Fonts.** The four font files every first screen needs (Plex Sans 400 and 600, Plex Mono 500 and 600) are preloaded from `src/layouts/Base.astro`, so they download alongside the stylesheet and the text does not paint in a fallback font and then change. If one is still late, `IBM Plex Sans Fallback` in `src/styles/global.css` stands in: Arial scaled to Plex Sans's measurements, so the swap does not move the text. If you change which weights the first screen uses, change the preload list to match; a preloaded file that is not used is a wasted download.
 
+**A long page says where the reader is.** Lessons, flows, deployment guides, Concepts and About carry a line under the site header: the trail to the page, the page's short name and, with the script, the section scrolled to. It stays in view with the header, and takes the place of the small label above the title. A layout passes `here` to the base layout to get one. Its height is `--here` in `global.css`, which anything that sticks below the header, and the allowance for a jump to an anchor, add on. A jump within a page glides; arriving from another page at a section far down does not.
+
 Nothing essential waits behind a click. A figure shows a complete answer in its first state, a lesson's comparison is also a table, and a definition that opens in place is a link to the glossary first.
 
 Pages put the task first. A page opens with what it is for, then the thing the reader came to do; supporting facts (sources, method, classification) sit behind a labeled disclosure, and history follows the lookup it belongs to.
@@ -154,6 +157,7 @@ Two checks cover this:
 
 - `npm test` includes a token audit (`scripts/contrast-check.mjs`) that fails if any declared text pairing falls below 4.5:1 in either theme.
 - `npm run check:rendered` (after `npm run build`, `scripts/rendered-check.mjs`) first reads every built page: each internal link leads to a page and each anchor to something on it, no word runs into the inline element after it, every lesson is listed, the right answer to a lesson's questions cannot be guessed from its place or its length, a figure choice that must not be built is marked on its button, in its panel and in its table, and the response headers are in place. Then it loads every page under those headers and fails if one breaks its own content security policy. Then it opens the site in a browser and measures what is drawn: contrast and size of every diagram label in each step state, size and line length of running text, sideways overflow (also at 320px, on every flow and every lesson), accessibility violations (axe-core, WCAG 2.1 A and AA), and whether the things a reader depends on are present and work:
+  - halfway down a long page the header still says which page it is and, on a wide screen, which section; a short page has no such line
   - the home page's figure makes its point before a click, fits about one screen and switches; there are three ways in; every lesson is listed in order; both answers to "whose authority" appear before either list of flows
   - a lesson's figure shows one complete variation, the table beneath covers them all, a choice changes what is shown, no explanation appears before an answer is chosen, each question has one right answer, and the page runs in the order every lesson shares
   - a flow's overview comes before its diagram and agrees with it, a part's link brings the diagram into view at its first step, and a glossary term shows its definition inside the window and puts it away again

@@ -56,13 +56,17 @@ const term = (name: string) =>
   );
 ---
 
-<Base title={l.title} description={l.promise}>
+<Base
+  title={l.title}
+  description={l.promise}
+  here={{
+    trail: [{ label: 'Learn', href: '/learn/' }, { label: `Lesson ${i + 1} of ${lessons.length}`, short: `${i + 1} of ${lessons.length}` }],
+    current: l.short,
+  }}
+>
   <div class="page-head">
     <div class="wrap">
-      <p class="eyebrow">
-        <a href="/learn/">Learn</a> / Lesson {i + 1} of {lessons.length}
-        <span class="mins">{l.minutes} min</span>
-      </p>
+      <p class="eyebrow">{l.minutes} min read</p>
       <h1>{l.title}</h1>
       <p class="lede" set:html={inline(lede)} />
       <nav class="path" aria-label="Lessons">
@@ -197,14 +201,6 @@ const term = (name: string) =>
 </Base>
 
 <style>
-  .mins {
-    color: var(--fg-muted);
-  }
-  .mins::before {
-    content: '·';
-    margin-right: 0.6rem;
-  }
-
   /* where this lesson sits: every lesson by number, the current one by name too */
   .path {
     margin-top: 1.5rem;

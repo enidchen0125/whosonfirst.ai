@@ -17,11 +17,17 @@ import plexMono500 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500
 import plexMono600 from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2?url";
 import plexSans400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
 import plexSans600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
+import Here from "../components/Here.astro";
 import { REVIEWED } from "../data/site";
 
 interface Props {
   title?: string;
   description?: string;
+  /** Where the reader is, for the line under the bar on a long page. */
+  here?: {
+    trail?: { label: string; short?: string; href?: string }[];
+    current: string;
+  };
 }
 
 // The publication's name is "Who’s on First". whosonfirst.ai is its address, and
@@ -30,6 +36,7 @@ const SITE = "Who’s on First";
 const DESCRIPTOR = "A field guide to agent authentication and authorization";
 const {
   title,
+  here,
   description = `${DESCRIPTOR}: the flows, the deployments and the standards, with and without a human in the loop.`,
 } = Astro.props;
 // Seen outside the site, a title has to say what the page is about and where it is from.
@@ -54,7 +61,7 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-here={here ? '' : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -118,6 +125,15 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
           <span class="theme-text">Switch color theme</span>
         </button>
       </div>
+      {
+        here && (
+          <div class="here">
+            <div class="wrap">
+              <Here trail={here.trail} current={here.current} />
+            </div>
+          </div>
+        )
+      }
     </header>
 
     <main id="main">
@@ -148,6 +164,43 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     </footer>
 
     <script>
+      // The "you are here" line names the section the reader has scrolled to. It is
+      // the last heading to have passed under the header. Decoration for the eye:
+      // a screen reader has the headings themselves.
+      {
+        const sec = document.querySelector<HTMLElement>('.here-sec');
+        const bar = document.querySelector<HTMLElement>('.site-header');
+        if (sec && bar) {
+          const heads = [...document.querySelectorAll<HTMLElement>('main h2')];
+          let queued = false;
+          const update = () => {
+            queued = false;
+            const line = bar.getBoundingClientRect().bottom + 24;
+            let current = '';
+            for (const h of heads) {
+              if (!h.offsetParent) continue;
+              if (h.getBoundingClientRect().top > line) break;
+              current = (h.textContent ?? '').trim();
+            }
+            if (sec.textContent !== current) {
+              sec.textContent = current;
+              sec.hidden = !current;
+            }
+          };
+          addEventListener(
+            'scroll',
+            () => {
+              if (!queued) {
+                queued = true;
+                requestAnimationFrame(update);
+              }
+            },
+            { passive: true },
+          );
+          update();
+        }
+      }
+
       // The phone menu. Without this script the navigation is simply shown in full.
       const header = document.querySelector<HTMLElement>('.site-header')!;
       const toggle = header.querySelector<HTMLButtonElement>('.menu-toggle')!;
@@ -314,6 +367,12 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     z-index: 50;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
+  }
+  /* Where the reader is, on the long pages: a line under the bar that stays with it
+     when the page's own title has scrolled away. Its height is --here in global.css,
+     which everything that sticks or scrolls into place below the header adds on. */
+  .here {
+    border-top: 1px solid var(--border);
   }
   .bar {
     display: flex;

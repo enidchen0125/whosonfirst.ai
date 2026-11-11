@@ -46,14 +46,26 @@ const details = kind
       },
     ]
   : [];
+// Where the reader is, for the line under the site header. A page that is its
+// own section, as About is, has no trail: the line is its name.
+const here = fm.section
+  ? fm.section.href === Astro.url.pathname
+    ? { current: fm.section.label }
+    : {
+        trail: [{ label: fm.section.label, href: fm.section.href }],
+        current: fm.title,
+      }
+  : undefined;
 ---
 
-<Base title={fm.title} description={fm.description ?? fm.lede}>
+<Base
+  title={fm.title}
+  description={fm.description ?? fm.lede}
+  here={here}
+>
   <div class="page-head">
     <div class="wrap">
-      <p class="eyebrow">
-        {fm.section ? <a href={fm.section.href}>{fm.section.label}</a> : 'Guide'}
-      </p>
+      {!fm.section && <p class="eyebrow">Guide</p>}
       <h1>{fm.title}</h1>
       {fm.lede && <p class="lede">{fm.lede}</p>}
       {
@@ -106,7 +118,7 @@ const details = kind
     }
     .article-toc {
       position: sticky;
-      top: 4.8rem;
+      top: calc(4.8rem + var(--here, 0rem));
     }
   }
   .article-toc p {

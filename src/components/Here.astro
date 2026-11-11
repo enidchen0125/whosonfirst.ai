@@ -1,0 +1,141 @@
+---
+/**
+ * Where the reader is: the trail to this page and the page's own short name,
+ * on one line under the site header. A layout gives the base layout the trail
+ * and the name, and the line stays in view with the header, so a reader halfway down a
+ * long page can still see which page it is.
+ *
+ * It takes the place of the small label above a page's title, so the top of the
+ * page is no taller for it. A script in the base layout adds the section the
+ * reader has scrolled to; without the script the line is the trail and the name.
+ *
+ * It sits inside the site header, whose styles and script address `nav`
+ * elements there, so this is a `div` with the navigation role.
+ */
+interface Props {
+  /**
+   * The way here, outermost first. An entry with no `href` is a label. On a
+   * phone a label in the middle of the trail gives way to the page's name,
+   * unless it has a `short` form to stand in for it.
+   */
+  trail?: { label: string; short?: string; href?: string }[];
+  /** This page, by its short name. */
+  current: string;
+}
+const { trail = [], current } = Astro.props;
+---
+
+<div class="here-nav" role="navigation" aria-label="You are here">
+  <ol>
+    {
+      trail.map((t) => (
+        <li class:list={{ 'has-short': !!t.short }}>
+          {t.href ? (
+            <a href={t.href}>{t.label}</a>
+          ) : t.short ? (
+            <>
+              <span class="full">{t.label}</span>
+              <span class="short" aria-hidden="true">
+                {t.short}
+              </span>
+            </>
+          ) : (
+            t.label
+          )}
+        </li>
+      ))
+    }
+    <li class="here-page" aria-current="page">{current}</li>
+  </ol>
+  <span class="here-sec" aria-hidden="true" hidden></span>
+</div>
+
+<style>
+  .here-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2rem;
+    font-family: var(--font-label);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+  ol {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    margin: 0;
+    flex: none;
+  }
+  li + li::before {
+    content: '/';
+    margin-right: 0.5rem;
+    color: var(--fg-subtle);
+  }
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  a:hover {
+    color: var(--fg);
+  }
+  /* the page's own name is the part that may be cut short, never the trail */
+  .here-page {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  /* the section scrolled to: in the reading face, and the first thing to give way */
+  .here-sec {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-body, inherit);
+    font-size: 0.84rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .here-sec::before {
+    content: '›';
+    margin-right: 0.6rem;
+    color: var(--fg-subtle);
+  }
+  @media (max-width: 40rem) {
+    /* on a phone the line is for the page's name; a section would crowd it out */
+    .here-sec {
+      display: none;
+    }
+    /* and a label in the middle of the trail gives way to the name, or to its short form */
+    li:not(:first-child):not(.here-page):not(.has-short) {
+      display: none;
+    }
+    .full {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+  @media (min-width: 40.01rem) {
+    .short {
+      display: none;
+    }
+  }
+</style>

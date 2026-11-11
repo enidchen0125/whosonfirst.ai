@@ -210,10 +210,13 @@ const details = [
 ];
 ---
 
-<Base title={flow.title} description={flow.tagline}>
+<Base
+  title={flow.title}
+  description={flow.tagline}
+  here={{ trail: [{ label: 'Flows', href: '/flows/' }, { label: group.title }], current: flow.short }}
+>
   <div class="page-head">
     <div class="wrap">
-      <p class="eyebrow"><a href="/flows/">Flows</a> / {group.title}</p>
       <h1>{flow.title}</h1>
       <p class="lede">{flow.tagline}</p>
       <DocMeta based={based} reviewed={REVIEWED} subject="Guide" details={details} />

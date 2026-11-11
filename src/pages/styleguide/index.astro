@@ -11,6 +11,7 @@ import FlowCard from "../../components/FlowCard.astro";
 import TokenInspector from "../../components/TokenInspector.astro";
 import LastHop from "../../components/LastHop.astro";
 import Check from "../../components/Check.astro";
+import Here from "../../components/Here.astro";
 import Mixup from "../../components/Mixup.astro";
 import Scenario from "../../components/Scenario.astro";
 import { apiSees } from "../../data/learn/api-sees";
@@ -113,10 +114,10 @@ const toc = [
 <Base
   title="Style guide"
   description="The living style guide for Who’s on First: color and type tokens with live contrast ratios, and every component rendered with the real code."
+  here={{ current: 'Style guide' }}
 >
   <div class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Style guide</p>
       <h1>How the site looks, and why</h1>
       <p class="lede">
         Every swatch, specimen and component below is the real thing, rendered from the same tokens the site uses.
@@ -358,6 +359,24 @@ const toc = [
         <div class="section-head">
           <h2>Components</h2>
           <p>The building blocks, with what each is for.</p>
+        </div>
+
+        <div class="spec">
+          <div class="spec-text">
+            <h3>Where you are</h3>
+            <p>
+              A long page carries a line under the site header: the way to the page, the page’s short name and, once
+              the reader has scrolled, the section they are in. It stays in view with the header and takes the place
+              of the small label above a title. On a phone it gives way to the page’s name alone. The one at the top
+              of this page is live.
+            </p>
+          </div>
+          <div class="spec-demo">
+            <Here
+              trail={[{ label: 'Learn', href: '/learn/' }, { label: 'Lesson 3 of 6', short: '3 of 6' }]}
+              current="Getting a token"
+            />
+          </div>
         </div>
 
         <div class="spec">
