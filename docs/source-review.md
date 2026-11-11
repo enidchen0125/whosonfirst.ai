@@ -258,11 +258,12 @@ www.keycloak.org
 developer.hashicorp.com
 developers.cloudflare.com
 platform.claude.com
+www.anthropic.com
 developers.openai.com
 ```
 
-Through `aws.amazon.com`, these are the hosts the tracker's `url` fields and the flows' `sources` link to, plus what the checks above read: `author-tools.ietf.org` for diffs between draft revisions, `api.github.com` and `raw.githubusercontent.com` for releases and files of projects hosted on GitHub, and `www.agenticcommerce.dev`, where `agenticcommerce.dev` redirects. From `developer.okta.com` on, they are the documentation sites of the vendors on the agent platforms page, which links to none of them; they are where that review starts, and a vendor may keep the relevant page elsewhere.
+Through `aws.amazon.com`, these are the hosts the tracker's `url` fields and the flows' `sources` link to, plus what the checks above read: `author-tools.ietf.org` for diffs between draft revisions, `api.github.com` and `raw.githubusercontent.com` for releases and files of projects hosted on GitHub, and `www.agenticcommerce.dev`, where `agenticcommerce.dev` redirects. From `developer.okta.com` on, they are the documentation sites of the vendors on the agent platforms page, which links to them only beside a few facts; they are where that review starts, and a vendor may keep the relevant page elsewhere.
 
-When a link is added to the tracker or to a flow's `sources`, add its host here.
+When a link is added to the tracker, to a flow's `sources` or to a deployment guide, add its host here.
 
 Being on the list does not mean a host answers. If one refuses the run, list the items that depend on it as not checked, with what was tried.
