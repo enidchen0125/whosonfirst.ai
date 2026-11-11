@@ -62,12 +62,12 @@ for (const f of flows) {
   if (f.phases) {
     if (f.phases.length < 2) fail("needs at least two phases");
     if (f.phases[0].from !== 1) fail("its first phase must start at step 1");
-    f.phases.forEach((p, i) => {
+    f.phases.forEach((p, i, all) => {
       if (!Number.isInteger(p.from) || p.from > f.steps.length)
         fail(
           `phase "${p.title}" starts at step ${p.from}, which does not exist`,
         );
-      if (i > 0 && p.from <= f.phases![i - 1].from)
+      if (i > 0 && p.from <= all[i - 1].from)
         fail(`phase "${p.title}" does not start after the one before it`);
     });
   }
