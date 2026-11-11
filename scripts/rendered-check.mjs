@@ -610,6 +610,52 @@ record(
     );
   }
 
+  // The README is what a visitor to the repository reads first, and it is
+  // written by hand. Every address it gives is on the site, it names every
+  // lesson, flow and deployment guide, and where it counts them it counts right.
+  {
+    const readme = readFileSync(
+      new URL("../README.md", import.meta.url),
+      "utf8",
+    );
+    const given = [
+      ...new Set(
+        [...readme.matchAll(/https:\/\/whosonfirst\.ai(\/[^\s)"'`<>]*)/g)].map(
+          (m) => m[1].replace(/[.,;:]+$/, ""),
+        ),
+      ),
+    ];
+    const wrong = [];
+    for (const address of given) {
+      const [path, section] = address.split("#");
+      const page = built.find((p) => p.path === path);
+      if (path.endsWith("/") ? !page : !existsSync(join(root, path)))
+        wrong.push(`${address} is not on the site`);
+      else if (section && !page?.html.includes(` id="${section}"`))
+        wrong.push(`${address} names no section of its page`);
+    }
+    const under = (dir) =>
+      built.filter((p) => new RegExp(`^/${dir}/[^/]+/$`).test(p.path));
+    for (const dir of ["learn", "flows", "deployments"])
+      for (const p of under(dir))
+        if (!given.includes(p.path)) wrong.push(`${p.path} is not listed`);
+    for (const [word, dir] of [
+      ["lessons", "learn"],
+      ["flows", "flows"],
+    ])
+      for (const m of readme.matchAll(
+        new RegExp(`\\b(\\d+) (?:short )?${word}\\b`, "g"),
+      ))
+        if (Number(m[1]) !== under(dir).length)
+          wrong.push(`it says “${m[0]}”, and there are ${under(dir).length}`);
+    record(
+      "readme",
+      "README.md lists every lesson, flow and deployment guide, counts them right, and gives no address the site lacks",
+      given.length > 0 && wrong.length === 0,
+      wrong.slice(0, 8).join("; "),
+    );
+  }
+
   // What a page tells a search engine: data that parses, about this page.
   const data = [];
   for (const p of indexed) {
