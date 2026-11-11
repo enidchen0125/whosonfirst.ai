@@ -876,7 +876,7 @@ function step(flow, i, y) {
     <div class="ticks">${flow.steps.map((_, k) => `<i class="${k < i ? "done" : k === i ? "now" : ""}"></i>`).join("")}</div>
     <div class="window" style="--window:${WINDOW}px">
       <img class="heads" src="${s.heads}" alt="">
-      <img src="${s.lines}" alt="" style="top:${(headsH - y).toFixed(1)}px">
+      <img src="${s.lines}" alt="${esc(`The sequence diagram at step ${i + 1} of ${flow.steps.length}: ${s.from.label}${s.to ? ` to ${s.to.label}` : ""}.`)}" style="top:${(headsH - y).toFixed(1)}px">
     </div>
     <div class="step">
       <p class="label"><span>${esc(s.part)}</span><span>${esc(s.phase)}</span></p>
@@ -893,7 +893,8 @@ function step(flow, i, y) {
 const doc = (
   size,
   html,
-) => `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  title = "",
+) => `<!doctype html><html lang="en"><head><meta charset="utf-8">${title ? `<title>${esc(title)}</title>` : ""}
 <style>@page { size: ${size.width}px ${size.height}px; margin: 0; } :root { --w: ${size.width}px; --h: ${size.height}px; } ${CSS}</style>
 </head><body>${html}</body></html>`;
 
@@ -910,8 +911,8 @@ async function sheet(size, scale = 2) {
     colorScheme: SCHEME,
   });
   const page = await context.newPage();
-  const draw = async (html) => {
-    await page.setContent(doc(size, html), { waitUntil: "load" });
+  const draw = async (html, title) => {
+    await page.setContent(doc(size, html, title), { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     // A picture that has outgrown its frame is cut off without a word. Say so.
     const over = await page.evaluate(() =>
@@ -946,7 +947,11 @@ const deck = pages(site, flow);
 // The carousel: one document, and each page as a picture.
 {
   const s = await sheet(TALL, 1);
-  for (const p of await s.draw(deck.map((p) => p.html).join("")))
+  // The document's own title is the question the site asks, as the home page words it.
+  for (const p of await s.draw(
+    deck.map((p) => p.html).join(""),
+    site.home.question,
+  ))
     problems.push(`carousel.pdf: ${p}`);
   // a page being printed is drawn light whatever was asked: this one is not being printed
   await s.page.emulateMedia({ media: "screen" });
@@ -955,6 +960,10 @@ const deck = pages(site, flow);
     width: `${TALL.width}px`,
     height: `${TALL.height}px`,
     printBackground: true,
+    // LinkedIn lets a reader download a document "for accessibility purposes".
+    // Tagged, the file tells a screen reader what is a heading, a table and a
+    // list, and in which order to read them.
+    tagged: true,
   });
   await s.close();
   note("carousel.pdf");
