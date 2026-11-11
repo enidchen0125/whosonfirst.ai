@@ -3,7 +3,6 @@
 **A field guide to agent authentication and authorization: who is acting, for whom, and who said they could.**
 
 [![CI](https://github.com/kevinswiber/whosonfirst.ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kevinswiber/whosonfirst.ai/actions/workflows/ci.yml)
-[![whosonfirst.ai](https://img.shields.io/website?url=https%3A%2F%2Fwhosonfirst.ai&label=whosonfirst.ai)](https://whosonfirst.ai)
 [![Last reviewed](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fkevinswiber%2Fwhosonfirst.ai%2Fmain%2Fsrc%2Fdata%2Fsite.ts&search=REVIEWED%20%3D%20%22(%5B%5E%22%5D%2B)%22&replace=%241&label=reviewed&color=blue)](https://whosonfirst.ai/about/#how-facts-were-checked)
 [![llms.txt](https://img.shields.io/badge/llms.txt-every%20page%20as%20Markdown-blue)](https://whosonfirst.ai/llms.txt)
 [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-lightgrey)](LICENSE-CONTENT)
@@ -73,7 +72,7 @@ Grouped by the question that matters most when choosing between them: is a perso
 **No human**
 
 - [Client credentials](https://whosonfirst.ai/flows/client-credentials/): the agent authenticates as itself.
-- [Workload identity federation](https://whosonfirst.ai/flows/workload-identity-federation/): the platform the agent runs on vouches for it, and no secret is stored.
+- [Workload identity federation](https://whosonfirst.ai/flows/workload-identity-federation/): the platform the agent runs on vouches for it, and nothing long-lived is stored.
 - [SPIFFE and mutual TLS](https://whosonfirst.ai/flows/spiffe-workload-identity/): a cryptographic identity from the infrastructure, used at both ends of every connection.
 - [Workload tokens (WIMSE)](https://whosonfirst.ai/flows/wimse-workload-tokens/): a workload identity bound to a key and proven on every request.
 
@@ -101,7 +100,7 @@ The flows are the same everywhere. What changes with the runtime is the starting
 
 ## Read it with an agent
 
-Every page is also published as Markdown, made from the page as built, so an assistant or a coding agent can read the guide without picking it out of HTML. A copy keeps what the page says in words: a flow’s steps, every variation of a figure, the decision guide’s rules.
+Every page of the guide is also published as Markdown, made from the page as built, so an assistant or a coding agent can read the guide without picking it out of HTML. A copy keeps what the page says in words: a flow’s steps, every variation of a figure, the decision guide’s rules.
 
 | What                                 | Address                                                                                                                       |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -134,7 +133,7 @@ pages it links to that apply before proposing a design. Check the design
 against the flow page's "Watch out for" section, and name the pages you used.
 ```
 
-**Review a design against it.** Hand an agent your design notes and the flow page you are following, and ask it which of the page’s cautions apply and which steps the design leaves out. “Who does what” on each flow page says what the agent, the authorization server and the API each have to do, which is most of a review checklist.
+**Review a design against it.** Hand an agent your design notes and the flow page you are following, and ask it which of the page’s cautions apply and which steps the design leaves out. “Who does what” on each flow page says what each party has to do, which is most of a review checklist.
 
 **Load the whole guide.** Download `llms-full.txt` and add it to a project’s knowledge or a retrieval index:
 
@@ -149,13 +148,13 @@ It is more than some models take in one prompt. For a single question, the index
 Two things to ask of any agent that reads it:
 
 - **Cite the page, not the copy.** The address without `index.md` is the one a person can open.
-- **Carry the review month along.** Drafts in this area change monthly, and each page says when it was last checked. For anything a decision rests on, have the agent follow the page’s link to the specification itself.
+- **Carry the review month along.** Drafts in this area change monthly, and each page and each copy says when the site was last checked. For anything a decision rests on, have the agent follow the page’s link to the specification itself.
 
 ## Accuracy
 
 A reference is only worth having if it is right. Revision numbers and dates in the tracker were taken from the IETF document mirror and specification repositories. Process states (for example “in last call”) came from secondary sources and are worded as reported. Vendor products are described from vendor documentation and were not tested, and mention is not recommendation. The [About page](https://whosonfirst.ai/about/) has the full method, and [`docs/source-review.md`](docs/source-review.md) is the checklist for each review.
 
-**Found something wrong or out of date?** [Open a correction](https://github.com/kevinswiber/whosonfirst.ai/issues/new/choose) with the page, what it says, and a link to the source that shows otherwise. A revision number or a status that has moved is worth an issue by itself. [CONTRIBUTING.md](CONTRIBUTING.md) says what a correction needs.
+**Found something wrong or out of date?** [Open a correction](https://github.com/kevinswiber/whosonfirst.ai/issues/new/choose) with the page, what it says, and a link to the source that shows otherwise, or send the change as a pull request. A revision number or a status that has moved is worth an issue by itself. [CONTRIBUTING.md](CONTRIBUTING.md) says what a correction needs.
 
 ## About
 
@@ -165,7 +164,7 @@ The site is static. It sets no cookies and loads nothing from another origin, an
 
 ## Working on the site
 
-Requires Node 22.
+Requires Node 22 or later.
 
 ```bash
 npm install

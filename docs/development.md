@@ -4,7 +4,7 @@ How the site is built, where things are and how its content is edited. The [READ
 
 ## Develop
 
-Requires Node 22.
+Requires Node 22 or later.
 
 ```bash
 npm install
@@ -190,7 +190,7 @@ A page is read in three places besides a browser: where a link to it is shared, 
 
 **For a search engine.** Every page carries schema.org data in its head: the site, who makes it, the page with the month it was last reviewed, and the trail to it. Lessons, flows and deployment guides also say they are articles. A layout passes `article` to the base layout for that, and `schema` to add nodes of its own. The “not found” page passes `noindex`.
 
-**For a program that reads.** `src/integrations/markdown-pages.mjs` writes each page again as Markdown beside it: `/flows/dpop/` has `/flows/dpop/index.md`. The page names it in a `<link rel="alternate" type="text/markdown">`. The copy leaves out the header, the footer, controls and drawings, and keeps what the page says in words: a flow's steps, a figure's every variation and its table, the decision guide's rules. Two files are made from the copies:
+**For a program that reads.** `src/integrations/markdown-pages.mjs` writes each page again as Markdown beside it: `/flows/dpop/` has `/flows/dpop/index.md`. The page names it in a `<link rel="alternate" type="text/markdown">`. The copy leaves out the header, the footer, controls and drawings, and keeps what the page says in words: a flow's steps, a figure's every variation and its table, the decision guide's rules. It ends with the page's address and the footer's line on when the site was last reviewed, which on a lesson is the only place the month appears. Two files are made from the copies:
 
 - `/llms.txt` says what the site is and links to every page's Markdown, in reading order.
 - `/llms-full.txt` is all of the pages in one file.
