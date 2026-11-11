@@ -315,12 +315,26 @@ export const rules: Rule[] = [
     },
     why: "The agent authenticates as itself. Use a signed assertion instead of a client secret wherever the authorization server allows.",
   },
+  // On a person's machine the agent has an identity of its own only where its
+  // installation was given a credential no other copy holds (RFC 8252, section
+  // 8.4). The first rule is for that case, the second for every other.
+  {
+    flow: "client-credentials",
+    role: "start",
+    weight: 6,
+    when: {
+      principal: ["self"],
+      target: ["mcp", "api", "agent", "internal"],
+      runtime: ["local"],
+    },
+    why: "Only where this installation was given a credential of its own, one that no other copy holds. Keep it in the operating system’s credential store, and prefer a key to a secret. A secret built into the app is the same in every copy, so it proves nothing about this one.",
+  },
   {
     flow: "authorization-code-pkce",
     role: "start",
     weight: 5,
     when: { principal: ["self"], runtime: ["local"] },
-    why: "On a person’s machine an agent cannot keep a secret, so it has no identity of its own to prove. Have the person who runs it sign in, and act for them.",
+    why: "Where the installation has no credential of its own, the agent has no identity to prove, and the access is really a person’s. Have the person who runs it sign in, and act for them.",
   },
   {
     flow: "spiffe-workload-identity",
@@ -419,7 +433,7 @@ export const cautions: Caution[] = [
   },
   {
     when: { runtime: ["local"] },
-    text: "A local agent is a public client. Do not embed secrets in it; use PKCE, a loopback redirect, and the operating system’s credential store.",
+    text: "A local agent is a public client unless its installation was given a credential of its own. Never build a secret into the app: every copy would hold the same one. Use PKCE and a loopback redirect, and keep tokens and keys in the operating system’s credential store.",
   },
 ];
 
