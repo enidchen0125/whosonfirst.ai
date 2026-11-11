@@ -1130,7 +1130,7 @@ export const standards: Standard[] = [
       "Agents publish an Agent Card declaring their skills and security schemes (API key, HTTP, OAuth 2.0, OpenID Connect, mutual TLS). Cards can be signed. A task state signals that further authorization is needed.",
     agents:
       "Defines how requirements are declared between agents, and leaves obtaining credentials to OAuth and its relatives.",
-    url: "https://a2a-protocol.org/latest/specification/",
+    url: "https://a2a-protocol.org/v1.0.1/specification/",
   },
   {
     id: "web-bot-auth",
@@ -1380,13 +1380,13 @@ export const standards: Standard[] = [
     body: "NIST",
     status: "guidance",
     detail:
-      "Draft concept paper, February 2026. NIST also launched an AI Agent Standards Initiative the same month.",
+      "Draft concept paper, February 2026. NIST announced an AI Agent Standards Initiative the same month, which its site now titles the SI Agent Standards Initiative.",
     topics: ["guidance"],
     summary:
       "Proposes a demonstration project applying existing identity standards to enterprise agents.",
     agents:
       "Signals which standards a US government reference architecture is likely to draw on: MCP, OAuth, OpenID Connect, SPIFFE, SCIM.",
-    url: "https://www.nccoe.nist.gov/",
+    url: "https://csrc.nist.gov/pubs/other/2026/02/05/accelerating-the-adoption-of-software-and-ai-agent/ipd",
   },
   {
     id: "owasp-agentic",
@@ -1399,7 +1399,7 @@ export const standards: Standard[] = [
     summary:
       "The ten most significant risks in agentic systems. Identity and privilege abuse is one of them.",
     agents: "A threat checklist to review any design on this site against.",
-    url: "https://genai.owasp.org/",
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
   },
   {
     id: "owasp-nhi",
@@ -1413,7 +1413,7 @@ export const standards: Standard[] = [
       "The common failures with service accounts, keys and tokens: long-lived secrets, over-privilege, improper offboarding, reuse.",
     agents:
       "Every agent is a non-human identity. Most real incidents are on this list.",
-    url: "https://owasp.org/www-project-non-human-identities-top-10/",
+    url: "https://owasp.org/projects/non-human-identities-top-10",
   },
   {
     id: "cosai-agentic-iam",
