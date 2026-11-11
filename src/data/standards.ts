@@ -1019,7 +1019,7 @@ export const standards: Standard[] = [
     body: "Microsoft",
     status: "project",
     detail:
-      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported.",
+      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported. The one exception is in preview: a flexible federated identity credential can match the subject of a GitHub, GitLab or Terraform Cloud token with wildcards.",
     topics: ["workload"],
     summary:
       "An app registration or a user-assigned managed identity is configured, through a federated identity credential, to trust tokens from an outside issuer. The workload sends that token as the client assertion on a client credentials request and receives a Microsoft Entra access token.",
@@ -1251,7 +1251,7 @@ export const standards: Standard[] = [
     topics: ["credentials"],
     summary: "A protocol for requesting and presenting verifiable credentials.",
     agents:
-      "How an agent, or a user on its behalf, presents a signed mandate to a verifier.",
+      "In AP2, how a mandate gets signed: the agent sends the request, and the holder of the user’s credential answers with the user-signed mandate.",
     url: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
   },
   {
@@ -1340,7 +1340,7 @@ export const standards: Standard[] = [
     summary:
       "Revives HTTP status 402: a server states its price, and the client retries with a signed payment.",
     agents:
-      "Payment as the credential. No identity layer; suited to pay-per-call access by autonomous agents.",
+      "Payment as the credential. The core protocol has no identity layer; extensions add one, such as HTTP Message Signatures that identify the paying agent. Suited to pay-per-call access by autonomous agents.",
     url: "https://github.com/x402-foundation/x402",
   },
 
