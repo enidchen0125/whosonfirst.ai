@@ -40,7 +40,7 @@ Most products deliver some of these well and the rest partially. The table is a 
 
 **AWS: Amazon Bedrock AgentCore Identity.** Each agent gets a workload identity in a directory. The agent presents a workload token to the identity service and receives outbound credentials from a token vault: OAuth access tokens, either user-delegated or client-credentials, or API keys. Inbound requests are validated against your identity provider's tokens or with IAM. In 2026 AWS added an on-behalf-of exchange that turns a user's token into a narrower one carrying both the user's and the agent's identity.
 
-**Microsoft: Entra Agent ID.** Agents become first-class directory objects, with an unusual structure. A **blueprint** holds the credentials. An **agent identity** created from it has none of its own; the blueprint's credential is used to get tokens for it. In delegated flows the token's subject is the human and the actor is the agent identity; in autonomous flows the agent identity is the subject. An optional **agent user** exists for systems that insist on a user account.
+**Microsoft: Entra Agent ID.** Agents become first-class directory objects, with an unusual structure. A **blueprint** holds the credentials. An **agent identity** created from it has none of its own; the blueprint's credential is used to get tokens for it. In delegated flows the token's subject is the human and the actor is the agent identity; in autonomous flows the agent identity is the subject. For systems that insist on a user account, an agent identity can have an optional **agent's user account**.
 
 **Google Cloud: Agent Identity.** Each deployed agent gets a SPIFFE ID and an automatically rotated X.509 certificate, and is an IAM principal in its own right, not a service account. This is the closest of the three to the IETF position that agents are workloads.
 
@@ -58,7 +58,7 @@ All three converge on the same model: a workload identity for the agent, exchang
 
 ## At the edge
 
-**Cloudflare** approaches from the network. MCP server portals put many MCP servers behind one access-controlled endpoint with per-user identity from your identity provider and central logging: an [MCP gateway](/deployments/gateways/) as a service. Its access product can act as the OAuth provider in front of an MCP server. And it is a principal backer of [Web Bot Auth](/flows/web-bot-auth/), under which it classifies cryptographically signed agents separately from anonymous bots.
+**Cloudflare** approaches from the network. MCP server portals put many MCP servers behind one access-controlled endpoint with per-user identity from your identity provider and central logging: an [MCP gateway](/deployments/gateways/) as a service. Its access product can act as the OAuth provider in front of an MCP server. And it is a principal backer of [Web Bot Auth](/flows/web-bot-auth/), which it accepts as one way for a bot or agent to identify itself as a Verified bot. Since July 2026 its documentation no longer keeps signed agents as a class apart: they are Verified bots, each labeled by whether one operator runs it or many end users direct it.
 
 ## Model platforms' hosted agents
 
