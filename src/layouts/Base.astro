@@ -307,7 +307,9 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
         const menu = document.querySelector<HTMLElement>('.site-header .here-menu');
         const bar = document.querySelector<HTMLElement>('.site-header');
         const heads = [...document.querySelectorAll<HTMLElement>('main h2')].filter((h) => h.offsetParent);
-        if (sec && menu && bar && heads.length > 1) {
+        // the list is a popover: where a browser has none, the button stays hidden
+        const popovers = 'showPopover' in HTMLElement.prototype;
+        if (sec && menu && bar && heads.length > 1 && popovers) {
           const name = sec.querySelector<HTMLElement>('.here-sec-name')!;
           const list = menu.querySelector('ol')!;
           const used = new Set([...document.querySelectorAll('[id]')].map((e) => e.id));
@@ -369,6 +371,9 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
             { passive: true },
           );
           update();
+        } else if (menu && !popovers) {
+          // without popovers the list would sit open on the page: put it away
+          menu.hidden = true;
         }
       }
 
@@ -697,6 +702,12 @@ const preloadFonts = [plexSans400, plexSans600, plexMono500, plexMono600];
     .site-header[data-js][data-open] nav {
       display: block;
       border-top: 1px solid var(--border);
+    }
+    /* a phone on its side is shorter than the open menu: the menu scrolls */
+    .site-header[data-js][data-open] {
+      max-height: 100dvh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
     .site-header[data-js] nav ul {
       display: block;

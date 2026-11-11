@@ -147,6 +147,18 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== "meta") as ClaimCat[];
     overflow-x: auto;
     scrollbar-width: none;
     border-bottom: 1.5px solid var(--fg);
+    /* more tabs than fit: a shadow at the edge they run off, as on a wide table */
+    background:
+      linear-gradient(to right, var(--bg) 40%, transparent) left / 2.4rem 100% no-repeat local,
+      linear-gradient(to left, var(--bg) 40%, transparent) right / 2.4rem 100% no-repeat local,
+      linear-gradient(to right, color-mix(in srgb, var(--fg) 30%, transparent), transparent) left / 0.8rem 100%
+        no-repeat scroll,
+      linear-gradient(to left, color-mix(in srgb, var(--fg) 30%, transparent), transparent) right / 0.8rem 100%
+        no-repeat scroll;
+  }
+  /* the strip clips what is drawn outside a tab, so its focus ring is drawn inside */
+  .ti-tabs button:focus-visible {
+    outline-offset: -3px;
   }
   .ti-tabs[hidden] {
     display: none;
@@ -301,6 +313,16 @@ const cats = Object.keys(CAT_LABEL).filter((c) => c !== "meta") as ClaimCat[];
     align-items: center;
     gap: 0.6rem 1rem;
     margin-top: 1rem;
+  }
+  /* a specification's name can be longer than a phone is wide */
+  .ti-panel footer .chips {
+    min-width: 0;
+  }
+  .ti-panel footer .chip {
+    min-width: 0;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .ti-legend {

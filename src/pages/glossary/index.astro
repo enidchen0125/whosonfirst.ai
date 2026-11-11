@@ -179,9 +179,17 @@ const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
     color: var(--fg-muted);
     scroll-margin-top: 5rem;
   }
+  /* With no margin to stand in, the letter is not drawn. It stays where it is,
+     one pixel of it, because the row of letters at the top jumps to it. */
   @media (max-width: 78rem) {
     .gl-letter {
-      display: none;
+      right: auto;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
     }
   }
   dt {

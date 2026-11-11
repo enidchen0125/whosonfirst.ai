@@ -190,4 +190,14 @@ const parts = flow.participants
     color: var(--accent);
     text-align: center;
   }
+  /* under a finger each number gets the room of a button */
+  @media (pointer: coarse) {
+    .ov-steps {
+      line-height: 2.4;
+    }
+    .ov-steps a {
+      min-width: 2.2em;
+      padding: 0.55rem 0.35rem;
+    }
+  }
 </style>
