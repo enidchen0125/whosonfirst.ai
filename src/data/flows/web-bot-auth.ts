@@ -11,9 +11,9 @@ export const webBotAuth: Flow = {
     "An agent that browses the open web signs its requests, so a site can tell which operator it belongs to without trusting a user-agent string.",
   summary: `Most of this site is about agents calling APIs that expect them. Agents also browse ordinary websites, which were built for people and regard automated traffic with suspicion. Sites have had two bad options for telling good bots from bad: the \`User-Agent\` header, which anyone can type, and lists of IP addresses, which break whenever infrastructure moves and say nothing about shared platforms.
 
-Web Bot Auth replaces both with cryptography. The agent’s operator publishes its public keys at a well-known URL. The agent signs each request using HTTP Message Signatures and names the operator in a header. The website, or more usually the CDN in front of it, fetches the keys, verifies the signature, and then applies whatever policy it likes to a caller it can now name.
+Web Bot Auth replaces both with cryptography. The agent’s operator publishes its public keys at an HTTPS URL. The agent signs each request using HTTP Message Signatures and names that URL in a header. The website, or more usually the CDN in front of it, fetches the keys, verifies the signature, and then applies whatever policy it likes to a caller it can now name.
 
-This is identification, not authorization. A valid signature says “this request came from operator X’s agent.” It does not say a user asked for it or that the site must serve it.`,
+This is identification, not authorization. A valid signature says that a holder of a key published at that URL signed the parts of the request the signature covers. It does not say a user asked for the request or that the site must serve it.`,
   fits: [
     "Agents that fetch or interact with public websites: browsing, research, shopping.",
     "Operators who want their traffic recognized and not blocked as an unknown bot.",
@@ -22,8 +22,8 @@ This is identification, not authorization. A valid signature says “this reques
   watchOut: [
     "It identifies the **operator**, not the end user and not the individual agent run. Per-user authorization still needs a login or a token.",
     "The identity is only as meaningful as the site’s policy for it. Verification proves a name; reputation is a separate matter.",
-    "The specification is an early working group draft, and the header syntax has changed between revisions. Deployed verifiers may expect an older form.",
-    "The signature covers selected parts of the request. Know which, and do not assume the body is protected.",
+    "The specification is an early working group draft. Between revisions the header’s syntax has changed, and so has what its value points to: an origin in earlier drafts, the key directory’s own URL in this one. Deployed verifiers may expect an older form.",
+    "The signature covers selected parts of the request. Know which. One that covers only the site’s name can be reused by anyone who sees it, for any method and path on that site, until it expires. Do not assume the body is protected.",
   ],
   lesson: "whose-authority",
   phases: [
@@ -32,7 +32,7 @@ This is identification, not authorization. A valid signature says “this reques
       from: 1,
     },
     {
-      title: "The agent signs each request and names the operator in a header",
+      title: "The agent signs each request and names its key URL in a header",
       from: 3,
     },
     {
@@ -42,9 +42,9 @@ This is identification, not authorization. A valid signature says “this reques
     { title: "The website receives a labeled request and responds", from: 7 },
   ],
   parts: {
-    op: "Publishes its public keys in a key directory, at a well-known path on a domain it controls, and gives the agent the matching private key. That domain is the agent’s identity. On a shared agent platform the key lives in the platform’s infrastructure, not in the model’s reach.",
+    op: "Publishes its public keys in a key directory, at an HTTPS URL it controls, and gives the agent the matching private key. That URL is the agent’s identifier. On a shared agent platform the key lives in the platform’s infrastructure, not in the model’s reach.",
     agent:
-      "Signs each outgoing request and adds three headers: where to find the keys, what was signed and how, and the signature itself. The signature covers selected parts of the request, so know which, and do not assume the body is protected. The header syntax has changed between draft revisions: check which one your counterpart implements.",
+      "Signs each outgoing request and adds three headers: where to find the keys, what was signed and how, and the signature itself. The signature covers selected parts of the request, so know which, and do not assume the body is protected. The header syntax has changed between draft revisions. The current draft requires the dictionary form, and a verifier built to an earlier draft may reject it: check which one your counterpart implements.",
     edge: "Fetches the operator’s keys from the URL the request names, verifies the signature with the named key, checks the time window, and applies policy: allow, rate-limit, serve a different representation, charge, or block. It typically passes the verified operator identity on to the website.",
     site: "Receives the request, typically labeled with the verified operator identity, makes its own decisions and responds. The signature names the operator, not the end user: if the site needs to know which person the agent is acting for, that takes the site’s own login or an OAuth token.",
   },
@@ -65,7 +65,7 @@ This is identification, not authorization. A valid signature says “this reques
       kind: "self",
       label: "Publish key directory",
       title: "The operator publishes its public keys",
-      body: `A key directory in JWKS format, served over HTTPS from a well-known path on a domain the operator controls. That domain is the agent’s identity. The path and media type shown are those used in the drafts to date.`,
+      body: `A key directory in JWKS format, served over HTTPS at a URL the operator controls. That URL is the agent’s identifier. The example uses the well-known path the draft registers. A URL at that path names the operator’s domain, not just one path on it, and its key directory is served with the media type shown.`,
       code: {
         lang: "http",
         text: `GET /.well-known/http-message-signatures-directory HTTP/1.1
@@ -91,7 +91,7 @@ Content-Type: application/http-message-signatures-directory+json
       kind: "self",
       label: "Sign the request",
       title: "The agent signs each outgoing request",
-      body: `An RFC 9421 signature over, at minimum, the target authority and the \`Signature-Agent\` header. The signature parameters carry a creation time, a short expiry, the key ID, and a \`tag\` that marks the signature’s purpose.`,
+      body: `An RFC 9421 signature over, at minimum, the target authority and the agent’s entry in the \`Signature-Agent\` header. The signature parameters carry a creation time, a short expiry, the key ID, and a \`tag\` that marks the signature’s purpose.`,
     },
     {
       from: "agent",
@@ -101,17 +101,23 @@ Content-Type: application/http-message-signatures-directory+json
       title: "The request arrives with three extra headers",
       body: `\`Signature-Agent\` says where to find the keys. \`Signature-Input\` describes what was signed and how. \`Signature\` is the signature itself.
 
-The example shows \`Signature-Agent\` in its original string form, which is what most deployed verifiers accept. Later drafts redefine it as a structured dictionary, so check the revision your counterpart implements.`,
+\`Signature-Agent\` is a dictionary. Its entry is keyed by the signature’s label, here \`sig1\`, and holds the URL of the key directory. \`Signature-Input\` lists that entry among the signed parts as \`"signature-agent";key="sig1"\`.
+
+Earlier drafts sent the header as a bare string. The current draft requires signers to send the dictionary and lets a verifier still accept the string. A verifier built to an earlier draft may accept only the string, so check which one your counterpart implements.`,
+      // The Signature value is real: Ed25519 over this example's signature base, made with the
+      // test key of RFC 9421 Appendix B.1.4, whose public half is the key in step 1. If a signed
+      // value changes (the host, the Signature-Agent entry, a signature parameter), sign again
+      // or shorten the value with an ellipsis.
       code: {
         lang: "http",
         text: `GET /products/widget HTTP/1.1
 Host: shop.example
 User-Agent: ExampleAgent/2.1
-Signature-Agent: "https://agent.operator.example"
-Signature-Input: sig1=("@authority" "signature-agent");created=1794268800;
+Signature-Agent: sig1="https://agent.operator.example/.well-known/http-message-signatures-directory"
+Signature-Input: sig1=("@authority" "signature-agent";key="sig1");created=1794268800;
   expires=1794268860;keyid="poqkLGiymh_W0uP6PZFw-dvez3QJT5SolqXBCW38r0U";
   alg="ed25519";tag="web-bot-auth"
-Signature: sig1=:jdq0SqOwHdyHr9+r5jw3iYZH6aNGKijYp/EstF4RQTQdi5N5YYKrD+mCT1HA1nZDsi6nJKuHxUi/5Syp3rLWBA==:`,
+Signature: sig1=:tQjDZHcVQ+BJ29HnzMuNjWJr4UC8yyFlTJnPli1pWH6QpLOGt9uDi/hgBwEsoJlCzvng6mnE5u2Hf1wqCTScCw==:`,
       },
     },
     {
@@ -120,14 +126,14 @@ Signature: sig1=:jdq0SqOwHdyHr9+r5jw3iYZH6aNGKijYp/EstF4RQTQdi5N5YYKrD+mCT1HA1nZ
       kind: "back",
       label: "Fetch key directory",
       title: "The verifier looks up the operator’s keys",
-      body: `Using the URL from \`Signature-Agent\`, cached according to HTTP caching headers. A verifier may also keep its own registry of operators it recognizes. If you write the verifier yourself, treat that URL as hostile input: any visitor can put any address in the header. Fetch over HTTPS only, refuse private, loopback and link-local addresses, set a size and time limit, and cache. Or fetch only for operators you already recognize.`,
+      body: `The verifier fetches the URL in \`Signature-Agent\` directly, and caches the key directory according to HTTP caching headers. A verifier may also keep its own registry of operators it recognizes. If you write the verifier yourself, treat that URL as hostile input: any visitor can put any address in the header. Fetch over HTTPS only, refuse private, loopback and link-local addresses, set a size and time limit, and cache. Or fetch only for operators you already recognize.`,
     },
     {
       from: "edge",
       kind: "self",
       label: "Verify signature; apply policy",
       title: "The verifier checks the signature and decides",
-      body: `It rebuilds the signature base from the request, verifies it with the named key, and checks the time window. The request is now attributable to \`agent.operator.example\`. What happens next is policy: allow, rate-limit, serve a different representation, charge, or block.`,
+      body: `It rebuilds the signature base from the request, verifies it with the named key, and checks the time window. A valid signature shows that a holder of a key published at that URL signed the parts the signature covers. Here those are the site’s name and the \`Signature-Agent\` entry, so until it expires, anyone who saw this request could reuse the signature on another request to \`shop.example\`. What happens next is policy: allow, rate-limit, serve a different representation, charge, or block.`,
     },
     {
       from: "edge",
