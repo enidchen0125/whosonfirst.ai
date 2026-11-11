@@ -109,7 +109,7 @@ They restate the flow's own page. Do not put a fact in an overview that the page
 - A lesson may teach only terms that are in the glossary. `teaches` lists them, and the build checks each one.
 - Its figure must make its point in the state it first shows, and `glance` adds a table of every variation beneath it. Most readers never click.
 - A lesson simplifies; it must not contradict. Each lesson names, in a comment, the flow or data file that holds the full account.
-- A figure compares approaches, and a reader can take a comparison for a menu. Give an option that must not be built an `avoid` sentence: the figure then says "do not build" on its button, in its panel and in its table. Say why in the text with `Caution`. Keep both for what is dangerous, not for what is merely weaker.
+- A figure compares approaches, and a reader can take a comparison for a menu. Give an option that must not be built an `avoid` sentence: the figure then puts a warning sign on its button, says "do not build this" with the reason in its panel, and marks its row in the table. Say why in the text with `Caution`. Keep both for what is dangerous, not for what is merely weaker.
 - A question's right answer must not stand out by where it sits or how long it is. Write each wrong answer as a belief a reader could really hold, at about the length of the right one, and vary which comes first. `npm run check:rendered` counts both across all the lessons.
 
 **A line break before an inline element loses its space.** In an `.astro` template, text that ends a line followed by `<strong>`, `<a>`, `<em>` or `<code>` on the next runs into it on the page. Write `{' '}` at the end of the first line. `npm run check:rendered` finds any that slip through.

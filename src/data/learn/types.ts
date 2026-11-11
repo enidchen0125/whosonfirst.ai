@@ -47,9 +47,10 @@ export interface ScenarioOption {
   name: string;
   /**
    * Set where this variation is shown for comparison and must not be built: one
-   * plain sentence saying why. md-lite. The figure then says "do not build" on
-   * the choice itself, at the head of its panel and in the comparison table, so
-   * the warning depends neither on the text around the figure nor on a click.
+   * plain sentence saying why. md-lite. The figure then puts a warning sign on
+   * the choice itself, says "do not build this" with the reason at the head of
+   * its panel, and marks its row in the comparison table, so the warning
+   * depends neither on the text around the figure nor on a click.
    * A variation that is only an attack, or only weaker, does not need it; one a
    * reader might take for a design they could ship does.
    */

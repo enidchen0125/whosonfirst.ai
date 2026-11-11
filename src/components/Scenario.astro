@@ -17,6 +17,7 @@ import type { Scenario } from "../data/learn/types";
 import { VERDICT_WORD } from "../data/learn/types";
 import { codeThemes } from "../lib/code-themes.mjs";
 import { block, inline } from "../lib/md";
+import WarnIcon from "./WarnIcon.astro";
 
 interface Props {
   scenario: Scenario;
@@ -65,7 +66,12 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
             <input type="radio" name={s.id} value={o.id} data-n={i + 1} checked={o.id === initial} />
             <span>
               <span class="sc-name">{o.name}</span>
-              {o.avoid && <small class="sc-flag">do not build</small>}
+              {o.avoid && (
+                <span class="sc-flag" title="Do not build this">
+                  <WarnIcon size="1.05rem" />
+                  <span class="visually-hidden">, do not build</span>
+                </span>
+              )}
             </span>
           </label>
         ))
@@ -177,7 +183,12 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
                 <tr>
                   <th scope="row">
                     {o.name}
-                    {o.avoid && <span class="sc-flag">Do not build this</span>}
+                    {o.avoid && (
+                      <span class="sc-flag">
+                        <WarnIcon size="0.85rem" />
+                        Do not build this
+                      </span>
+                    )}
                   </th>
                   {o.findings.map((f, k) => (
                     <td data-q={s.questions[k]}>
@@ -290,25 +301,31 @@ const judged = s.options.some((o) => o.findings.some((f) => f.verdict));
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-  /* A variation shown for comparison and not to be built says so in words, in three
-     places: on its button, at the head of its panel and in the comparison table. On
-     the button it takes the button's own color, which inverts when chosen. */
-  .sc-flag {
+  /* A variation shown for comparison and not to be built is marked in three places.
+     Its button carries the warning sign alone, because the words would crowd a
+     control and the reason appears directly beneath once it is chosen. The head of
+     its panel says so in words, with the reason. The comparison table has the sign
+     and the words together, which is also where a reader who never clicks learns
+     what the sign on the button means. */
+  .sc-choices .sc-flag {
+    display: inline-flex;
+    color: var(--red);
+  }
+  /* a chosen button is inverted, and the sign takes the button's own color there */
+  .sc-choices input:checked + span .sc-flag {
+    color: inherit;
+  }
+  .sc-glance .sc-flag {
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
+    margin-top: 0.15rem;
     font-family: var(--font-label);
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     white-space: nowrap;
-  }
-  .sc-choices .sc-flag {
-    padding: 0.1rem 0.35rem;
-    border: 1px solid currentColor;
-    border-radius: var(--radius);
-  }
-  .sc-glance .sc-flag {
-    display: block;
-    margin-top: 0.15rem;
     color: var(--red);
   }
   .sc-avoid {
