@@ -152,7 +152,7 @@ Two things to ask of any agent that reads it:
 
 ## Accuracy
 
-A reference is only worth having if it is right. Revision numbers and dates in the tracker were taken from the IETF document mirror and specification repositories. Process states (for example “in last call”) came from secondary sources and are worded as reported. Vendor products are described from vendor documentation and were not tested, and mention is not recommendation. The [About page](https://whosonfirst.ai/about/) has the full method, and [`docs/source-review.md`](docs/source-review.md) is the checklist for each review.
+A reference is only worth having if it is right. In the tracker, IETF revision numbers, dates and process states (for example “in last call”) were read from the IETF datatracker and the RFC Editor, and other revisions from specification repositories. A state worded as reported came from a secondary source. Vendor products are described from vendor documentation and were not tested, and mention is not recommendation. The [About page](https://whosonfirst.ai/about/) has the full method, and [`docs/source-review.md`](docs/source-review.md) is the checklist for each review.
 
 **Found something wrong or out of date?** [Open a correction](https://github.com/kevinswiber/whosonfirst.ai/issues/new/choose) with the page, what it says, and a link to the source that shows otherwise, or send the change as a pull request. A revision number or a status that has moved is worth an issue by itself. [CONTRIBUTING.md](CONTRIBUTING.md) says what a correction needs.
 

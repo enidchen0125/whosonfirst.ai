@@ -38,8 +38,8 @@ const details = [
     note: `${standards.length - published - draftCount} projects and guidance`,
   },
   {
-    label: "Process states",
-    value: "As reported",
+    label: "IETF process states",
+    value: "Read from the datatracker",
     note: "How to read status",
     noteHref: "#reading-status",
   },
@@ -66,7 +66,7 @@ const moved = [
   },
   {
     when: "July",
-    what: "**MCP 2026-07-28**: the protocol becomes stateless, Dynamic Client Registration is deprecated, issuer validation is required, and the enterprise-managed and client-credentials extensions become stable.",
+    what: "**MCP 2026-07-28**: the protocol becomes stateless, Dynamic Client Registration is deprecated and issuer validation is required.",
   },
   {
     when: "August",
@@ -78,7 +78,7 @@ const moved = [
   },
   {
     when: "October",
-    what: "The IETF is reported to have formed two agent-related working groups, **agentproto** (agent communication) and **DAWN** (agent discovery). Neither is chartered to work on authentication or authorization. **ID-JAG** reaches revision -06.",
+    what: "The IETF charters two agent-related working groups, **agentproto** (agent communication) and **DAWN** (agent discovery). Neither is chartered to define a new authentication or authorization mechanism: agentproto’s charter says it will reuse existing ones, and DAWN’s puts identity management out of scope. **ID-JAG** reaches revision -06. The MCP **OAuth Client Credentials** extension moves to stable, as **Enterprise-Managed Authorization** did in June.",
   },
   {
     when: "November",
@@ -249,9 +249,9 @@ const moved = [
         <p>
           An IETF <strong>working group draft</strong> has been adopted by a group that intends to publish it, but can
           still change in incompatible ways. An <strong>individual draft</strong> is one or more people’s proposal and
-          carries no endorsement. Revision numbers and dates here were taken from the IETF document mirror and
-          specification repositories. Process states, such as “in last call,” come from secondary sources and are
-          worded as reported. Follow the source link before relying on any draft.
+          carries no endorsement. IETF revision numbers, dates and process states, such as “in last call,” were read
+          from the IETF datatracker and the RFC Editor, and other revisions from specification repositories. A state
+          worded as reported comes from a secondary source. Follow the source link before relying on any draft.
         </p>
       </div>
     </div>

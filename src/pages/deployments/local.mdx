@@ -1,8 +1,8 @@
 ---
 layout: ../../layouts/Article.astro
 title: Desktop, IDE, CLI and CI agents
-description: Agents on a user's machine are public OAuth clients. Agents in a pipeline have a platform identity. How each should authenticate, where tokens live, and what to do about stdio MCP servers.
-lede: An agent on someone's laptop has a human close by and no identity of its own. An agent in a pipeline has an identity and no human. Each has a well-trodden path, and both paths avoid a pasted API key.
+description: Agents on a user’s machine are public OAuth clients. Agents in a pipeline have a platform identity. How each should authenticate, where tokens live, and what to do about stdio MCP servers.
+lede: An agent on someone’s laptop has a human close by and no identity of its own. An agent in a pipeline has an identity and no human. Each has a well-trodden path, and both paths avoid a pasted API key.
 section:
   label: Deployments
   href: /deployments/
@@ -81,7 +81,7 @@ The token's claims describe the job: repository, branch or tag, environment, wor
 
 **Be specific in the trust rule.** A rule that accepts any token from the CI provider's issuer accepts every repository on that provider. Pin the repository and, for anything sensitive, the branch or environment.
 
-**Watch the subject format.** GitHub announced in 2026 that newly created repositories default to subject claims built from immutable owner and repository IDs instead of names. Rules that pattern-match on names need attention when new repositories are added.
+**Watch the subject format.** A repository created on GitHub after July 15, 2026 has a default subject that keeps the owner and repository names and adds the immutable ID of each: `repo:octo-org@123456/octo-repo@456789:ref:refs/heads/main`. An older repository keeps the earlier form, `repo:octo-org/octo-repo:ref:refs/heads/main`, unless its owner opts in, or it is renamed or transferred. GitHub Enterprise Server does not have the new form. A trust rule has to match the form the repository uses, so a rule written around the names alone does not match a new repository. GitHub documents both forms, and how to opt in, under [Immutable subject claims](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims).
 
 **An agent in CI is still an agent.** If the job runs a model that reads pull request content, it is processing untrusted input with the pipeline's credentials. Give agent steps the least privilege of any step in the workflow, and keep deploy credentials in a separate job. Set `id-token` on the one job that needs it, as above, not for the whole workflow. Anything that job runs can request the token, so if it also runs a model over pull request content, make the trust rule grant only what the model's task needs.
 

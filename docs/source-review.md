@@ -42,18 +42,19 @@ Every entry in `src/data/standards.ts` with `status: "wg-draft"` or `status: "dr
 
 Source: `https://datatracker.ietf.org/doc/<draft-name>/doc.json`. The draft name is the entry's `ref`. The entry `actor-profile` names two drafts in `ref`; check both.
 
-| Compare                               | With                                                                                                            |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Revision in `detail` ("Revision -17") | `rev`                                                                                                           |
-| Month in `detail`                     | `published` of the last item in `rev_history`. Not `time`, which changes whenever the document's metadata does  |
-| Process state in `detail`             | `iesg_state`, `rfceditor_state`, and `state` (an expired draft reads "Expired")                                 |
-| `status`                              | `group.type`: a draft adopted by a working group gets a new name, and the old name's page says what replaced it |
+| Compare                               | With                                                                                                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Revision in `detail` ("Revision -17") | `rev`                                                                                                                                     |
+| Month in `detail`                     | `published` of the last item in `rev_history`. Not `time`, which changes whenever the document's metadata does                            |
+| A full date, where the site gives one | The date on the draft's first page. `published` is in UTC, and the datatracker's web pages print local dates, which can be the day before |
+| Process state in `detail`             | `iesg_state`, `rfceditor_state`, and `state` (an expired draft reads "Expired")                                                           |
+| `status`                              | `group.type`: a draft adopted by a working group gets a new name, and the old name's page says what replaced it                           |
 
 Also report:
 
 - A draft published as an RFC. Give the RFC number and date from `https://www.rfc-editor.org/rfc/rfc<number>.json`.
 - A draft adopted, replaced, renamed or expired.
-- What changed in a new revision, when the `detail` describes the previous one ("That revision changed the header syntax") or a flow page shows syntax the revision changed. The draft's change log or the diff linked from its datatracker page is the source.
+- What changed in a new revision, when the `detail` describes the previous one ("Revision -12 defines its header fields as Structured Fields") or a flow page shows syntax the revision changed. The draft's change log or the diff linked from its datatracker page is the source.
 
 ### Other drafts and versioned specifications
 
@@ -65,7 +66,7 @@ And the specifications that publish dated or numbered revisions:
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mcp-authorization`, `mcp-elicitation` | The current MCP revision, and whether a release candidate or a new revision has been announced. Source: the specification's versioning page and the `modelcontextprotocol/modelcontextprotocol` repository |
 | `mcp-ema`, `mcp-client-credentials`    | Each extension's revision and stage in `modelcontextprotocol/ext-auth`                                                                                                                                     |
-| `a2a`                                  | Latest released version                                                                                                                                                                                    |
+| `a2a`                                  | Latest released version, and that the `url` names it: `/latest/` on the project's site is the development build                                                                                            |
 | `spiffe`                               | Stability of each document type, WIT-SVID in particular                                                                                                                                                    |
 | `k8s-*`                                | The current stable Kubernetes release, and the stage of each feature named. Source: `https://kubernetes.io/releases/` and the feature gates reference                                                      |
 
@@ -78,7 +79,7 @@ A published specification pins the draft revision it was written against. The si
 | MCP 2026-07-28 requires OAuth 2.1 and cites draft -13; the current draft is -17                                         | `standards.ts` (`mcp-authorization`); `flows/mcp-authorization.ts` (comment in `roles`, and the note on what the revision rests on) |
 | MCP 2026-07-28 cites Client ID Metadata Documents -00; the MCP draft revision moves to -03                              | `standards.ts` (`cimd`, `mcp-authorization`); `flows/mcp-authorization.ts`                                                          |
 | The MCP enterprise-managed authorization extension pins ID-JAG -04; the draft is at -06                                 | `standards.ts` (`id-jag`); `flows/cross-app-access.ts` (cautions)                                                                   |
-| OAuth 2.1 is at revision -17 dated October 30, 2026, and gathers the RFCs listed                                        | `flows/authorization-code-pkce.ts` (notes)                                                                                          |
+| OAuth 2.1 is at revision -17 dated October 31, 2026, and gathers the RFCs listed                                        | `flows/authorization-code-pkce.ts` (notes)                                                                                          |
 | AAuth is at revision -11, which added the person token and the five access modes, and builds on HTTP Signature Keys -09 | `standards.ts` (`aauth-hardt`, `signature-key`); `flows/aauth.ts` (every step, the comparison, cautions and notes)                  |
 
 ### Projects with releases
@@ -91,37 +92,37 @@ A project entry has a maturity level only if `level` is set on it, with its evid
 
 Statements about the future, or about a process that was unfinished at the last review. Report each as happened, not yet, or no longer expected. Whoever applies the report removes the rows that are settled and adds any the new wording creates.
 
-| The site says                                                                                     | Where                                                                                 |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| OAuth 2.1: submission to the IESG is targeted for December 2026                                   | `standards.ts` (`oauth-2-1`)                                                          |
-| RFC 6749 is the current standard until OAuth 2.1 is published                                     | `standards.ts` (`rfc6749`)                                                            |
-| Identity chaining: approved and in the RFC Editor queue; no RFC number yet                        | `standards.ts` (`identity-chaining`)                                                  |
-| Transaction tokens: third working group last call complete, awaiting write-up                     | `standards.ts` (`txn-tokens`); `flows/transaction-tokens.ts` (notes)                  |
-| Attestation-based client authentication: -12 followed a working group last call                   | `standards.ts` (`attestation-client-auth`)                                            |
-| SPIFFE client authentication: waiting on a WIMSE dependency                                       | `standards.ts` (`spiffe-client-auth`)                                                 |
-| WIMSE HTTP signatures: submitted to the IESG                                                      | `standards.ts` (`wimse-httpsig`)                                                      |
-| WIMSE practices: in IETF Last Call in November 2026; would be the first WIMSE RFC                 | `standards.ts` (`wimse-practices`)                                                    |
-| No WIMSE document is an RFC yet                                                                   | `standards.ts` (`wimse-arch`)                                                         |
-| HTTP Signature-Key: call for adoption issued, outcome not confirmed                               | `standards.ts` (`signature-key`); `flows/aauth.ts` (notes)                            |
-| AAuth (Hardt): the work is moving to a new OpenID Foundation working group                        | `standards.ts` (`aauth-hardt`); `flows/aauth.ts` (notes)                              |
-| AAuth (Hardt): the draft lists four implementations, each marked exploratory                      | `flows/aauth.ts` (cautions)                                                           |
-| Mission-bound and actor drafts: individual, not adopted                                           | `standards.ts` (`mission-bound`, `actor-profile`, `txn-tokens-agents`, `scim-agents`) |
-| RFC 9700: an update draft is in progress                                                          | `standards.ts` (`rfc9700`)                                                            |
-| RFC 9396: a companion draft is headed for working group adoption                                  | `standards.ts` (`rfc9396`)                                                            |
-| RFC 9901: the SD-JWT VC draft is in IESG evaluation                                               | `standards.ts` (`rfc9901`)                                                            |
-| RFC 8693: no revision is in progress                                                              | `standards.ts` (`rfc8693`)                                                            |
-| MCP: the next release is planned for March 2027                                                   | `standards.ts` (`mcp-authorization`)                                                  |
-| MCP: Dynamic Client Registration may be removed from July 2027                                    | `standards.ts` (`rfc7591`)                                                            |
-| MCP elicitation is still marked as subject to change                                              | `standards.ts` (`mcp-elicitation`); `flows/url-elicitation.ts` (cautions)             |
-| Kubernetes v1.38 is planned for December; v1.37 is the current stable release                     | `deployments/kubernetes.mdx`                                                          |
-| WIT-SVID is incubating; SPIRE's support is experimental, behind a flag                            | `standards.ts` (`spiffe`, `spire`); `flows/wimse-workload-tokens.ts` (notes)          |
-| Agent Sandbox is at version 1.0 with a `v1beta1` API                                              | `standards.ts` (`k8s-agent-sandbox`); `deployments/kubernetes.mdx`                    |
-| AP2: donated to the FIDO Alliance; no FIDO-published draft yet                                    | `standards.ts` (`ap2`, `verifiable-intent`)                                           |
-| Decentralized Identifiers 1.1 is at Candidate Recommendation                                      | `standards.ts` (`vc-data-model`)                                                      |
-| An OWASP MCP Top 10 is in beta                                                                    | `standards.ts` (`owasp-agentic`)                                                      |
-| The NIST concept paper is a draft                                                                 | `standards.ts` (`nist-agent-identity`)                                                |
-| Google's agent identity for external workloads is in Preview                                      | `flows/workload-identity-federation.ts` (documented implementations)                  |
-| agentproto and DAWN are reported formed; neither is chartered for authentication or authorization | `pages/standards/index.astro` (`moved`)                                               |
+| The site says                                                                                                                             | Where                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| OAuth 2.1: submission to the IESG is targeted for December 2026                                                                           | `standards.ts` (`oauth-2-1`)                                                          |
+| RFC 6749 is the current standard until OAuth 2.1 is published                                                                             | `standards.ts` (`rfc6749`)                                                            |
+| Identity chaining: approved and in the RFC Editor queue; no RFC number yet                                                                | `standards.ts` (`identity-chaining`)                                                  |
+| Transaction tokens: third working group last call complete, awaiting write-up                                                             | `standards.ts` (`txn-tokens`); `flows/transaction-tokens.ts` (notes)                  |
+| Attestation-based client authentication: working group consensus, waiting for its write-up                                                | `standards.ts` (`attestation-client-auth`)                                            |
+| SPIFFE client authentication: waiting on a WIMSE dependency                                                                               | `standards.ts` (`spiffe-client-auth`)                                                 |
+| WIMSE HTTP signatures: submitted to the IESG                                                                                              | `standards.ts` (`wimse-httpsig`)                                                      |
+| WIMSE practices: in IETF Last Call until November 13, 2026; would be the first WIMSE RFC                                                  | `standards.ts` (`wimse-practices`)                                                    |
+| No WIMSE document is an RFC yet                                                                                                           | `standards.ts` (`wimse-arch`)                                                         |
+| HTTP Signature-Key: an individual draft; the HTTP working group had no consensus to adopt it "at this time" (September 2026)              | `standards.ts` (`signature-key`); `flows/aauth.ts` (notes)                            |
+| AAuth (Hardt): adopted as a working group at the OpenID Foundation, by its author's account; the specification work has yet to move there | `standards.ts` (`aauth-hardt`); `flows/aauth.ts` (notes)                              |
+| AAuth (Hardt): the draft lists four implementations, each marked exploratory                                                              | `flows/aauth.ts` (cautions)                                                           |
+| Mission-bound and actor drafts: individual, not adopted                                                                                   | `standards.ts` (`mission-bound`, `actor-profile`, `txn-tokens-agents`, `scim-agents`) |
+| RFC 9700: an update draft is in progress                                                                                                  | `standards.ts` (`rfc9700`)                                                            |
+| RFC 9901: the SD-JWT VC draft is in IESG evaluation                                                                                       | `standards.ts` (`rfc9901`)                                                            |
+| RFC 8693: no revision is in progress                                                                                                      | `standards.ts` (`rfc8693`)                                                            |
+| MCP: the next release is planned for March 2027                                                                                           | `standards.ts` (`mcp-authorization`)                                                  |
+| MCP: Dynamic Client Registration may be removed from July 2027                                                                            | `standards.ts` (`rfc7591`)                                                            |
+| MCP elicitation is still marked as subject to change                                                                                      | `standards.ts` (`mcp-elicitation`); `flows/url-elicitation.ts` (cautions)             |
+| Kubernetes v1.38 is planned for December; v1.37 is the current stable release; v1.35 to v1.37 are the maintained releases                 | `deployments/kubernetes.mdx`                                                          |
+| WIT-SVID is incubating; SPIRE's support is experimental, behind a flag                                                                    | `standards.ts` (`spiffe`, `spire`); `flows/wimse-workload-tokens.ts` (notes)          |
+| Agent Sandbox is at version 1.0 with a `v1beta1` API                                                                                      | `standards.ts` (`k8s-agent-sandbox`); `deployments/kubernetes.mdx`                    |
+| AP2: donated to the FIDO Alliance; no FIDO-published draft yet                                                                            | `standards.ts` (`ap2`, `verifiable-intent`)                                           |
+| Decentralized Identifiers 1.1 is at Candidate Recommendation                                                                              | `standards.ts` (`vc-data-model`)                                                      |
+| An OWASP MCP Top 10 is in beta                                                                                                            | `standards.ts` (`owasp-agentic`)                                                      |
+| The NIST concept paper is a draft; NIST's site titles its agent initiative the SI Agent Standards Initiative                              | `standards.ts` (`nist-agent-identity`)                                                |
+| Google's agent identity for external workloads is in Preview                                                                              | `flows/workload-identity-federation.ts` (documented implementations)                  |
+| Microsoft Entra's flexible federated identity credentials are in preview                                                                  | `standards.ts` (`entra-wif`)                                                          |
+| agentproto and DAWN: neither is chartered to define a new authentication or authorization mechanism                                       | `pages/standards/index.astro` (`moved`)                                               |
 
 To catch statements this table has missed, search `src/` for: `reported`, `planned`, `targeted`, `not confirmed`, `in progress`, `yet`, `still`, `expected`, `headed`.
 
@@ -134,7 +135,7 @@ These pages describe products, and products change stage and name without notice
 **`src/pages/deployments/agent-platforms.mdx`.** Every paragraph that names a vendor. For each, check the vendor's current documentation for the product's name, whether the described mechanism is still how it works, and its release stage:
 
 - AWS: Amazon Bedrock AgentCore Identity, including the on-behalf-of exchange
-- Microsoft: Entra Agent ID (blueprint, agent identity, agent user)
+- Microsoft: Entra Agent ID (blueprint, agent identity, agent's user account)
 - Google Cloud: Agent Identity (SPIFFE ID, X.509 certificate, IAM principal)
 - Okta: Cross App Access
 - Auth0: Auth0 for AI Agents
@@ -171,7 +172,7 @@ In January, April, July and October.
 
 ### RFCs
 
-Every entry with `status: "rfc"`. Source: `https://www.rfc-editor.org/rfc/rfc<number>.json`. Report anything in `updated_by` or `obsoleted_by` that the entry's `detail` does not mention, and any change of BCP number.
+Every entry with `status: "rfc"`. Source: `https://www.rfc-editor.org/rfc/rfc<number>.json`. Report anything in `updated_by` or `obsoleted_by` that the entry's `detail` does not mention, and any change of BCP number. The JSON's `see_also` is empty: read the BCP number from the first page of `https://www.rfc-editor.org/rfc/rfc<number>.txt`.
 
 An RFC being updated does not change its status or a flow's rating. It may change what a flow page should say.
 
@@ -181,7 +182,7 @@ Every entry with `status: "final"` not already covered above: OpenID Foundation 
 
 ### Guidance
 
-Every entry with `status: "guidance"`. Check for a new edition and that the `url` still resolves. Two of these link to a site's front page, not a document; report a stable link to the document if one exists.
+Every entry with `status: "guidance"`. Check for a new edition and that the `url` still resolves.
 
 ### Links
 
@@ -217,7 +218,7 @@ For the person, or the session, that makes the changes. One fact is often stated
    - "read in November 2026" in `src/data/flows/workload-identity-federation.ts`
 
    The last two are dates for those pages alone. Change them only if those pages were re-read.
-8. **How facts were checked.** `src/pages/about.mdx` and the Accuracy section of `README.md` say which facts came from primary sources and which were reported. If a run read process states from the datatracker itself, that description changes.
+8. **How facts were checked.** `src/pages/about.mdx`, the Accuracy section of `README.md`, the comment at the top of `src/data/standards.ts`, and the page facts and "Reading status correctly" on the standards page say which facts came from primary sources and which were reported. They say IETF process states were read from the datatracker. If a run could not read them there, that description changes.
 9. Run `npm run check`, `npm test` and `npm run build`.
 
 ## Domains a run needs
@@ -244,7 +245,8 @@ agenticcommerce.dev
 www.agenticcommerce.dev
 genai.owasp.org
 owasp.org
-www.nccoe.nist.gov
+csrc.nist.gov
+www.nist.gov
 docs.aws.amazon.com
 aws.amazon.com
 docs.cloud.google.com
@@ -256,11 +258,12 @@ www.keycloak.org
 developer.hashicorp.com
 developers.cloudflare.com
 platform.claude.com
+www.anthropic.com
 developers.openai.com
 ```
 
-Through `aws.amazon.com`, these are the hosts the tracker's `url` fields and the flows' `sources` link to, plus what the checks above read: `author-tools.ietf.org` for diffs between draft revisions, `api.github.com` and `raw.githubusercontent.com` for releases and files of projects hosted on GitHub, and `www.agenticcommerce.dev`, where `agenticcommerce.dev` redirects. From `developer.okta.com` on, they are the documentation sites of the vendors on the agent platforms page, which links to none of them; they are where that review starts, and a vendor may keep the relevant page elsewhere.
+Through `aws.amazon.com`, these are the hosts the tracker's `url` fields and the flows' `sources` link to, plus what the checks above read: `author-tools.ietf.org` for diffs between draft revisions, `api.github.com` and `raw.githubusercontent.com` for releases and files of projects hosted on GitHub, and `www.agenticcommerce.dev`, where `agenticcommerce.dev` redirects. From `developer.okta.com` on, they are the documentation sites of the vendors on the agent platforms page, which links to them only beside a few facts; they are where that review starts, and a vendor may keep the relevant page elsewhere.
 
-When a link is added to the tracker or to a flow's `sources`, add its host here.
+When a link is added to the tracker, to a flow's `sources` or to a deployment guide, add its host here.
 
 Being on the list does not mean a host answers. If one refuses the run, list the items that depend on it as not checked, with what was tried.

@@ -45,7 +45,7 @@ There is no standard for this pattern. These are implementations and building bl
 
 | Implementation | Approach |
 | --- | --- |
-| Claude Managed Agents vaults | Credentials are attached to a session by reference and never enter the sandbox. Calls to MCP servers and git go through proxies that add the credential; environment-variable secrets appear as placeholders that are substituted at egress, only for their allowed hosts, and only in headers and bodies |
+| Claude Managed Agents vaults | Credentials are attached to a session by reference, and vault secrets stay outside the sandbox. Calls to MCP servers go through a proxy that adds the credential; environment-variable secrets appear as placeholders that are substituted at egress, only for their allowed hosts, and only in headers and bodies. A mounted repository's token is separate: it is [wired into the local git remote](https://www.anthropic.com/research/managed-agents), and code in the sandbox can [fetch and push with it](https://platform.claude.com/docs/en/managed-agents/secure-deployment#keep-credentials-in-vaults) |
 | Fly.io Tokenizer (open source) | The client holds a secret *encrypted to the proxy's key* and sends it with the request. Only the proxy can open it, and the sealed value carries its own rule for which hosts it may go to |
 | agentgateway (open source) | An egress-proxy mode with destination allow-listing and optional TLS termination, plus backend authentication policies that attach or exchange credentials |
 | Agent Router (open source) | Per-backend credential injection for MCP servers, with a policy for whether a caller-supplied token may override it |

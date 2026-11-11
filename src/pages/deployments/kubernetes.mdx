@@ -1,7 +1,7 @@
 ---
 layout: ../../layouts/Article.astro
 title: Agents on Kubernetes
-description: How an AI agent running as a pod gets an identity, reaches cloud and external services without stored secrets, authenticates to other workloads, and carries a user's delegation.
+description: How an AI agent running as a pod gets an identity, reaches cloud and external services without stored secrets, authenticates to other workloads, and carries a user’s delegation.
 lede: A pod already has more identity than most agents ever use. Kubernetes signs a statement about every workload it runs; the work is in turning that statement into exactly the access the agent needs, and nothing else.
 section:
   label: Deployments
@@ -76,7 +76,7 @@ The first four identify the **workload**: which pod, which service account, whic
 
 ## What ships in Kubernetes
 
-The current stable release is **v1.37** (August 2026); v1.38 is planned for December. Everything in the first group below is generally available in supported releases.
+The current stable release is **v1.37** (August 2026); v1.38 is planned for December. Kubernetes maintains its three most recent minor releases, now v1.35, v1.36 and v1.37. A capability marked GA in v1.34 or earlier is generally available in all three. One marked GA in v1.36 or v1.37 is generally available only from that release.
 
 <div class="table-scroll" tabindex="0" role="region" aria-label="Table: What ships in Kubernetes">
 

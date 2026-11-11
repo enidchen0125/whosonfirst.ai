@@ -4,9 +4,10 @@ import type { Standard } from "./types";
  * The standards tracker.
  *
  * Status and revision details were checked in November 2026 (see data/site.ts).
- * Revision numbers and dates come from the IETF document mirror and from
- * specification repositories. Process states ("in last call", "with the RFC
- * Editor") are reported from secondary sources and are worded accordingly.
+ * IETF revision numbers, dates and process states ("in last call", "with the
+ * RFC Editor") were read from the IETF datatracker and the RFC Editor, and
+ * other revisions from specification repositories. A state worded as
+ * "reported" comes from a secondary source.
  */
 
 const rfc = (n: number) => `https://www.rfc-editor.org/rfc/rfc${n}`;
@@ -36,7 +37,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "October 2012. Still the current standard until OAuth 2.1 is published.",
+      "October 2012. Updated by RFCs 8252, 8996 and 9700. Still the current standard until OAuth 2.1 is published.",
     topics: ["core"],
     summary:
       "Defines the roles (client, authorization server, resource server) and the core grants: authorization code, client credentials, refresh.",
@@ -50,7 +51,7 @@ export const standards: Standard[] = [
     ref: "RFC 6750",
     body: "IETF",
     status: "rfc",
-    detail: "October 2012.",
+    detail: "October 2012. Updated by RFCs 8996 and 9700.",
     topics: ["core"],
     summary:
       "The `Authorization: Bearer` header and the `WWW-Authenticate` error vocabulary, including `insufficient_scope`.",
@@ -147,7 +148,7 @@ export const standards: Standard[] = [
     ref: "RFC 7519",
     body: "IETF",
     status: "rfc",
-    detail: "May 2015.",
+    detail: "May 2015. Updated by RFCs 7797 and 8725.",
     topics: ["core"],
     summary:
       "A compact way to carry claims between two parties, signed or encrypted, with seven registered claims: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat` and `jti`. A recipient not named in `aud` must reject the token, and no one may accept it at or after `exp`.",
@@ -321,7 +322,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -12, October 2026, following a working group last call in September. That revision changed the header syntax in a wire-breaking way.",
+      "Revision -12, October 2026. A working group last call opened in September 2026; since October the draft has working group consensus and is waiting for its write-up. Revision -12 defines its header fields as Structured Fields in place of the token68 syntax.",
     topics: ["registration", "proof-of-possession"],
     summary:
       "A client instance presents an attestation from its platform or backend, plus proof of possession of a key, to authenticate.",
@@ -369,7 +370,7 @@ export const standards: Standard[] = [
     summary:
       "Fixes an audience-confusion weakness in client assertions: the audience must be the authorization server’s issuer identifier.",
     agents:
-      "Any agent using `private_key_jwt` or JWT bearer grants should follow it. Published this month.",
+      "Any agent using `private_key_jwt` or JWT bearer grants should follow it. Published in November 2026.",
     url: rfc(10070),
   },
 
@@ -391,12 +392,12 @@ export const standards: Standard[] = [
   },
   {
     id: "id-jag",
-    name: "Identity Assertion Authorization Grant (ID-JAG)",
+    name: "Identity Assertion JWT Authorization Grant (ID-JAG)",
     ref: "draft-ietf-oauth-identity-assertion-authz-grant",
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -06, October 2026. OAuth working group document. Revisions -05 and -06 tightened audience rules and added key binding. The MCP extension pins -04.",
+      "Revision -06, October 2026. OAuth working group document. Revision -05 limited a token exchange request to one audience and added mutual TLS certificate binding as an alternative to DPoP. Revision -06 changed the error returned for a subject token that fails validation. The MCP extension pins -04.",
     topics: ["delegation"],
     summary:
       "An enterprise identity provider issues a short-lived grant that another application’s authorization server exchanges for an access token, with no user redirect. Also called Cross-App Access.",
@@ -411,7 +412,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -17, July 2026. Reported approved and in the RFC Editor queue since June 2026; no RFC number yet.",
+      "Revision -17, July 2026. Approved by the IESG and in the RFC Editor queue since June 2026; no RFC number yet.",
     topics: ["delegation"],
     summary:
       "Token exchange in one domain yields a JWT grant that is redeemed at another domain’s authorization server.",
@@ -426,7 +427,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -11, July 2026. Reported to have completed a third working group last call and to be awaiting write-up.",
+      "Revision -11, July 2026. A third working group last call ended in August 2026; the draft has working group consensus and is waiting for its write-up.",
     topics: ["delegation", "workload"],
     summary:
       "A short-lived, signed token that carries user identity and immutable request context through a call chain inside one trust domain.",
@@ -557,7 +558,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "May 2023. A companion draft on metadata and error remediation is reported to be headed for working group adoption.",
+      "May 2023. A companion draft on metadata and error remediation was adopted by the OAuth working group in August 2026.",
     topics: ["human-in-the-loop", "authorization"],
     summary:
       "`authorization_details`: a structured JSON description of exactly what is being authorized, in place of coarse scope strings.",
@@ -582,7 +583,7 @@ export const standards: Standard[] = [
   },
   {
     id: "aauth-rosenberg",
-    name: "AAuth: Agentic Authorization Grant",
+    name: "AAuth: Agentic Authorization OAuth 2.1 Extension",
     ref: "draft-rosenberg-oauth-aauth",
     body: "IETF",
     status: "draft",
@@ -601,7 +602,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "draft",
     detail:
-      "Revision -11, September 2026. Individual draft with several companions. That revision added the person token and arranged access into five modes. Its author reports the work is moving to a new OpenID Foundation working group.",
+      "Revision -11, September 2026. Individual draft with several companions. That revision added the person token and arranged access into five modes. Its author’s repository says AAuth has been adopted as a working group at the OpenID Foundation, and that specification work will move there.",
     topics: ["proof-of-possession", "delegation", "agent-protocol"],
     summary:
       "Not an OAuth extension. Every agent has its own key and signs every request with HTTP Message Signatures; there are no bearer tokens and no pre-registration.",
@@ -673,7 +674,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "draft",
     detail:
-      "Revision -09, September 2026. Individual draft; a call for adoption in the HTTP working group was issued, outcome not confirmed.",
+      "Revision -09, September 2026. Individual draft. A call for adoption in the HTTP working group ended in September 2026 with no consensus to adopt it at this time.",
     topics: ["proof-of-possession"],
     summary:
       "A header for conveying or referencing the public key that verifies an HTTP message signature.",
@@ -780,7 +781,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -08, October 2026. Reported as submitted to the IESG for publication.",
+      "Revision -08, October 2026. Submitted to the IESG for publication in October 2026.",
     topics: ["workload", "proof-of-possession"],
     summary:
       "Workload-to-workload authentication using HTTP Message Signatures with the Workload Identity Token key. Responses can be signed too.",
@@ -795,7 +796,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "wg-draft",
     detail:
-      "Revision -08, October 2026. Informational. Reported to be in IETF Last Call in November 2026, which would make it the first WIMSE RFC.",
+      "Revision -08, October 2026. Informational. Its IETF Last Call ends on November 13, 2026. It would be the first WIMSE RFC.",
     topics: ["workload", "guidance", "kubernetes"],
     summary:
       "A survey of how credentials reach workloads today without long-lived secrets: Kubernetes projected tokens, cloud metadata services, SPIFFE, CI/CD OIDC.",
@@ -1019,7 +1020,7 @@ export const standards: Standard[] = [
     body: "Microsoft",
     status: "project",
     detail:
-      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported.",
+      "Platform documentation. The issuer, subject and audience of the incoming token must match the configured values exactly; wildcards are not supported. The one exception is in preview: a [flexible federated identity credential](https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-flexible-federated-identity-credentials) can match the subject of a GitHub, GitLab or Terraform Cloud token with wildcards.",
     topics: ["workload"],
     summary:
       "An app registration or a user-assigned managed identity is configured, through a federated identity credential, to trust tokens from an outside issuer. The workload sends that token as the client assertion on a client credentials request and receives a Microsoft Entra access token.",
@@ -1130,7 +1131,7 @@ export const standards: Standard[] = [
       "Agents publish an Agent Card declaring their skills and security schemes (API key, HTTP, OAuth 2.0, OpenID Connect, mutual TLS). Cards can be signed. A task state signals that further authorization is needed.",
     agents:
       "Defines how requirements are declared between agents, and leaves obtaining credentials to OAuth and its relatives.",
-    url: "https://a2a-protocol.org/latest/specification/",
+    url: "https://a2a-protocol.org/v1.0.1/specification/",
   },
   {
     id: "web-bot-auth",
@@ -1199,7 +1200,7 @@ export const standards: Standard[] = [
     body: "OpenID Foundation",
     status: "wg-draft",
     detail:
-      "Draft 1, announced June 2026 with the protocol-neutral COAZ framework. Supersedes the earlier “AuthZEN profile for MCP.”",
+      "Draft 1. The AuthZEN working group approved a single COAZ profile for MCP as a working group draft in June 2026, then split it in two. This binding and the protocol-neutral COAZ Framework were announced in July 2026.",
     topics: ["authorization", "agent-protocol"],
     summary:
       "Maps MCP requests to AuthZEN authorization requests for parameter-level decisions, with mappings declared per tool.",
@@ -1232,7 +1233,7 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "rfc",
     detail:
-      "November 2025. The companion SD-JWT VC draft is reported to be in IESG evaluation.",
+      "November 2025. The companion SD-JWT VC draft is in IESG evaluation.",
     topics: ["credentials"],
     summary:
       "Selective Disclosure for JWTs: a signed credential whose holder can reveal only chosen claims, with key binding.",
@@ -1251,7 +1252,7 @@ export const standards: Standard[] = [
     topics: ["credentials"],
     summary: "A protocol for requesting and presenting verifiable credentials.",
     agents:
-      "How an agent, or a user on its behalf, presents a signed mandate to a verifier.",
+      "In AP2, how a mandate gets signed: the agent sends the request, and the holder of the user’s credential answers with the user-signed mandate.",
     url: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
   },
   {
@@ -1340,7 +1341,7 @@ export const standards: Standard[] = [
     summary:
       "Revives HTTP status 402: a server states its price, and the client retries with a signed payment.",
     agents:
-      "Payment as the credential. No identity layer; suited to pay-per-call access by autonomous agents.",
+      "Payment as the credential. The core protocol has no identity layer; extensions add one, such as HTTP Message Signatures that identify the paying agent. Suited to pay-per-call access by autonomous agents.",
     url: "https://github.com/x402-foundation/x402",
   },
 
@@ -1380,13 +1381,13 @@ export const standards: Standard[] = [
     body: "NIST",
     status: "guidance",
     detail:
-      "Draft concept paper, February 2026. NIST also launched an AI Agent Standards Initiative the same month.",
+      "Draft concept paper, February 2026. NIST announced an AI Agent Standards Initiative the same month, which its site now titles the SI Agent Standards Initiative.",
     topics: ["guidance"],
     summary:
       "Proposes a demonstration project applying existing identity standards to enterprise agents.",
     agents:
       "Signals which standards a US government reference architecture is likely to draw on: MCP, OAuth, OpenID Connect, SPIFFE, SCIM.",
-    url: "https://www.nccoe.nist.gov/",
+    url: "https://csrc.nist.gov/pubs/other/2026/02/05/accelerating-the-adoption-of-software-and-ai-agent/ipd",
   },
   {
     id: "owasp-agentic",
@@ -1399,7 +1400,7 @@ export const standards: Standard[] = [
     summary:
       "The ten most significant risks in agentic systems. Identity and privilege abuse is one of them.",
     agents: "A threat checklist to review any design on this site against.",
-    url: "https://genai.owasp.org/",
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
   },
   {
     id: "owasp-nhi",
@@ -1413,7 +1414,7 @@ export const standards: Standard[] = [
       "The common failures with service accounts, keys and tokens: long-lived secrets, over-privilege, improper offboarding, reuse.",
     agents:
       "Every agent is a non-human identity. Most real incidents are on this list.",
-    url: "https://owasp.org/www-project-non-human-identities-top-10/",
+    url: "https://owasp.org/projects/non-human-identities-top-10",
   },
   {
     id: "cosai-agentic-iam",
