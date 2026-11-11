@@ -601,12 +601,12 @@ export const standards: Standard[] = [
     body: "IETF",
     status: "draft",
     detail:
-      "Revision -11, September 2026. Individual draft with several companions. Its author reports the work is moving to a new OpenID Foundation working group.",
+      "Revision -11, September 2026. Individual draft with several companions. That revision added the person token and arranged access into five modes. Its author reports the work is moving to a new OpenID Foundation working group.",
     topics: ["proof-of-possession", "delegation", "agent-protocol"],
     summary:
       "Not an OAuth extension. Every agent has its own key and signs every request with HTTP Message Signatures; there are no bearer tokens and no pre-registration.",
     agents:
-      "A clean-slate design for agent identity and authorization. The other AAuth.",
+      "A clean-slate design for agent identity and authorization. One of two unrelated proposals called AAuth. This one does not extend OAuth.",
     url: draft("draft-hardt-oauth-aauth-protocol"),
   },
 
@@ -678,7 +678,7 @@ export const standards: Standard[] = [
     summary:
       "A header for conveying or referencing the public key that verifies an HTTP message signature.",
     agents:
-      "Would give signed-request schemes a common way to find the signer’s key.",
+      "Would give signed-request schemes a common way to find the signer’s key. AAuth is built on it.",
     url: draft("draft-hardt-httpbis-signature-key"),
   },
 

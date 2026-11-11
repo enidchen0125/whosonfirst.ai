@@ -10,6 +10,11 @@ export interface Term {
 /** md-lite formatting is allowed in `def`. Keep entries to one or two sentences. */
 export const glossary: Term[] = [
   {
+    term: "AAuth",
+    def: "A draft protocol, separate from OAuth, in which each agent has its own key and signs every request, and a person server vouches for the user it acts for. An unrelated OAuth draft shares the name.",
+    see: { href: "/flows/aauth/", label: "AAuth" },
+  },
+  {
     term: "Access token",
     def: "A credential an API accepts as proof that a request is authorized. Short-lived, addressed to one audience, and limited to particular scopes.",
     see: { href: "/concepts/#tokens", label: "What is in a token" },
@@ -28,6 +33,11 @@ export const glossary: Term[] = [
     term: "Agent Card",
     def: "In A2A, a JSON document an agent publishes to describe its skills and the credentials it requires. It can be signed.",
     see: { href: "/flows/agent-to-agent/", label: "Agent to agent" },
+  },
+  {
+    term: "Agent provider",
+    def: "In AAuth, the service that gives an agent its identifier and vouches for its key, by issuing a short-lived agent token that binds the two.",
+    see: { href: "/flows/aauth/", label: "AAuth" },
   },
   {
     term: "A2A",
@@ -280,6 +290,11 @@ export const glossary: Term[] = [
     term: "OpenID Connect",
     aka: ["OIDC"],
     def: "A layer on top of OAuth that tells an application who signed in, with an ID token. It is what most “Sign in with” buttons run.",
+  },
+  {
+    term: "Person server",
+    def: "In AAuth, a server the user chooses to represent them. It tells an API which person an agent acts for, asks that person for consent, and issues the token that records it.",
+    see: { href: "/flows/aauth/", label: "AAuth" },
   },
   {
     term: "PKCE",

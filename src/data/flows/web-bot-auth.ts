@@ -158,5 +158,9 @@ Signature: sig1=:jdq0SqOwHdyHr9+r5jw3iYZH6aNGKijYp/EstF4RQTQdi5N5YYKrD+mCT1HA1nZ
       title: "Where this is going",
       body: `The IETF working group has one adopted document and has missed its original milestones, so the details are still moving. The idea has already spread: payment networks have built agent-recognition schemes on the same signatures, adding fields that say whether the agent is browsing or paying and on whose behalf.`,
     },
+    {
+      title: "From identifying to authorizing",
+      body: `[AAuth](/flows/aauth/) starts from the same kind of signature and adds what this leaves out: a token that says which person the agent acts for, and another that records what they approved. It is an individual draft, further from settled than this one.`,
+    },
   ],
 };

@@ -155,7 +155,7 @@ DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7…`,
   notes: [
     {
       title: "DPoP, mutual TLS, or message signatures",
-      body: `All three prove that the caller holds a key. **Mutual TLS** (RFC 8705) binds the token to a client certificate; it is strong and invisible to application code, but breaks when something in the path terminates TLS. **DPoP** signs a small proof per request and survives proxies. **HTTP Message Signatures** (RFC 9421) sign chosen parts of the request itself, including the body, and are the basis for newer work such as [Web Bot Auth](/flows/web-bot-auth/) and [workload proof tokens](/flows/wimse-workload-tokens/).`,
+      body: `All three prove that the caller holds a key. **Mutual TLS** (RFC 8705) binds the token to a client certificate; it is strong and invisible to application code, but breaks when something in the path terminates TLS. **DPoP** signs a small proof per request and survives proxies. **HTTP Message Signatures** (RFC 9421) sign chosen parts of the request itself, including the body, and are the basis for newer work such as [Web Bot Auth](/flows/web-bot-auth/), [workload proof tokens](/flows/wimse-workload-tokens/) and [AAuth](/flows/aauth/).`,
     },
   ],
 };
