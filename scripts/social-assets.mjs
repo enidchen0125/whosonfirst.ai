@@ -405,7 +405,9 @@ p, h1, h2, h3, ul, ol, table { margin: 0; padding: 0; }
   font: 600 32px/1 var(--font-display);
   letter-spacing: -0.015em;
 }
-.brand img { width: 46px; height: 46px; }
+/* Taller than the line of text it sits on, and pulled back by the difference,
+   so the rule under the row stays where it is. The link cards do the same. */
+.brand img { width: 56px; height: 56px; margin: -5px 0; }
 .tag, .eyebrow, .label {
   font-family: var(--font-label);
   font-weight: 500;
