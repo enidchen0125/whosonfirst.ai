@@ -235,7 +235,7 @@ On a person's machine nothing forces a call through the gateway at all, and a [l
   <li>Exchanged tokens name the gateway as actor, and only the gateway can obtain a token for the servers’ audiences, by exchange or by any other grant.</li>
   <li>Per-tool rules read the user and the client from the validated token. A gateway that rewrites requests compares each one’s headers with its body as it arrived; only a gateway that forwards a request unchanged leaves that to the server.</li>
   <li>A gateway that keeps users’ grants at third-party services asks for consent for each MCP client before it sends the user on.</li>
-  <li>Agents reach the LLM gateway with a platform identity or a person’s sign-in where it supports one, on tokens short enough that a disabled account stops soon. Any virtual keys left are one for each caller, and open models only.</li>
+  <li>Agents reach the LLM gateway with a platform identity or a person’s sign-in where it supports one, on tokens short enough that a disabled account stops soon. Any virtual keys left are one for each caller, and a key issued for models does not open tools as well.</li>
   <li>Provider credentials are short-lived where the provider accepts an identity. Stored keys exist only at the gateway.</li>
   <li>Logs of prompts and replies are access-controlled, and tokens are kept out of them.</li>
   <li>Nothing reaches the servers or the providers except through the gateway. Where a direct path stays open, the server verifies that the gateway is the caller, or applies the gateway’s rules itself. Checking the audience alone does not do this.</li>
