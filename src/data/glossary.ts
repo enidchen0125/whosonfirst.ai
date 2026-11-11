@@ -17,7 +17,7 @@ export const glossary: Term[] = [
   {
     term: "Actor",
     aka: ["act claim"],
-    def: "The party presenting a token when it is not the subject. Recorded in the `act` claim, which is what distinguishes delegation from impersonation.",
+    def: "The party acting for a token’s subject, as the issuer names it in the `act` claim. Its presence is what distinguishes delegation from impersonation. It says who was authorized to act, not who is holding the token.",
     see: { href: "/flows/token-exchange/", label: "Token exchange" },
   },
   {
