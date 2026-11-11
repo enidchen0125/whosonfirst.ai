@@ -48,7 +48,7 @@ const failures: ScenarioData = {
         },
         {
           verdict: "yes",
-          note: "An API that checks for the key refuses the token alone, and the key was never in the log. A proof caught beside it can repeat that one request, briefly.",
+          note: "An API that checks for the key refuses the token alone, and the key was never in the log. A proof caught beside it can be reused at that one address, briefly.",
         },
         {
           verdict: "partly",
@@ -113,7 +113,7 @@ const failures: ScenarioData = {
         },
         {
           verdict: "yes",
-          note: "The model cannot repeat what it was never shown. It must not be able to choose where your code sends it, either.",
+          note: "The model cannot repeat a secret it was never shown. It must not be able to choose where your code sends that secret, either.",
         },
         { verdict: "no", note: "Nobody is asked before text is sent." },
       ],
@@ -292,8 +292,10 @@ const checks: CheckQuestion[] = [
       person out.
     </li>
     <li>
-      <strong>Keep the password away from the model.</strong> It lives in a secrets store. Your code, or a proxy
-      outside the agent’s sandbox, fills it in. The model asks to be signed in and never sees what was typed.
+      <strong>Keep that account’s password away from the model.</strong> It lives in a secrets store. Your code, or
+      a proxy outside the agent’s sandbox, fills it in. The model asks to be signed in and never sees what was
+      typed. This is for the agent’s own account. A person’s password is never stored at all, as the next point
+      says.
     </li>
     <li>
       <strong>If it has to be a person’s account, the person signs in.</strong> Show them the service’s own sign-in

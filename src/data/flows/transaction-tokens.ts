@@ -146,7 +146,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       kind: "self",
       label: "Verify; authorize on context",
       title: "The tool enforces the original intent",
-      body: `The tool can refuse anything that does not match \`tctx\`. If a prompt injection has convinced the agent to sell instead of buy, the tool sees a request that contradicts the signed transaction and rejects it. For an action that should happen once, the tool also treats \`txn\` as its record that it has already been done.`,
+      body: `The tool can refuse anything that does not match \`tctx\`. If a prompt injection has convinced the agent to sell instead of buy, the tool sees a request that contradicts the signed transaction and rejects it. For an action that should happen once, the tool also records each \`txn\` it has acted on and refuses to act on it again.`,
     },
     {
       from: "tool",

@@ -193,7 +193,7 @@ A gateway controls only the traffic that passes through it. Add a NetworkPolicy 
 
 [Agent Sandbox](https://github.com/kubernetes-sigs/agent-sandbox) is a SIG Apps project that adds a `Sandbox` resource: an isolated, stateful, single-pod runtime for an agent, with templates, claims and pre-warmed pools. The project is at version 1.0, with an API still labeled `v1beta1`.
 
-Its defaults are a reasonable floor, not the target. Sandboxes created from a template do not mount a ServiceAccount token, and get a generated NetworkPolicy that blocks private address ranges and cloud metadata endpoints but still allows the whole public internet. For an agent that holds or can use any credential, replace that with egress through a proxy and a default-deny list, as in [sandboxes](/deployments/sandboxes/). Isolation itself is delegated to a sandboxed container runtime such as gVisor or Kata.
+Its defaults are a reasonable floor, not the target. Sandboxes created from a template do not mount a ServiceAccount token, and get a generated NetworkPolicy that blocks private address ranges and cloud metadata endpoints but still allows the whole public internet. For an agent that holds or can use any credential, replace that with egress through a proxy and an allow-list that denies by default, as in [sandboxes](/deployments/sandboxes/). Isolation itself is delegated to a sandboxed container runtime such as gVisor or Kata.
 
 It has no built-in credential broker. Credentials reach a sandbox the way they reach any pod, which for an agent executing untrusted code means you should bring your own: see [sandboxes](/deployments/sandboxes/).
 

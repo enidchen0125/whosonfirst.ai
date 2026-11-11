@@ -41,7 +41,7 @@ The grant is trivial. The hard part is the credential the agent uses to authenti
   parts: {
     agent:
       "Signs a short-lived proof of its identity with a private key it holds, asks for a token that is valid for one API, and sends that token with each call. No refresh token is issued: it asks again. What it authenticates with is yours to choose: prefer a key the agent holds to a static client secret, and prefer an identity the platform issues to both, where one is available.",
-    as: "Verifies the agent’s proof against the public key registered for it, checks audience, expiry and replay, decides which of the requested scopes the agent is allowed, and issues a token whose subject is the agent. There is no consent step, so the scopes are whatever an administrator configured. Review them as you would a service account’s permissions.",
+    as: "Verifies the agent’s proof against the public key registered for it, checks audience and expiry, and replay where it keeps track of `jti`, decides which of the requested scopes the agent is allowed, and issues a token whose subject is the agent. There is no consent step, so the scopes are whatever an administrator configured. Review them as you would a service account’s permissions.",
     api: "Validates the token and authorizes a machine caller, not a person: rules that depend on “the current user” have nothing to bind to. If the API is yours, do not treat a request parameter the agent filled in as evidence of which user it is working for.",
   },
   participants: [
@@ -94,7 +94,7 @@ grant_type=client_credentials
       kind: "self",
       label: "Verify assertion, apply policy",
       title: "The authorization server authenticates the client",
-      body: `It verifies the signature against the public key registered for this client, checks audience, expiry and replay, then decides which of the requested scopes this client is allowed. There is no user to ask, so policy is the only gate.`,
+      body: `It verifies the signature against the public key registered for this client, checks audience and expiry, and replay where it keeps track of \`jti\`, then decides which of the requested scopes this client is allowed. There is no user to ask, so policy is the only gate.`,
     },
     {
       from: "as",

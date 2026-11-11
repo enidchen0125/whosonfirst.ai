@@ -94,7 +94,7 @@ WWW-Authenticate: Bearer
       kind: "back",
       label: "Get resource metadata",
       title: "The client reads the protected resource metadata",
-      body: `This document (RFC 9728) is the bridge between a resource and its authorization server. It must list at least one entry in \`authorization_servers\`. The client checks that \`resource\` in this document is the server URL it called, and stops if it is not. The \`resource\` it later asks a token for is that same URL. \`scopes_supported\` is meant to be the minimal set for basic use, not everything the server could ever ask for.`,
+      body: `This document (RFC 9728) is the bridge between a resource and its authorization server. It must list at least one entry in \`authorization_servers\`. The client checks that \`resource\` in this document is the URL the metadata address was built from: the server URL it called or, when the document came from the root location, that server’s origin. If it is not, the client stops. \`scopes_supported\` is meant to be the minimal set for basic use, not everything the server could ever ask for.`,
       code: {
         lang: "json",
         text: `{

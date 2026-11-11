@@ -83,7 +83,7 @@ The token's claims describe the job: repository, branch or tag, environment, wor
 
 **Watch the subject format.** GitHub announced in 2026 that newly created repositories default to subject claims built from immutable owner and repository IDs instead of names. Rules that pattern-match on names need attention when new repositories are added.
 
-**An agent in CI is still an agent.** If the job runs a model that reads pull request content, it is processing untrusted input with the pipeline's credentials. Give agent steps the least privilege of any step in the workflow, and keep deploy credentials in a separate job. A job that runs a model over repository content gets no `id-token` permission: set it on the one job that needs it, as above, not for the whole workflow.
+**An agent in CI is still an agent.** If the job runs a model that reads pull request content, it is processing untrusted input with the pipeline's credentials. Give agent steps the least privilege of any step in the workflow, and keep deploy credentials in a separate job. Set `id-token` on the one job that needs it, as above, not for the whole workflow. Anything that job runs can request the token, so if it also runs a model over pull request content, make the trust rule grant only what the model's task needs.
 
 ## Checklist
 

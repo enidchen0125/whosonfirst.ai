@@ -94,7 +94,7 @@ client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
 &client_assertion=eyJhbGciOiJFUzI1NiJ9…
 &scope=openid payments.release
 &login_hint=alice@example.com
-&binding_message=Pay invoice 1042: $1,250.00 to Acme Ltd
+&binding_message=INV-1042
 &requested_expiry=300
 &authorization_details=[{"type":"payment","invoice":"1042",
    "amount":{"currency":"USD","value":"1250.00"},"payee":"Acme Ltd"}]`,

@@ -369,9 +369,11 @@ const checks: CheckQuestion[] = [
   <Scenario scenario={checksScenario} glance="All six at a glance" />
 
   <p>
-    <strong>Do not write these checks yourself.</strong> Use a maintained library, and tell it in your own
-    configuration which issuer, which keys and which signing method to accept. Never take those from the token: one
-    that names its own key, or says it needs no signature, must be refused. Decoding a token is not checking it.
+    <strong>Do not write the signature check yourself.</strong> Use a maintained library, and tell it in your own
+    configuration which issuer, which audience, which keys and which signing method to accept. Never take those from
+    the token: one that brings its own key, says where to fetch one, or says it needs no signature must be refused.
+    The last of the five, whether the token covers this request, is yours to write: only your code knows what each
+    request needs. Decoding a token is not checking it.
   </p>
 
   <h2>When the API says no</h2>

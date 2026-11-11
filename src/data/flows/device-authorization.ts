@@ -83,7 +83,7 @@ client_id=cli-agent
       kind: "resp",
       label: "device_code, user_code, URL",
       title: "The server returns two codes",
-      body: `The \`device_code\` is a long secret. The agent’s runtime keeps it and polls with it. It never goes into the model’s context or a log: until it expires, whoever has it can collect the tokens. The \`user_code\` is short enough to type. \`verification_uri_complete\` embeds the user code so it can be rendered as a QR code. It also means a victim never has to type anything, so the approval page should still show the code and ask the user to confirm it matches the one on their device.`,
+      body: `The \`device_code\` is a long secret. The agent’s runtime keeps it and polls with it. It never goes into the model’s context or a log: until it expires, whoever has it can collect the tokens. The \`user_code\` is short enough to type. \`verification_uri_complete\` embeds the user code so it can be rendered as a QR code. It also means a person who is sent that link by an attacker never has to type anything, so the approval page should still show the code and ask the user to confirm it matches the one on their device.`,
       code: {
         lang: "json",
         text: `{

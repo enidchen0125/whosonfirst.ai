@@ -11,7 +11,7 @@ export const wimseWorkloadTokens: Flow = {
     "A workload identity that is bound to a key and proven on every request, so it survives the gateways and proxies that agent traffic passes through.",
   summary: `Mutual TLS gives two workloads strong mutual authentication, until something in the middle terminates the connection. Agent traffic passes through a lot of middle: API gateways, MCP gateways, service-mesh waypoints, inspection proxies. Each one ends the TLS session, and the caller’s certificate goes no further. The usual fallback is a bearer JWT in a header, which anyone along the path can copy and replay.
 
-The IETF WIMSE working group is standardizing a credential built for this. A **Workload Identity Token** (WIT) is a JWT that names the workload and carries its public key. It is never accepted on its own. Each request must also carry proof that the sender holds the matching private key: either a **Workload Proof Token** (WPT), a small signed JWT bound to this request, or an HTTP Message Signature over the request itself. A proxy can forward both, and a thief who copies them has at most a proof for one URL that expires in seconds.
+The IETF WIMSE working group is standardizing a credential built for this. A **Workload Identity Token** (WIT) is a JWT that names the workload and carries its public key. It is never accepted on its own. Each request must also carry proof that the sender holds the matching private key: either a **Workload Proof Token** (WPT), a small signed JWT bound to this request, or an HTTP Message Signature over the request itself. A proxy can forward both, and a thief who copies them has at most a proof for one URL that expires within minutes.
 
 The working group’s agent architecture document says plainly that agents are workloads, and builds on exactly this.`,
   fits: [
@@ -45,10 +45,10 @@ The working group’s agent architecture document says plainly that agents are w
     issuer:
       "Recognizes the workload and returns a signed Workload Identity Token that names it and carries its public key. How it recognizes the workload is the platform’s business: the draft does not prescribe it.",
     agent:
-      "Creates a key pair, keeps the private key, and gets a Workload Identity Token for the public key. For each request it signs a short-lived, single-use proof for the URL being called, and sends the token and the proof in their own headers, not in `Authorization`. The private key lives in the agent process: protect it and rotate the credential often.",
+      "Creates a key pair, keeps the private key, and gets a Workload Identity Token for the public key. For each request it signs a short-lived proof for the URL being called, and sends the token and the proof in their own headers, not in `Authorization`. The private key lives in the agent process: protect it and rotate the credential often.",
     proxy:
       "Ends the TLS session from the agent and forwards the request on a new connection, with both headers untouched. It can verify them itself to apply policy.",
-    tool: "Verifies the Workload Identity Token against the issuer’s keys, then verifies the proof with the public key inside the token, and checks that the proof matches the token, names this endpoint, and is fresh and unseen. It does not accept the token on its own. A receiver that skips the proof is accepting a bearer token that anyone along the path can copy and replay.",
+    tool: "Verifies the Workload Identity Token against the issuer’s keys, then verifies the proof with the public key inside the token, and checks that the proof matches the token, names this endpoint, and is fresh and, where it keeps track of `jti`, unseen. It does not accept the token on its own. A receiver that skips the proof is accepting a bearer token that anyone along the path can copy and replay.",
   },
   participants: [
     {

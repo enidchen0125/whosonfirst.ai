@@ -23,7 +23,7 @@ For agent systems this gives you a per-workload identity that works the same acr
     "SPIFFE says **who a workload is**. It says nothing about which user the workload is acting for. For that you still need a token carrying the user’s delegation, alongside the workload identity.",
     "Authentication is not authorization. Mutual TLS with no policy means every workload in the trust domain can call every other.",
     "Registration entries decide which workloads get which IDs. Loose selectors (a whole namespace) hand the same identity to things that should differ.",
-    "An LLM agent that spawns sub-agents in one process shares one SVID among them. Workload identity stops at the process boundary.",
+    "An LLM agent that spawns sub-agents in one process shares one SVID among them. Workload identity names the workload and nothing inside it.",
     "Anything running in the agent’s container can ask for the agent’s certificate and key, including code the agent was asked to run. Run untrusted code in a separate pod that cannot reach the socket.",
   ],
   lesson: "whose-authority",

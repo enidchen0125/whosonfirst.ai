@@ -39,7 +39,7 @@ Token exchange is the standard alternative. The middle service presents the toke
     agent:
       "Calls the tool server with a token it obtained with the user’s consent, whose audience is the tool server. It does not hold a credential for the downstream API.",
     tool: "Validates the token it receives and does not forward it. Authenticates as itself, presents that token to the authorization server, and asks for a new one for the downstream API with the narrowest scope that will do. Only the new token goes to the API.",
-    as: "Checks that the token is valid, that this client may exchange tokens, that the audience is permitted for it, and that the scope does not exceed what the user granted. Then issues a new token that keeps the user as its subject and, in this flow, names the tool server in an `act` claim. Servers differ on whether they add that, so check what yours issues. Which clients may exchange which tokens for which audiences is yours to configure.",
+    as: "Checks that the token is valid, that this client may exchange tokens, that the audience is permitted for it, and that policy lets this client obtain the requested scope under the user’s grant. Then issues a new token that keeps the user as its subject and, in this flow, names the tool server in an `act` claim. Servers differ on whether they add that, so check what yours issues. Which clients may exchange which tokens for which audiences is yours to configure.",
     api: "Checks that the token is addressed to it, then reads who the request is for and who is acting for them. It can apply the user’s permissions and a rule about what the tool server may read, and log both identities.",
   },
   participants: [

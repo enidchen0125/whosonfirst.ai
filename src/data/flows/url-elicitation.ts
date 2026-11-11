@@ -126,7 +126,7 @@ The same mechanism covers anything sensitive that should bypass the agent: enter
       kind: "front",
       label: "Open connect page",
       title: "The user lands on a page the server controls",
-      body: `The recommended design is a “connect” URL on the server’s own domain rather than a direct link to the third party. That page signs the user in, or finds their existing session, with the same authorization server the MCP client used, and compares that user with the \`sub\` on the tool call. Holding the link proves nothing. The link carries no identity and grants nothing by itself, because the attack is an attacker passing their own link to a victim.`,
+      body: `The recommended design is a “connect” URL on the server’s own domain rather than a direct link to the third party. That page signs the user in, or finds their existing session, with the same authorization server the MCP client used, and compares that user with the \`sub\` on the tool call. Holding the link proves nothing, so the link must carry no identity and grant nothing by itself: the attack is an attacker passing their own link to a victim.`,
     },
     {
       from: "mcp",

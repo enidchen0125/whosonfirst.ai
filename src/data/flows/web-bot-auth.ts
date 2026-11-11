@@ -120,7 +120,7 @@ Signature: sig1=:jdq0SqOwHdyHr9+r5jw3iYZH6aNGKijYp/EstF4RQTQdi5N5YYKrD+mCT1HA1nZ
       kind: "back",
       label: "Fetch key directory",
       title: "The verifier looks up the operator’s keys",
-      body: `Using the URL from \`Signature-Agent\`, cached according to HTTP caching headers. A verifier may also keep its own registry of operators it recognizes. If you write the verifier yourself, treat that URL as hostile input: any visitor can put any address in the header. Fetch over HTTPS only, refuse private and link-local addresses, set a size and time limit, and cache. Or fetch only for operators you already recognize.`,
+      body: `Using the URL from \`Signature-Agent\`, cached according to HTTP caching headers. A verifier may also keep its own registry of operators it recognizes. If you write the verifier yourself, treat that URL as hostile input: any visitor can put any address in the header. Fetch over HTTPS only, refuse private, loopback and link-local addresses, set a size and time limit, and cache. Or fetch only for operators you already recognize.`,
     },
     {
       from: "edge",

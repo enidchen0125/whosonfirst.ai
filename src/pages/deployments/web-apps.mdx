@@ -93,7 +93,7 @@ Some of what the agent touches belongs to you and not to any user: its database,
   <li>Refresh tokens are stored on the server, encrypted, filed by user and by issuer.</li>
   <li>The user a token is fetched for comes from the session, never from model output.</li>
   <li>Tokens do not appear in prompts, tool results, logs or traces.</li>
-  <li>A token is sent only to the API it was issued for, at a host fixed in code.</li>
+  <li>A token is sent only to the API it was issued for, at a host your code fixed or checked against a list.</li>
   <li>A sign-in is finished only in the browser session that started it.</li>
   <li>Unattended work runs on narrow scopes, is attributable to a job, and can be switched off by the user.</li>
   <li>The app's own access uses the platform's identity where one is offered.</li>

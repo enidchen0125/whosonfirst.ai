@@ -372,7 +372,7 @@ export const tokens: TokenSpec[] = [
         text: '"jti": "e1j3V_bKic8-LAEB",',
         indent: 1,
         cat: "meta",
-        note: "Unique per proof. Servers remember recent values and reject repeats.",
+        note: "Unique per proof. A server that remembers recent values can reject repeats. The specification leaves that to the server.",
       },
       {
         text: '"htm": "GET",',

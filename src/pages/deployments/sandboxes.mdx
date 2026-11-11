@@ -29,7 +29,7 @@ The step-by-step version, including what happens when an injected instruction tr
 
 **Scope every credential to hosts.** A credential that the proxy will attach to any request can be aimed at a server that echoes headers back. The allowed-hosts list is the control.
 
-**Fix where the credential goes.** One named header or one named body field, set by the operator. Not a URL, which ends up in logs, referrers and error messages on the far side. And not wherever a placeholder happens to appear: an agent that chooses the position can write the key into a comment on the allowed service and read it back.
+**Prefer a fixed place for the credential.** One named header or one named body field, set by the operator. Never a URL, which ends up in logs, referrers and error messages on the far side. Some implementations swap a placeholder wherever the agent wrote it. The host list is then the only control, so ask what each allowed service stores or echoes: an agent can write the placeholder into a comment there and read the key back in the reply.
 
 **The proxy terminates TLS.** It has to, in order to add a header. The sandbox must therefore trust the proxy's certificate authority, and the proxy becomes the most sensitive component in the system. Treat it accordingly.
 
@@ -76,7 +76,7 @@ The best case is a destination that accepts identity instead of a secret. If the
 <ul class="checklist">
   <li>The sandbox has no network path that bypasses the proxy.</li>
   <li>No real credential is present in the sandbox's environment, files or image.</li>
-  <li>Every credential is scoped to named hosts and injected into one named header or field, never a URL and never a position the agent chose.</li>
+  <li>Every credential is scoped to named hosts and never injected into a URL. Where a placeholder is swapped wherever it appears, no allowed host echoes what it is sent.</li>
   <li>The destination allow-list is default-deny.</li>
   <li>Credentials are per task or per session where the provider allows it, and revoked at exit.</li>
   <li>The proxy and vault authenticate each other with workload identity, not a shared secret.</li>
