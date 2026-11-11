@@ -77,8 +77,8 @@ const checks: CheckQuestion[] = [
     "An API sees a request and a **credential**. It does not see the user, the conversation or the intent.",
     "A credential is worth what it proves: **who is acting, for whom, and who said they could.**",
     "The agent’s own key proves the first. A key the user made proves the second. A token the user approved can carry all three.",
-    { rule: "Never ask a user to paste a secret into the conversation. Anything typed there, the model can be asked to repeat." },
     "A limit only counts where the agent cannot talk its way around it. That place is the API.",
+    { rule: "Never ask a user to paste a secret into the conversation. Anything typed there, the model can be asked to repeat." },
   ]}
   names={[
     ["What a request carries as evidence", "Credential"],

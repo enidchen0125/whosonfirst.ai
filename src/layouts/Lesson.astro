@@ -28,14 +28,23 @@ interface Props {
   /** Three or four sentences to leave with. md-lite. */
   /**
    * What to keep, as md-lite lines. A line given as `{ rule }` is the lesson's
-   * one hard rule, a "never", and is set apart with a red edge. At most one a
-   * lesson: a list where every line is a rule has none.
+   * one hard rule, a "never". It is taken out of the list and shown beneath it
+   * under its own label, so that a prohibition does not sit among the ideas or
+   * straight under the heading. At most one a lesson, and the build refuses a
+   * second: where every line is a rule, none is.
    */
   keep: (string | { rule: string })[];
   /** [what the lesson called it, the glossary term for it]. */
   names?: [plain: string, term: string][];
 }
 const { slug, lede, checks, keep, names = [] } = Astro.props;
+const ideas = keep.filter((k): k is string => typeof k === "string");
+const rules = keep.filter((k): k is { rule: string } => typeof k !== "string");
+if (rules.length > 1)
+  throw new Error(
+    `lesson "${slug}" gives ${rules.length} rules in keep: one at most`,
+  );
+const rule = rules[0]?.rule;
 const l = lesson(slug);
 const i = lessons.indexOf(l);
 const prev = lessons[i - 1];
@@ -91,12 +100,16 @@ const term = (name: string) =>
       <section class="keep" aria-labelledby="keep">
         <h2 id="keep">What to keep</h2>
         <ul>
-          {
-            keep.map((k) =>
-              typeof k === 'string' ? <li set:html={inline(k)} /> : <li class="rule" set:html={inline(k.rule)} />,
-            )
-          }
+          {ideas.map((k) => <li set:html={inline(k)} />)}
         </ul>
+        {
+          rule && (
+            <div class="keep-rule callout" data-tone="red">
+              <p class="callout-title">One rule</p>
+              <p set:html={inline(rule)} />
+            </div>
+          )
+        }
       </section>
 
       {
@@ -308,10 +321,15 @@ const term = (name: string) =>
     border-bottom: 1px solid var(--border);
     font-size: 1.04rem;
   }
-  /* the lesson's one hard rule: the same edge a mix-up has, in the color of a "no" */
-  .keep li.rule {
-    padding-left: 0.9rem;
-    border-left: 3px solid var(--red);
+  /* The lesson's one hard rule, under the ideas and under a label of its own: the
+     form a mix-up has, with the edge in the color of a "no". */
+  .keep-rule {
+    margin: 1.3rem 0 0;
+    max-width: var(--prose);
+    font-size: 1.04rem;
+  }
+  .keep-rule p:last-child {
+    margin: 0;
     font-weight: 500;
   }
 

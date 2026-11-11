@@ -202,10 +202,10 @@ const checks: CheckQuestion[] = [
   lede="Agents call tools, and tools call other services. Every hop needs a credential, and what gets handed along decides what the last service in the chain can know."
   checks={checks}
   keep={[
-    { rule: "A service never passes on a token that was issued for itself. **Exchange, never forward.**" },
     "A forwarded token only works if the next API stops checking the audience, and then any token from that issuer works there.",
     "**Delegation** names the person and the software acting for them. **Impersonation** names only the person. Prefer delegation.",
     "Access should shrink as it travels down a chain. It should never grow.",
+    { rule: "A service never passes on a token that was issued for itself. **Exchange, never forward.**" },
   ]}
   names={[
     ["Forwarding the token you were handed", "Token passthrough"],

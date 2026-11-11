@@ -243,11 +243,11 @@ const checks: CheckQuestion[] = [
   checks={checks}
   keep={[
     "The user signs in and approves at the **authorization server**, never in the agent.",
-    { rule: "An agent never asks a user for their password. Only the authorization server does." },
     "What comes back through the browser is a one-time **code**. The token itself only ever travels on a direct connection.",
     "**PKCE** ties the code to the app that asked for it.",
     "A **refresh token** lets the agent carry on without the user. Guard it as if it were the user’s access, because it is.",
     "Tokens are held by your program and never shown to the model.",
+    { rule: "An agent never asks a user for their password. Only the authorization server does." },
   ]}
   names={[
     ["The whole routine", "OAuth"],
