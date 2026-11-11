@@ -63,8 +63,13 @@ jobs:
       - run: npm ci
       - name: Build
         run: npm run build
-      # The checks run headless, so the headless shell is all they need.
+      # The checks run headless, so the headless shell is all they need, and the
+      # runner's image already has the libraries it links against. With
+      # `--with-deps` the step also asked apt for nine font packages: fonts for
+      # scripts the site does not use, and for a display the headless shell
+      # never opens. The job then failed whenever the runner could not reach
+      # the Ubuntu mirror, before any check had run.
       - name: Install Chromium
-        run: npx playwright install --with-deps --only-shell chromium
+        run: npx playwright install --only-shell chromium
       - name: Rendered checks
         run: npm run check:rendered
