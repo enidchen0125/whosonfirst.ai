@@ -44,7 +44,7 @@ X-User: alice`,
         },
         {
           verdict: "no",
-          note: "`alice` is whatever the agent typed. The API cannot check it.",
+          note: "`alice` is whatever the agent typed. The API cannot confirm it.",
         },
         {
           verdict: "no",

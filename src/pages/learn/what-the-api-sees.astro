@@ -49,11 +49,11 @@ const checks: CheckQuestion[] = [
   {
     id: "evidence",
     question:
-      "Which of these is evidence the API can check, and not a claim it has to take on trust?",
+      "Which of these tells the API the request is for Alice, without it having to take the agent’s word?",
     options: [
       {
         text: "A header the agent adds: `X-User: alice`.",
-        why: "The agent can put any name in that header. So can anyone else who has the agent’s key.",
+        why: "The API can read that header, and apply its rules to the name in it. But the agent wrote it, and can write any name there. So can anyone else who has the agent’s key.",
       },
       {
         text: "A line in the agent’s prompt: “only access the current user’s data.”",
@@ -62,7 +62,7 @@ const checks: CheckQuestion[] = [
       {
         text: "A token that names Alice, signed by a service the API trusts.",
         correct: true,
-        why: "The agent did not write the token and cannot alter it without breaking the signature. The next lesson shows how that works.",
+        why: "The agent did not write the token and cannot alter it without breaking the signature. The API is relying on the service that signed it, not on the agent. The next lesson shows how that works.",
       },
     ],
   },
