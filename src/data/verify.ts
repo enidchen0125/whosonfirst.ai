@@ -116,7 +116,7 @@ export const credentials: Credential[] = [
   },
   {
     id: "delegated",
-    name: "A token Alice delegated",
+    name: "A token Alice approved",
     onWire: "Access token",
     how: "The API checks the token’s signature against the issuer’s published keys, and that the issuer, audience and expiry are the ones it expects. An API that cannot read the token itself can ask the authorization server about it instead (token introspection).",
     results: {

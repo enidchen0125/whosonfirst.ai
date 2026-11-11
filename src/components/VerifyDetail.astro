@@ -23,7 +23,7 @@ import { inline } from "../lib/md";
       <thead>
         <tr>
           <th scope="col">What the API can verify</th>
-          {credentials.map((c) => <th scope="col">The agent presents: {c.name.toLowerCase()}</th>)}
+          {credentials.map((c) => <th scope="col">The agent presents: {c.name[0].toLowerCase() + c.name.slice(1)}</th>)}
         </tr>
       </thead>
       <tbody>
