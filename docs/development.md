@@ -243,9 +243,9 @@ It writes to `social/`, which is not committed:
 
 `--flow <slug>` chooses the flow the video steps through and the carousel shows a step of; without it that is MCP authorization. `--no-video` leaves the video out. `--dark` draws the same pictures in the site's dark theme, into `social/dark/`: every color is already a light and dark pair, the mark carries both, and the diagram is photographed from the page in that theme. The video needs `ffmpeg` on the path, and is skipped with a note where there is none.
 
-Every word in these pictures is read from the pages as built: the home page's question and its ways in, the first lesson's figure, the groups and ratings on the flows page, the tracker's counts, a flow's steps and its diagram as drawn. The script holds the layout and none of the content, so a picture cannot say what the site does not. If a page it reads has changed shape, it stops and names what it could not find, and if a picture has outgrown its frame it says which. Make the pictures again after the content changes. Do not edit them by hand.
-
 The pictures are read on a phone, where a page 1080 pixels wide is shown at about a third of its size. So nothing on one is set smaller than 23 pixels, and most labels are 26. Keep to that when a page is changed: type that looks comfortable at full size is too small to read in a feed.
+
+Every word in these pictures is read from the pages as built: the home page's question and its ways in, the first lesson's figure, the groups and ratings on the flows page, the tracker's counts, a flow's steps and its diagram as drawn. The script holds the layout and none of the content, so a picture cannot say what the site does not. If a page it reads has changed shape, it stops and names what it could not find, and if a picture has outgrown its frame it says which. Make the pictures again after the content changes. Do not edit them by hand.
 
 ## Response headers
 
